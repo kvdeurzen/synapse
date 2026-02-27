@@ -3,12 +3,12 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: unknown
-last_updated: "2026-02-27T20:18:19.218Z"
+last_updated: "2026-02-27T20:32:56.186Z"
 progress:
   total_phases: 2
   completed_phases: 2
-  total_plans: 4
-  completed_plans: 4
+  total_plans: 5
+  completed_plans: 5
 ---
 
 # Project State
@@ -23,9 +23,9 @@ See: .planning/PROJECT.md (updated 2026-02-27)
 ## Current Position
 
 Phase: 2 of 7 (Database Schema)
-Plan: 2 of 2 in current phase (plan complete — Phase 2 complete)
+Plan: 3 of 3 in current phase (plan complete — Phase 2 complete)
 Status: Phase 2 complete
-Last activity: 2026-02-27 — Plan 02-02 complete: init_project + delete_project MCP tools, 72 tests pass
+Last activity: 2026-02-27 — Plan 02-03 complete: connectDb wired into tool files, BTree index test strengthened
 
 Progress: [████░░░░░░] 28%
 
@@ -41,7 +41,7 @@ Progress: [████░░░░░░] 28%
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
 | 01-mcp-foundation | 2/2 | 9 min | 4.5 min |
-| 02-database-schema | 2/2 | 10 min | 5 min |
+| 02-database-schema | 3/3 | 12 min | 4 min |
 
 **Recent Trend:**
 - Last 5 plans: 5 min, 4 min, 6 min, 4 min
@@ -72,6 +72,8 @@ Recent decisions affecting current work:
 - [Phase 02-02]: TABLE_SCHEMAS null guard — Record<string,Schema> index returns Schema|undefined in strict TS; explicit guard throws informative error instead of non-null assertion
 - [Phase 02-02]: BTree index graceful degradation — createIndex wrapped in try/catch with logger.warn; init_project succeeds even if empty-table index fails (RESEARCH.md Pitfall 3)
 - [Phase 02-02]: Two-export pattern: initProject/deleteProject core functions exported separately from registerXTool wrappers — core is testable without MCP server
+- [Phase 02-03]: LanceDB 0.26.2 creates BTree indexes on empty tables successfully — graceful degradation try/catch is a safety net, not a known-failure path
+- [Phase 02-03]: init-project.ts keeps resolve(dbPath) for return value (database_path) after calling connectDb(dbPath) — connectDb resolves internally but doesn't expose absPath
 
 ### Pending Todos
 
@@ -84,5 +86,5 @@ Recent decisions affecting current work:
 ## Session Continuity
 
 Last session: 2026-02-27
-Stopped at: Completed 02-database-schema/02-02-PLAN.md (Phase 2 Plan 2 complete — Phase 2 done)
+Stopped at: Completed 02-database-schema/02-03-PLAN.md (Phase 2 Plan 3 complete — Phase 2 fully done)
 Resume file: None

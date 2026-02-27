@@ -3,10 +3,10 @@ import { mkdtempSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import * as lancedb from "@lancedb/lancedb";
-import { ProjectMetaRowSchema } from "../../src/db/schema.js";
 import { insertBatch } from "../../src/db/batch.js";
-import { initProject } from "../../src/tools/init-project.js";
+import { ProjectMetaRowSchema } from "../../src/db/schema.js";
 import { deleteProject } from "../../src/tools/delete-project.js";
+import { initProject } from "../../src/tools/init-project.js";
 
 let tmpDir: string;
 
@@ -48,10 +48,7 @@ describe("deleteProject", () => {
 
     const db = await lancedb.connect(tmpDir);
     const table = await db.openTable("project_meta");
-    const rows = await table
-      .query()
-      .where("project_id = 'proj-to-delete'")
-      .toArray();
+    const rows = await table.query().where("project_id = 'proj-to-delete'").toArray();
     expect(rows.length).toBe(0);
   });
 

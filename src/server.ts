@@ -1,7 +1,9 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { logger } from "./logger.js";
+import { registerDeleteProjectTool } from "./tools/delete-project.js";
 import { registerEchoTool } from "./tools/echo.js";
+import { registerInitProjectTool } from "./tools/init-project.js";
 import { registerPingTool } from "./tools/ping.js";
 import type { SynapseConfig } from "./types.js";
 
@@ -27,6 +29,12 @@ export function createServer(config: SynapseConfig): McpServer {
   toolCount++;
 
   registerEchoTool(server);
+  toolCount++;
+
+  registerInitProjectTool(server, config);
+  toolCount++;
+
+  registerDeleteProjectTool(server, config);
   toolCount++;
 
   return server;

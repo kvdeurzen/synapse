@@ -1,8 +1,8 @@
-import { mkdirSync } from "node:fs";
 import { resolve } from "node:path";
 import * as lancedb from "@lancedb/lancedb";
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
+import { connectDb } from "../db/connection.js";
 import { TABLE_NAMES, TABLE_SCHEMAS } from "../db/schema.js";
 import { createToolLogger, logger } from "../logger.js";
 import type { SynapseConfig, ToolResult } from "../types.js";
@@ -38,9 +38,7 @@ export async function initProject(dbPath: string, projectId: string): Promise<In
   ProjectIdSchema.parse(projectId);
 
   const absPath = resolve(dbPath);
-  mkdirSync(absPath, { recursive: true });
-
-  const db = await lancedb.connect(absPath);
+  const db = await connectDb(dbPath);
   const existing = new Set(await db.tableNames());
 
   let tables_created = 0;

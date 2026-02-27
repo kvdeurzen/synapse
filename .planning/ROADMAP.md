@@ -114,7 +114,7 @@ Note: Phase 6 depends on Phase 3 (not Phase 5), so Phases 5 and 6 could run in p
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. MCP Foundation | 2/2 | Complete   | 2026-02-27 |
-| 2. Database Schema | 0/TBD | Not started | - |
+| 2. Database Schema | 1/2 | In Progress|  |
 | 3. Embedding Service | 0/TBD | Not started | - |
 | 4. Document Management | 0/TBD | Not started | - |
 | 5. Document Search | 0/TBD | Not started | - |

@@ -9,9 +9,11 @@
     "format": "bunx biome format --write src/ test/"
   },
   "dependencies": {
+    "@lancedb/lancedb": "0.26.2",
     "@modelcontextprotocol/sdk": "latest",
     "pino": "latest",
     "smol-toml": "latest",
+    "ulidx": "^2.4.1",
     "zod": "^4.0.0"
   },
   "devDependencies": {

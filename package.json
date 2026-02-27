@@ -1,0 +1,23 @@
+{
+  "name": "synapse-mcp",
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "start": "bun run src/index.ts",
+    "test": "bun test",
+    "lint": "bunx biome check src/ test/",
+    "format": "bunx biome format --write src/ test/"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "latest",
+    "pino": "latest",
+    "smol-toml": "latest",
+    "zod": "^4.0.0"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "latest",
+    "@types/node": "latest",
+    "bun-types": "latest",
+    "typescript": "latest"
+  }
+}

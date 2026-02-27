@@ -3,12 +3,12 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: unknown
-last_updated: "2026-02-27T20:10:38.504Z"
+last_updated: "2026-02-27T20:18:19.218Z"
 progress:
   total_phases: 2
-  completed_phases: 1
+  completed_phases: 2
   total_plans: 4
-  completed_plans: 3
+  completed_plans: 4
 ---
 
 # Project State
@@ -23,11 +23,11 @@ See: .planning/PROJECT.md (updated 2026-02-27)
 ## Current Position
 
 Phase: 2 of 7 (Database Schema)
-Plan: 1 of 2 in current phase (plan complete)
-Status: Phase 2 in progress
-Last activity: 2026-02-27 — Plan 02-01 complete: 5 LanceDB Arrow schemas, 5 Zod schemas, connectDb, insertBatch, 37 tests
+Plan: 2 of 2 in current phase (plan complete — Phase 2 complete)
+Status: Phase 2 complete
+Last activity: 2026-02-27 — Plan 02-02 complete: init_project + delete_project MCP tools, 72 tests pass
 
-Progress: [███░░░░░░░] 21%
+Progress: [████░░░░░░] 28%
 
 ## Performance Metrics
 
@@ -41,10 +41,10 @@ Progress: [███░░░░░░░] 21%
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
 | 01-mcp-foundation | 2/2 | 9 min | 4.5 min |
-| 02-database-schema | 1/2 | 6 min | 6 min |
+| 02-database-schema | 2/2 | 10 min | 5 min |
 
 **Recent Trend:**
-- Last 5 plans: 5 min, 4 min, 6 min
+- Last 5 plans: 5 min, 4 min, 6 min, 4 min
 - Trend: stable
 
 *Updated after each plan completion*
@@ -69,6 +69,9 @@ Recent decisions affecting current work:
 - [01-02]: registerXTool(server, config, ...) pattern established for all future tool registrations
 - [Phase 02-01]: Apache-arrow types imported from 'apache-arrow' (transitive dep) not '@lancedb/lancedb' — lancedb TypeScript index.d.ts does not re-export Arrow types
 - [Phase 02-01]: Zod v4 ZodIssue.path is PropertyKey[] (includes symbols) — use .map(String) for safe string conversion in error formatting
+- [Phase 02-02]: TABLE_SCHEMAS null guard — Record<string,Schema> index returns Schema|undefined in strict TS; explicit guard throws informative error instead of non-null assertion
+- [Phase 02-02]: BTree index graceful degradation — createIndex wrapped in try/catch with logger.warn; init_project succeeds even if empty-table index fails (RESEARCH.md Pitfall 3)
+- [Phase 02-02]: Two-export pattern: initProject/deleteProject core functions exported separately from registerXTool wrappers — core is testable without MCP server
 
 ### Pending Todos
 
@@ -81,5 +84,5 @@ Recent decisions affecting current work:
 ## Session Continuity
 
 Last session: 2026-02-27
-Stopped at: Completed 02-database-schema/02-01-PLAN.md (Phase 2 Plan 1 complete)
+Stopped at: Completed 02-database-schema/02-02-PLAN.md (Phase 2 Plan 2 complete — Phase 2 done)
 Resume file: None

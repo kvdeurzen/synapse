@@ -113,7 +113,7 @@ Note: Phase 6 depends on Phase 3 (not Phase 5), so Phases 5 and 6 could run in p
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. MCP Foundation | 0/2 | Planned | - |
+| 1. MCP Foundation | 1/2 | In Progress|  |
 | 2. Database Schema | 0/TBD | Not started | - |
 | 3. Embedding Service | 0/TBD | Not started | - |
 | 4. Document Management | 0/TBD | Not started | - |

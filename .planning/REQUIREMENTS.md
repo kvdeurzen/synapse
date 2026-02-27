@@ -10,12 +10,12 @@ Requirements for initial release. Each maps to roadmap phases.
 ### Foundation
 
 - [ ] **FOUND-01**: Server starts via stdio transport and connects to MCP clients (Claude Code, Cursor)
-- [ ] **FOUND-02**: Server accepts --db path CLI arg and OLLAMA_URL, EMBED_MODEL, SYNAPSE_DB_PATH env vars
+- [x] **FOUND-02**: Server accepts --db path CLI arg and OLLAMA_URL, EMBED_MODEL, SYNAPSE_DB_PATH env vars
 - [ ] **FOUND-03**: init_project creates LanceDB database with 5 tables (documents, code_chunks, relationships, project_meta, activity_log) and all indexes
 - [ ] **FOUND-04**: init_project seeds starter documents (project charter, ADR log template, coding guidelines, glossary)
 - [ ] **FOUND-05**: All queries are scoped by project_id for multi-project support
 - [ ] **FOUND-06**: Schema includes v2 forward-compatibility fields (parent_id, depth, decision_type) on documents table
-- [ ] **FOUND-07**: All logging goes to stderr only — no stdout contamination of MCP JSON-RPC stream
+- [x] **FOUND-07**: All logging goes to stderr only — no stdout contamination of MCP JSON-RPC stream
 
 ### Embedding Service
 
@@ -120,8 +120,8 @@ Which phases cover which requirements. Updated during roadmap creation.
 | Requirement | Phase | Status |
 |-------------|-------|--------|
 | FOUND-01 | Phase 1 | Pending |
-| FOUND-02 | Phase 1 | Pending |
-| FOUND-07 | Phase 1 | Pending |
+| FOUND-02 | Phase 1 | Complete |
+| FOUND-07 | Phase 1 | Complete |
 | FOUND-03 | Phase 2 | Pending |
 | FOUND-05 | Phase 2 | Pending |
 | FOUND-06 | Phase 2 | Pending |

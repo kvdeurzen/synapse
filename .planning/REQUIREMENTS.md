@@ -1,0 +1,180 @@
+# Requirements: Synapse
+
+**Defined:** 2026-02-27
+**Core Value:** Agents get the right context for any task — from both project decisions and actual code — without wasting tokens on irrelevant content
+
+## v1 Requirements
+
+Requirements for initial release. Each maps to roadmap phases.
+
+### Foundation
+
+- [ ] **FOUND-01**: Server starts via stdio transport and connects to MCP clients (Claude Code, Cursor)
+- [ ] **FOUND-02**: Server accepts --db path CLI arg and OLLAMA_URL, EMBED_MODEL, SYNAPSE_DB_PATH env vars
+- [ ] **FOUND-03**: init_project creates LanceDB database with 5 tables (documents, code_chunks, relationships, project_meta, activity_log) and all indexes
+- [ ] **FOUND-04**: init_project seeds starter documents (project charter, ADR log template, coding guidelines, glossary)
+- [ ] **FOUND-05**: All queries are scoped by project_id for multi-project support
+- [ ] **FOUND-06**: Schema includes v2 forward-compatibility fields (parent_id, depth, decision_type) on documents table
+- [ ] **FOUND-07**: All logging goes to stderr only — no stdout contamination of MCP JSON-RPC stream
+
+### Embedding Service
+
+- [ ] **EMBED-01**: Embedding service calls Ollama /api/embed with nomic-embed-text model (768 dimensions)
+- [ ] **EMBED-02**: Embedding service supports single and batch embedding
+- [ ] **EMBED-03**: Write operations (store_document, index_codebase) fail fast with clear error when Ollama is unreachable
+- [ ] **EMBED-04**: Read operations (semantic_search, search_code, query_documents) continue working without Ollama
+- [ ] **EMBED-05**: Non-blocking health check on startup logs warning if Ollama is down but server starts anyway
+- [ ] **EMBED-06**: Embedding dimension assertion prevents inserting vectors with wrong dimensions
+
+### Document Management
+
+- [ ] **DOC-01**: User can store a document with title, content, category (17 types), and optional metadata via store_document
+- [ ] **DOC-02**: Documents are chunked at write time using category-specific strategies (semantic_section, paragraph, fixed_size) with configurable max size and overlap
+- [ ] **DOC-03**: Each chunk is prefixed with context header ("Document: {title} | Section: {header}") before embedding
+- [ ] **DOC-04**: store_document with existing doc_id creates new version (version + 1) and marks old chunks as superseded
+- [ ] **DOC-05**: User can query documents by category, phase, tags, status, and priority filters via query_documents
+- [ ] **DOC-06**: User can update document metadata (status, phase, tags, priority) without re-embedding via update_document
+- [ ] **DOC-07**: User can soft-delete (archive) or hard-delete documents via delete_document
+- [ ] **DOC-08**: project_overview returns document counts by category/status/phase, recent activity, and key documents (priority >= 4)
+- [ ] **DOC-09**: Documents follow lifecycle states: draft → active → approved, with superseded and archived transitions
+- [ ] **DOC-10**: Carry-forward categories (architecture_decision, design_pattern, glossary, code_pattern, dependency) are never auto-archived
+- [ ] **DOC-11**: All mutations are logged to activity_log with actor, action, and timestamp
+- [ ] **DOC-12**: store_document returns doc_id, chunk_count, version, and token_estimate
+
+### Search
+
+- [ ] **SRCH-01**: User can run semantic search across documents with optional category, phase, tags, status filters and min_relevance threshold
+- [ ] **SRCH-02**: User can run full-text search across documents
+- [ ] **SRCH-03**: Hybrid search merges semantic and FTS results via Reciprocal Rank Fusion (k=60)
+- [ ] **SRCH-04**: get_smart_context overview phase returns summaries (~100 tokens each) from both documents and code_chunks tables (~2-4k tokens total)
+- [ ] **SRCH-05**: get_smart_context detailed phase fetches full content for agent-specified doc_ids with 1-hop relationship traversal
+- [ ] **SRCH-06**: get_smart_context respects max_tokens budget and truncates results to fit
+- [ ] **SRCH-07**: Search results include relevance scores and source attribution
+
+### Relationships & Graph
+
+- [ ] **GRAPH-01**: User can create manual relationships between documents via link_documents with type (implements, depends_on, supersedes, references, contradicts, child_of, related_to)
+- [ ] **GRAPH-02**: link_documents supports bidirectional relationship creation
+- [ ] **GRAPH-03**: 1-hop graph traversal surfaces related documents when fetching context
+- [ ] **GRAPH-04**: Relationships track source attribution (manual vs ast_import) for distinguishing human-created from auto-generated edges
+
+### Code Indexing
+
+- [ ] **CODE-01**: index_codebase scans project directory for .ts, .tsx, .py, .rs files respecting .gitignore patterns
+- [ ] **CODE-02**: Files are parsed with tree-sitter to extract AST-aware chunks at function/class/method/interface/type boundaries
+- [ ] **CODE-03**: Each code chunk includes symbol_name, symbol_type, scope_chain, imports, and exports metadata
+- [ ] **CODE-04**: Code chunks are prefixed with context header ("File: {path} | {symbol_type}: {scope_chain}") before embedding
+- [ ] **CODE-05**: Incremental indexing compares SHA-256 file hashes and only re-indexes changed files
+- [ ] **CODE-06**: Deleted files have their code_chunks and auto-generated relationships removed
+- [ ] **CODE-07**: Import/use statements are parsed to auto-generate depends_on relationships between files
+- [ ] **CODE-08**: Auto-generated relationships (source: "ast_import") are replaced on re-index to stay fresh
+- [ ] **CODE-09**: index_codebase returns files_scanned, files_indexed, chunks_created, skipped_unchanged counts
+- [ ] **CODE-10**: TypeScript, Python, and Rust languages are supported with appropriate tree-sitter grammars
+
+### Code Search
+
+- [ ] **CSRCH-01**: User can search code via search_code with query, language, symbol_type, and file_pattern filters
+- [ ] **CSRCH-02**: Code search supports semantic, fulltext, and hybrid (RRF) search modes
+- [ ] **CSRCH-03**: Code search results include file_path, symbol_name, scope_chain, content, relevance_score, start_line, end_line
+- [ ] **CSRCH-04**: get_index_status returns total files indexed, total chunks, last index time, languages breakdown, stale files count
+
+## v2 Requirements
+
+Deferred to future release. Tracked but not in current roadmap.
+
+### Agentic Workflow
+
+- **AGENT-01**: Task decomposition system (understand → scope → plan → subdivide → execute → validate)
+- **AGENT-02**: Agent role profiles with per-role context assembly and token budgets
+- **AGENT-03**: User preference learning (style preferences + architectural patterns)
+- **AGENT-04**: Decision threshold system (auto-resolve low-impact, involve user on new decisions with suggestions/pros/cons)
+- **AGENT-05**: Three-layer validation pipeline (automated tests, parent agent review, user checkpoints)
+- **AGENT-06**: Slash commands and phase management workflow
+
+### Extended Features
+
+- **EXT-01**: Additional language support (Go, Java, C++, C#)
+- **EXT-02**: Export documents to markdown
+- **EXT-03**: Import documents from markdown
+- **EXT-04**: Batch store operations
+- **EXT-05**: GSD/BMad import tools
+- **EXT-06**: MCP resources and prompt templates
+
+## Out of Scope
+
+| Feature | Reason |
+|---------|--------|
+| HTTP/SSE transport | Adds auth complexity and security surface with zero benefit for local dev; stdio is standard |
+| Multiple embedding providers | Mixing embedding spaces fractures vector search; fail-fast on Ollama is intentional |
+| Automatic context injection (push model) | Forces context on agents; two-phase pull model is better |
+| Multi-hop graph traversal (>1 hop) | Exponential blowup; agent can call again to go deeper |
+| Real-time file watching / auto-index | Background processes cause orphaned process bugs; explicit index_codebase is safer |
+| Cross-encoder reranking | Additional model inference latency exceeds benefit at v1 scale; RRF is sufficient |
+| 20+ language support | TS/Python/Rust covers target users; add languages based on demand |
+| Mobile/web client | MCP server is a dev tool; stdio transport only |
+
+## Traceability
+
+Which phases cover which requirements. Updated during roadmap creation.
+
+| Requirement | Phase | Status |
+|-------------|-------|--------|
+| FOUND-01 | — | Pending |
+| FOUND-02 | — | Pending |
+| FOUND-03 | — | Pending |
+| FOUND-04 | — | Pending |
+| FOUND-05 | — | Pending |
+| FOUND-06 | — | Pending |
+| FOUND-07 | — | Pending |
+| EMBED-01 | — | Pending |
+| EMBED-02 | — | Pending |
+| EMBED-03 | — | Pending |
+| EMBED-04 | — | Pending |
+| EMBED-05 | — | Pending |
+| EMBED-06 | — | Pending |
+| DOC-01 | — | Pending |
+| DOC-02 | — | Pending |
+| DOC-03 | — | Pending |
+| DOC-04 | — | Pending |
+| DOC-05 | — | Pending |
+| DOC-06 | — | Pending |
+| DOC-07 | — | Pending |
+| DOC-08 | — | Pending |
+| DOC-09 | — | Pending |
+| DOC-10 | — | Pending |
+| DOC-11 | — | Pending |
+| DOC-12 | — | Pending |
+| SRCH-01 | — | Pending |
+| SRCH-02 | — | Pending |
+| SRCH-03 | — | Pending |
+| SRCH-04 | — | Pending |
+| SRCH-05 | — | Pending |
+| SRCH-06 | — | Pending |
+| SRCH-07 | — | Pending |
+| GRAPH-01 | — | Pending |
+| GRAPH-02 | — | Pending |
+| GRAPH-03 | — | Pending |
+| GRAPH-04 | — | Pending |
+| CODE-01 | — | Pending |
+| CODE-02 | — | Pending |
+| CODE-03 | — | Pending |
+| CODE-04 | — | Pending |
+| CODE-05 | — | Pending |
+| CODE-06 | — | Pending |
+| CODE-07 | — | Pending |
+| CODE-08 | — | Pending |
+| CODE-09 | — | Pending |
+| CODE-10 | — | Pending |
+| CSRCH-01 | — | Pending |
+| CSRCH-02 | — | Pending |
+| CSRCH-03 | — | Pending |
+| CSRCH-04 | — | Pending |
+
+**Coverage:**
+- v1 requirements: 46 total
+- Mapped to phases: 0
+- Unmapped: 46 ⚠️
+
+---
+*Requirements defined: 2026-02-27*
+*Last updated: 2026-02-27 after initial definition*

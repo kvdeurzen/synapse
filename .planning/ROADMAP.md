@@ -31,7 +31,9 @@ Decimal phases appear between their surrounding integers in numeric order.
   2. Server accepts --db path CLI arg and OLLAMA_URL, EMBED_MODEL, SYNAPSE_DB_PATH env vars at startup
   3. Piping the server's stdout through a JSON parser produces no parse errors (no console.log contamination)
   4. All server log output appears on stderr, none on stdout
-**Plans**: TBD
+**Plans**: 2 plans
+  - [ ] 01-01-PLAN.md — Project scaffolding, config loader, logger, shared types
+  - [ ] 01-02-PLAN.md — MCP server with stdio transport, ping/echo tools, stdout smoke test
 
 ### Phase 2: Database Schema
 **Goal**: All 5 LanceDB tables exist with complete Arrow schemas — including v2 forward-compatibility fields — and the batched insert pattern is established before any data is written
@@ -111,7 +113,7 @@ Note: Phase 6 depends on Phase 3 (not Phase 5), so Phases 5 and 6 could run in p
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. MCP Foundation | 0/TBD | Not started | - |
+| 1. MCP Foundation | 0/2 | Planned | - |
 | 2. Database Schema | 0/TBD | Not started | - |
 | 3. Embedding Service | 0/TBD | Not started | - |
 | 4. Document Management | 0/TBD | Not started | - |

@@ -93,9 +93,10 @@ describe("initProject", () => {
     for (const name of TABLE_NAMES) {
       const table = await db.openTable(name);
       const indices = await table.listIndices();
-      // BTree index on project_id should exist (or the attempt was gracefully handled)
-      // We verify at minimum that listIndices() is callable and returns an array
-      expect(Array.isArray(indices)).toBe(true);
+      // BTree index on project_id should exist — verify the array is non-empty
+      // If the index was created successfully, listIndices() returns at least one entry
+      // If it gracefully failed (Pitfall 3), this test documents the actual behavior
+      expect(indices.length).toBeGreaterThan(0);
     }
   });
 

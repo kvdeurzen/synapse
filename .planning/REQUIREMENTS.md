@@ -9,7 +9,7 @@ Requirements for initial release. Each maps to roadmap phases.
 
 ### Foundation
 
-- [ ] **FOUND-01**: Server starts via stdio transport and connects to MCP clients (Claude Code, Cursor)
+- [x] **FOUND-01**: Server starts via stdio transport and connects to MCP clients (Claude Code, Cursor)
 - [x] **FOUND-02**: Server accepts --db path CLI arg and OLLAMA_URL, EMBED_MODEL, SYNAPSE_DB_PATH env vars
 - [ ] **FOUND-03**: init_project creates LanceDB database with 5 tables (documents, code_chunks, relationships, project_meta, activity_log) and all indexes
 - [ ] **FOUND-04**: init_project seeds starter documents (project charter, ADR log template, coding guidelines, glossary)
@@ -119,7 +119,7 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| FOUND-01 | Phase 1 | Pending |
+| FOUND-01 | Phase 1 | Complete |
 | FOUND-02 | Phase 1 | Complete |
 | FOUND-07 | Phase 1 | Complete |
 | FOUND-03 | Phase 2 | Pending |

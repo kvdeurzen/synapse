@@ -10,28 +10,28 @@ See: .planning/PROJECT.md (updated 2026-02-27)
 ## Current Position
 
 Phase: 1 of 7 (MCP Foundation)
-Plan: 1 of 2 in current phase
-Status: In progress
-Last activity: 2026-02-27 — Plan 01-01 complete: project scaffold, logger, config loader
+Plan: 2 of 2 in current phase (phase complete)
+Status: Phase 1 complete
+Last activity: 2026-02-27 — Plan 01-02 complete: MCP server, stdio transport, ping+echo tools, smoke test
 
-Progress: [█░░░░░░░░░] 5%
+Progress: [██░░░░░░░░] 14%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 1
-- Average duration: 5 min
-- Total execution time: 0.08 hours
+- Total plans completed: 2
+- Average duration: 4.5 min
+- Total execution time: 0.15 hours
 
 **By Phase:**
 
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
-| 01-mcp-foundation | 1/2 | 5 min | 5 min |
+| 01-mcp-foundation | 2/2 | 9 min | 4.5 min |
 
 **Recent Trend:**
-- Last 5 plans: 5 min
-- Trend: —
+- Last 5 plans: 5 min, 4 min
+- Trend: stable
 
 *Updated after each plan completion*
 
@@ -49,6 +49,10 @@ Recent decisions affecting current work:
 - [01-01]: Zod v4.3.6 resolved (not v3) — pinned to ^4.0.0; Zod v4 uses z.string({ error: msg }) for invalid_type customization
 - [01-01]: bun@1.3.9 generates bun.lock (text format) not bun.lockb (binary) — committed as lockfile
 - [01-01]: Config subprocess tests use temp file + `bun run file.ts -- args` to avoid bun flag collision with --db
+- [01-02]: McpServer._registeredTools is a plain object (not Map) — use bracket notation in tests
+- [01-02]: Tool count tracked as module-level counter (private field on TypeScript type)
+- [01-02]: notifications/initialized must be sent after initialize before subsequent MCP requests
+- [01-02]: registerXTool(server, config, ...) pattern established for all future tool registrations
 
 ### Pending Todos
 
@@ -61,5 +65,5 @@ Recent decisions affecting current work:
 ## Session Continuity
 
 Last session: 2026-02-27
-Stopped at: Completed 01-mcp-foundation/01-01-PLAN.md
+Stopped at: Completed 01-mcp-foundation/01-02-PLAN.md (Phase 1 complete)
 Resume file: None

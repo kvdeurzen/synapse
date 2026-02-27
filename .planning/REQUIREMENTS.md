@@ -119,62 +119,62 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| FOUND-01 | — | Pending |
-| FOUND-02 | — | Pending |
-| FOUND-03 | — | Pending |
-| FOUND-04 | — | Pending |
-| FOUND-05 | — | Pending |
-| FOUND-06 | — | Pending |
-| FOUND-07 | — | Pending |
-| EMBED-01 | — | Pending |
-| EMBED-02 | — | Pending |
-| EMBED-03 | — | Pending |
-| EMBED-04 | — | Pending |
-| EMBED-05 | — | Pending |
-| EMBED-06 | — | Pending |
-| DOC-01 | — | Pending |
-| DOC-02 | — | Pending |
-| DOC-03 | — | Pending |
-| DOC-04 | — | Pending |
-| DOC-05 | — | Pending |
-| DOC-06 | — | Pending |
-| DOC-07 | — | Pending |
-| DOC-08 | — | Pending |
-| DOC-09 | — | Pending |
-| DOC-10 | — | Pending |
-| DOC-11 | — | Pending |
-| DOC-12 | — | Pending |
-| SRCH-01 | — | Pending |
-| SRCH-02 | — | Pending |
-| SRCH-03 | — | Pending |
-| SRCH-04 | — | Pending |
-| SRCH-05 | — | Pending |
-| SRCH-06 | — | Pending |
-| SRCH-07 | — | Pending |
-| GRAPH-01 | — | Pending |
-| GRAPH-02 | — | Pending |
-| GRAPH-03 | — | Pending |
-| GRAPH-04 | — | Pending |
-| CODE-01 | — | Pending |
-| CODE-02 | — | Pending |
-| CODE-03 | — | Pending |
-| CODE-04 | — | Pending |
-| CODE-05 | — | Pending |
-| CODE-06 | — | Pending |
-| CODE-07 | — | Pending |
-| CODE-08 | — | Pending |
-| CODE-09 | — | Pending |
-| CODE-10 | — | Pending |
-| CSRCH-01 | — | Pending |
-| CSRCH-02 | — | Pending |
-| CSRCH-03 | — | Pending |
-| CSRCH-04 | — | Pending |
+| FOUND-01 | Phase 1 | Pending |
+| FOUND-02 | Phase 1 | Pending |
+| FOUND-07 | Phase 1 | Pending |
+| FOUND-03 | Phase 2 | Pending |
+| FOUND-05 | Phase 2 | Pending |
+| FOUND-06 | Phase 2 | Pending |
+| EMBED-01 | Phase 3 | Pending |
+| EMBED-02 | Phase 3 | Pending |
+| EMBED-03 | Phase 3 | Pending |
+| EMBED-04 | Phase 3 | Pending |
+| EMBED-05 | Phase 3 | Pending |
+| EMBED-06 | Phase 3 | Pending |
+| FOUND-04 | Phase 4 | Pending |
+| DOC-01 | Phase 4 | Pending |
+| DOC-02 | Phase 4 | Pending |
+| DOC-03 | Phase 4 | Pending |
+| DOC-04 | Phase 4 | Pending |
+| DOC-05 | Phase 4 | Pending |
+| DOC-06 | Phase 4 | Pending |
+| DOC-07 | Phase 4 | Pending |
+| DOC-08 | Phase 4 | Pending |
+| DOC-09 | Phase 4 | Pending |
+| DOC-10 | Phase 4 | Pending |
+| DOC-11 | Phase 4 | Pending |
+| DOC-12 | Phase 4 | Pending |
+| GRAPH-01 | Phase 4 | Pending |
+| GRAPH-02 | Phase 4 | Pending |
+| GRAPH-03 | Phase 4 | Pending |
+| GRAPH-04 | Phase 4 | Pending |
+| SRCH-01 | Phase 5 | Pending |
+| SRCH-02 | Phase 5 | Pending |
+| SRCH-03 | Phase 5 | Pending |
+| SRCH-04 | Phase 5 | Pending |
+| SRCH-05 | Phase 5 | Pending |
+| SRCH-06 | Phase 5 | Pending |
+| SRCH-07 | Phase 5 | Pending |
+| CODE-01 | Phase 6 | Pending |
+| CODE-02 | Phase 6 | Pending |
+| CODE-03 | Phase 6 | Pending |
+| CODE-04 | Phase 6 | Pending |
+| CODE-05 | Phase 6 | Pending |
+| CODE-06 | Phase 6 | Pending |
+| CODE-07 | Phase 6 | Pending |
+| CODE-08 | Phase 6 | Pending |
+| CODE-09 | Phase 6 | Pending |
+| CODE-10 | Phase 6 | Pending |
+| CSRCH-01 | Phase 7 | Pending |
+| CSRCH-02 | Phase 7 | Pending |
+| CSRCH-03 | Phase 7 | Pending |
+| CSRCH-04 | Phase 7 | Pending |
 
 **Coverage:**
-- v1 requirements: 46 total
-- Mapped to phases: 0
-- Unmapped: 46 ⚠️
+- v1 requirements: 50 total
+- Mapped to phases: 50
+- Unmapped: 0
 
 ---
 *Requirements defined: 2026-02-27*
-*Last updated: 2026-02-27 after initial definition*
+*Last updated: 2026-02-27 — Traceability updated after roadmap creation*

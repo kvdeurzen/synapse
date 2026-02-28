@@ -105,7 +105,9 @@ Decimal phases appear between their surrounding integers in numeric order.
   2. search_code supports language, symbol_type, and file_pattern filters that visibly narrow results
   3. An agent can call get_index_status and see total files indexed, total chunks, last index time, per-language breakdown, and stale file count
   4. A get_smart_context overview call against a project with both stored documents and indexed code returns summaries from both tables in a single response
-**Plans**: TBD
+**Plans**: 2 plans
+  - [ ] 07-01-PLAN.md — search_code tool with semantic, fulltext, hybrid modes and code-specific filters
+  - [ ] 07-02-PLAN.md — get_index_status tool, get_smart_context cross-table extension
 
 ## Progress
 
@@ -121,4 +123,4 @@ Note: Phase 6 depends on Phase 3 (not Phase 5), so Phases 5 and 6 could run in p
 | 4. Document Management | 4/4 | Complete   | 2026-02-28 |
 | 5. Document Search | 4/4 | Complete   | 2026-02-28 |
 | 6. Code Indexing | 5/5 | Complete   | 2026-02-28 |
-| 7. Code Search and Integration Validation | 0/TBD | Not started | - |
+| 7. Code Search and Integration Validation | 0/2 | Not started | - |

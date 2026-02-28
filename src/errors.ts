@@ -22,9 +22,7 @@ export class OllamaModelNotFoundError extends OllamaError {
 
 export class OllamaTimeoutError extends OllamaError {
   constructor(url: string, timeoutMs: number) {
-    super(
-      `Ollama request timed out after ${timeoutMs}ms at ${url}. Run: ollama serve`,
-    );
+    super(`Ollama request timed out after ${timeoutMs}ms at ${url}. Run: ollama serve`);
     this.name = "OllamaTimeoutError";
   }
 }

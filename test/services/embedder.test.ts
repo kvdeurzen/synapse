@@ -1,10 +1,10 @@
-import { describe, test, expect, beforeEach, mock } from "bun:test";
+import { beforeEach, describe, expect, mock, test } from "bun:test";
 import {
+  EmbedDimensionError,
   OllamaError,
-  OllamaUnreachableError,
   OllamaModelNotFoundError,
   OllamaTimeoutError,
-  EmbedDimensionError,
+  OllamaUnreachableError,
 } from "../../src/errors.js";
 
 // ─── Test helpers ──────────────────────────────────────────────────────────────
@@ -168,7 +168,9 @@ describe("embed() batch inputs", () => {
     });
 
     expect(result).toHaveLength(3);
-    result.forEach((v) => expect(v).toHaveLength(768));
+    for (const v of result) {
+      expect(v).toHaveLength(768);
+    }
   });
 
   test("large batch (50 texts) is chunked — fetch called multiple times with ≤32 texts each", async () => {
@@ -193,7 +195,9 @@ describe("embed() batch inputs", () => {
     // Should have been called at least twice (50 texts / 32 batch size = 2 chunks)
     expect(callLog.length).toBeGreaterThanOrEqual(2);
     // Each individual call should have ≤32 texts
-    callLog.forEach((len) => expect(len).toBeLessThanOrEqual(32));
+    for (const len of callLog) {
+      expect(len).toBeLessThanOrEqual(32);
+    }
   });
 });
 
@@ -207,9 +211,7 @@ describe("embed() dimension assertion", () => {
 
   test("throws EmbedDimensionError when Ollama returns 384-dim vector", async () => {
     const { embed, _setFetchImpl } = await getEmbedder();
-    const mockFetch = mock(() =>
-      Promise.resolve(mockOllamaResponse([make384Vector()])),
-    );
+    const mockFetch = mock(() => Promise.resolve(mockOllamaResponse([make384Vector()])));
     _setFetchImpl(mockFetch);
 
     await expect(
@@ -222,9 +224,7 @@ describe("embed() dimension assertion", () => {
 
   test("throws EmbedDimensionError when Ollama returns 769-dim vector", async () => {
     const { embed, _setFetchImpl } = await getEmbedder();
-    const mockFetch = mock(() =>
-      Promise.resolve(mockOllamaResponse([make769Vector()])),
-    );
+    const mockFetch = mock(() => Promise.resolve(mockOllamaResponse([make769Vector()])));
     _setFetchImpl(mockFetch);
 
     await expect(
@@ -237,22 +237,24 @@ describe("embed() dimension assertion", () => {
 
   test("EmbedDimensionError message includes model name and dimensions", async () => {
     const { embed, _setFetchImpl } = await getEmbedder();
-    const mockFetch = mock(() =>
-      Promise.resolve(mockOllamaResponse([make384Vector()])),
-    );
+    const mockFetch = mock(() => Promise.resolve(mockOllamaResponse([make384Vector()])));
     _setFetchImpl(mockFetch);
 
-    await expect(
-      embed(["hello"], "proj-1", {
+    let caughtError: unknown;
+    try {
+      await embed(["hello"], "proj-1", {
         ollamaUrl: "http://localhost:11434",
         embedModel: "nomic-embed-text",
-      }),
-    ).rejects.toSatisfy(
-      (e: EmbedDimensionError) =>
-        e.message.includes("nomic-embed-text") &&
-        e.message.includes("384") &&
-        e.message.includes("768"),
-    );
+      });
+    } catch (e) {
+      caughtError = e;
+    }
+
+    expect(caughtError).toBeInstanceOf(EmbedDimensionError);
+    const err = caughtError as EmbedDimensionError;
+    expect(err.message).toContain("nomic-embed-text");
+    expect(err.message).toContain("384");
+    expect(err.message).toContain("768");
   });
 });
 
@@ -266,9 +268,7 @@ describe("embed() error classification", () => {
 
   test("TypeError from fetch (ECONNREFUSED) throws OllamaUnreachableError", async () => {
     const { embed, _setFetchImpl } = await getEmbedder();
-    const mockFetch = mock(() =>
-      Promise.reject(new TypeError("fetch failed")),
-    );
+    const mockFetch = mock(() => Promise.reject(new TypeError("fetch failed")));
     _setFetchImpl(mockFetch);
 
     await expect(
@@ -311,9 +311,7 @@ describe("embed() error classification", () => {
 
   test("HTTP 404 throws OllamaModelNotFoundError", async () => {
     const { embed, _setFetchImpl } = await getEmbedder();
-    const mockFetch = mock(() =>
-      Promise.resolve(mockHttpError(404, "model not found")),
-    );
+    const mockFetch = mock(() => Promise.resolve(mockHttpError(404, "model not found")));
     _setFetchImpl(mockFetch);
 
     await expect(
@@ -326,9 +324,7 @@ describe("embed() error classification", () => {
 
   test("HTTP 500 throws OllamaError (generic)", async () => {
     const { embed, _setFetchImpl } = await getEmbedder();
-    const mockFetch = mock(() =>
-      Promise.resolve(mockHttpError(500, "internal server error")),
-    );
+    const mockFetch = mock(() => Promise.resolve(mockHttpError(500, "internal server error")));
     _setFetchImpl(mockFetch);
 
     await expect(

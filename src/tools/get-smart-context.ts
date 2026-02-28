@@ -363,12 +363,12 @@ export async function getSmartContext(
   args: {
     project_id: string;
     mode: "overview" | "detailed";
-    doc_ids?: string[];
-    max_tokens?: number;
-    category?: string;
-    phase?: string;
-    tags?: string;
-    status?: string;
+    doc_ids?: string[] | undefined;
+    max_tokens?: number | undefined;
+    category?: string | undefined;
+    phase?: string | undefined;
+    tags?: string | undefined;
+    status?: string | undefined;
   },
 ): Promise<OverviewResult | DetailedResult> {
   const validated = GetSmartContextInputSchema.parse(args);

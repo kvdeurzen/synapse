@@ -99,15 +99,22 @@ export async function hybridSearch(
   }
 
   // ── 2. Build WHERE predicate via search-utils ──────────────────────────────
+  const searchFilters: {
+    category?: string;
+    phase?: string;
+    tags?: string;
+    status?: string;
+    priority?: number;
+  } = {};
+  if (validated.category !== undefined) searchFilters.category = validated.category;
+  if (validated.phase !== undefined) searchFilters.phase = validated.phase;
+  if (validated.tags !== undefined) searchFilters.tags = validated.tags;
+  if (validated.status !== undefined) searchFilters.status = validated.status;
+  if (validated.priority !== undefined) searchFilters.priority = validated.priority;
+
   const { predicate, docMap, postFilterRequired } = await buildSearchPredicate(
     projectId,
-    {
-      category: validated.category,
-      phase: validated.phase,
-      tags: validated.tags,
-      status: validated.status,
-      priority: validated.priority,
-    },
+    searchFilters,
     { includeSuperseded, dbPath },
   );
 
@@ -120,7 +127,7 @@ export async function hybridSearch(
   // ── 4. Run hybrid search with RRFReranker(60) ─────────────────────────────
   const db = await connectDb(dbPath);
   const docChunksTable = await db.openTable("doc_chunks");
-  const reranker = new rerankers.RRFReranker(60);
+  const reranker = await rerankers.RRFReranker.create(60);
 
   const rows = await docChunksTable
     .query()

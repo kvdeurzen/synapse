@@ -5,12 +5,16 @@ import { checkOllamaHealth, setOllamaStatus } from "./services/embedder.js";
 import { registerDeleteDocumentTool } from "./tools/delete-document.js";
 import { registerDeleteProjectTool } from "./tools/delete-project.js";
 import { registerEchoTool } from "./tools/echo.js";
+import { registerFulltextSearchTool } from "./tools/fulltext-search.js";
 import { registerGetRelatedDocumentsTool } from "./tools/get-related-documents.js";
+import { registerGetSmartContextTool } from "./tools/get-smart-context.js";
+import { registerHybridSearchTool } from "./tools/hybrid-search.js";
 import { registerInitProjectTool } from "./tools/init-project.js";
 import { registerLinkDocumentsTool } from "./tools/link-documents.js";
 import { registerPingTool } from "./tools/ping.js";
 import { registerProjectOverviewTool } from "./tools/project-overview.js";
 import { registerQueryDocumentsTool } from "./tools/query-documents.js";
+import { registerSemanticSearchTool } from "./tools/semantic-search.js";
 import { registerStoreDocumentTool } from "./tools/store-document.js";
 import { registerUpdateDocumentTool } from "./tools/update-document.js";
 import type { SynapseConfig } from "./types.js";
@@ -64,6 +68,18 @@ export function createServer(config: SynapseConfig): McpServer {
   toolCount++;
 
   registerGetRelatedDocumentsTool(server, config);
+  toolCount++;
+
+  registerSemanticSearchTool(server, config);
+  toolCount++;
+
+  registerFulltextSearchTool(server, config);
+  toolCount++;
+
+  registerHybridSearchTool(server, config);
+  toolCount++;
+
+  registerGetSmartContextTool(server, config);
   toolCount++;
 
   return server;

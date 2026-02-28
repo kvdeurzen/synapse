@@ -73,15 +73,22 @@ export async function semanticSearch(
   }
 
   // ── 2. Build WHERE predicate via search-utils ──────────────────────────────
+  const searchFilters: {
+    category?: string;
+    phase?: string;
+    tags?: string;
+    status?: string;
+    priority?: number;
+  } = {};
+  if (validated.category !== undefined) searchFilters.category = validated.category;
+  if (validated.phase !== undefined) searchFilters.phase = validated.phase;
+  if (validated.tags !== undefined) searchFilters.tags = validated.tags;
+  if (validated.status !== undefined) searchFilters.status = validated.status;
+  if (validated.priority !== undefined) searchFilters.priority = validated.priority;
+
   const { predicate, docMap, postFilterRequired } = await buildSearchPredicate(
     projectId,
-    {
-      category: validated.category,
-      phase: validated.phase,
-      tags: validated.tags,
-      status: validated.status,
-      priority: validated.priority,
-    },
+    searchFilters,
     { includeSuperseded, dbPath },
   );
 

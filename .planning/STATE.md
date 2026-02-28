@@ -3,12 +3,12 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: unknown
-last_updated: "2026-02-28T15:21:27.689Z"
+last_updated: "2026-02-28T15:24:14.341Z"
 progress:
   total_phases: 5
   completed_phases: 4
   total_plans: 15
-  completed_plans: 13
+  completed_plans: 14
 ---
 
 # Project State
@@ -23,9 +23,9 @@ See: .planning/PROJECT.md (updated 2026-02-27)
 ## Current Position
 
 Phase: 5 of 7 (Document Search) — IN PROGRESS
-Plan: 3 of 5 in current phase (Plan 05-03 complete — get_smart_context tool: overview mode + detailed mode with 1-hop graph expansion)
-Status: Phase 5 Plan 03 COMPLETE — get_smart_context two-phase context assembly tool built
-Last activity: 2026-02-28 — Plan 05-03 complete: get_smart_context MCP tool (overview metadata scan + detailed 1-hop graph expansion, token budget, RELATIONSHIP_PRIORITY ordering)
+Plan: 3 of 5 in current phase (Plans 05-02 and 05-03 both complete — three search tools + get_smart_context)
+Status: Phase 5 Plans 02+03 COMPLETE — semantic_search, fulltext_search, hybrid_search + get_smart_context built
+Last activity: 2026-02-28 — Plan 05-02 complete: semantic_search (vector cosine), fulltext_search (BM25), hybrid_search (RRFReranker k=60 with FTS fallback)
 
 Progress: [████████░░] 57% (Phase 5 in progress)
 
@@ -52,6 +52,7 @@ Progress: [████████░░] 57% (Phase 5 in progress)
 
 *Updated after each plan completion*
 | Phase 05-document-search P03 | 4 | 2 tasks | 2 files |
+| Phase 05-document-search P02 | 419 | 2 tasks | 6 files |
 
 ## Accumulated Context
 
@@ -109,6 +110,8 @@ Recent decisions affecting current work:
 - [Phase 05-03]: get_smart_context max_tokens min=500 — tests use 500+ with overflow-designed content for budget enforcement
 - [Phase 05-03]: get_smart_context requested docs always included regardless of budget; only related/expanded docs are budget-gated
 - [Phase 05-03]: 1-hop graph expansion keeps highest-priority relationship when doc appears via multiple paths (dedup by RELATIONSHIP_PRIORITY)
+- [Phase 05-02]: RRFReranker constructed with new rerankers.RRFReranker(60) — not static .create(); constructor works in LanceDB 0.26.2
+- [Phase 05-02]: hybridSearch falls back to fulltextSearch() when Ollama status is not 'ok' — both 'unreachable' and 'model_missing' trigger fallback with search_type='hybrid_fts_fallback'
 
 ### Pending Todos
 

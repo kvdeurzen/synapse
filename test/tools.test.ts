@@ -1,5 +1,6 @@
-import { describe, expect, test } from "bun:test";
+import { afterEach, describe, expect, test } from "bun:test";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
+import { setOllamaStatus } from "../src/services/embedder.js";
 import { registerEchoTool } from "../src/tools/echo.js";
 import { registerPingTool } from "../src/tools/ping.js";
 import type { SynapseConfig, ToolResult } from "../src/types.js";
@@ -33,6 +34,11 @@ async function invokeTool(
 }
 
 describe("ping tool", () => {
+  afterEach(() => {
+    // Reset Ollama status to default after each test
+    setOllamaStatus("unreachable");
+  });
+
   test("returns ToolResult envelope with success:true", async () => {
     const server = new McpServer({ name: "test", version: "0.1.0" });
     registerPingTool(server, TEST_CONFIG, () => 2);
@@ -49,7 +55,10 @@ describe("ping tool", () => {
     expect(parsed.data).toBeDefined();
   });
 
-  test("returns version, uptime, dbPath, ollamaUrl, embedModel", async () => {
+  test("returns version, uptime, dbPath, ollamaUrl, embedModel, and live ollamaStatus", async () => {
+    // Set known Ollama status before invoking ping
+    setOllamaStatus("ok");
+
     const server = new McpServer({ name: "test", version: "0.1.0" });
     registerPingTool(server, TEST_CONFIG, () => 2);
 
@@ -70,8 +79,37 @@ describe("ping tool", () => {
     expect(parsed.data?.dbPath).toBe("/tmp/test-tools.db");
     expect(parsed.data?.ollamaUrl).toBe("http://localhost:11434");
     expect(parsed.data?.embedModel).toBe("nomic-embed-text");
-    expect(parsed.data?.ollamaStatus).toBe("unknown");
+    // Live status from setOllamaStatus('ok') — not hardcoded 'unknown'
+    expect(parsed.data?.ollamaStatus).toBe("ok");
     expect(parsed.data?.toolCount).toBe(2);
+  });
+
+  test("ping reports 'unreachable' when Ollama status is unreachable", async () => {
+    setOllamaStatus("unreachable");
+
+    const server = new McpServer({ name: "test", version: "0.1.0" });
+    registerPingTool(server, TEST_CONFIG, () => 2);
+
+    const response = await invokeTool(server, "ping");
+    const parsed = JSON.parse(response.content[0]?.text ?? "{}") as ToolResult<{
+      ollamaStatus: string;
+    }>;
+
+    expect(parsed.data?.ollamaStatus).toBe("unreachable");
+  });
+
+  test("ping reports 'model_missing' when model not pulled", async () => {
+    setOllamaStatus("model_missing");
+
+    const server = new McpServer({ name: "test", version: "0.1.0" });
+    registerPingTool(server, TEST_CONFIG, () => 2);
+
+    const response = await invokeTool(server, "ping");
+    const parsed = JSON.parse(response.content[0]?.text ?? "{}") as ToolResult<{
+      ollamaStatus: string;
+    }>;
+
+    expect(parsed.data?.ollamaStatus).toBe("model_missing");
   });
 
   test("result wraps data in ToolResult { success, data } shape", async () => {

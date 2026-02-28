@@ -142,6 +142,23 @@ None - no external service configuration required.
 - The postinstall script makes this setup reproducible for new installs
 - Blocker from STATE.md ("tree-sitter grammar compatibility with core 0.25.1 must be verified") is now RESOLVED — grammars work with their prebuilt linux-x64 binaries
 
+## Self-Check: PASSED
+
+All files exist:
+- FOUND: src/services/code-indexer/scanner.ts
+- FOUND: src/services/code-indexer/parser.ts
+- FOUND: test/services/code-indexer/scanner.test.ts
+- FOUND: test/services/code-indexer/parser.test.ts
+- FOUND: scripts/setup-tree-sitter.js
+- FOUND: .planning/phases/06-code-indexing/06-01-SUMMARY.md
+
+All commits exist:
+- FOUND: 9cb20ae (Task 1 - install packages + smoke tests)
+- FOUND: 0003c19 (Task 2 - scanner.ts + parser.ts)
+- FOUND: 68aee60 (docs - SUMMARY + STATE + ROADMAP)
+
+Test results: 411/411 pass, 0 fail
+
 ---
 *Phase: 06-code-indexing*
 *Completed: 2026-02-28*

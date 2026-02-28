@@ -3,12 +3,12 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: unknown
-last_updated: "2026-02-28T15:34:38.570Z"
+last_updated: "2026-02-28T17:26:45.821Z"
 progress:
-  total_phases: 5
+  total_phases: 6
   completed_phases: 5
-  total_plans: 15
-  completed_plans: 15
+  total_plans: 20
+  completed_plans: 17
 ---
 
 # Project State
@@ -54,6 +54,7 @@ Progress: [████████░░] 80% (Phase 6: 2/5 plans complete)
 | Phase 05-document-search P03 | 4 | 2 tasks | 2 files |
 | Phase 05-document-search P02 | 419 | 2 tasks | 6 files |
 | Phase 05-document-search P04 | 3 | 1 tasks | 5 files |
+| Phase 06-code-indexing P01 | 5 | 2 tasks | 7 files |
 
 ## Accumulated Context
 
@@ -119,6 +120,8 @@ Recent decisions affecting current work:
 - [Phase 06-02]: Rust impl_item scope chain uses typeNode.text (implementing type name) not "Type for Trait" string — ensures method scope chains read "Point.method" not "Point for Display.method"
 - [Phase 06-02]: Python import_from_statement with relative_import emits raw relative path (e.g., ".models") — import-resolver in Plan 03 normalizes to file paths
 - [Phase 06-02]: lexical_declaration with non-arrow-function initializer → symbol_type="constant" — indexes config objects, MAX_RETRIES, top-level consts per user decision
+- [Phase 06-01]: tree-sitter Bun NAPI workaround: index.js Bun code path expects prebuilds/linux-x64/tree-sitter.node but bun install builds to build/Release/ — postinstall script copies binary; CXXFLAGS=-std=c++20 required for compilation
+- [Phase 06-01]: Grammar packages tree-sitter-typescript@0.23.2, tree-sitter-python@0.25.0, tree-sitter-rust@0.24.0 use prebuilt linux-x64 binaries — ABI compatibility with core 0.25.0 confirmed, no compilation needed for grammars
 
 ### Pending Todos
 
@@ -126,10 +129,10 @@ Recent decisions affecting current work:
 
 ### Blockers/Concerns
 
-- [Phase 6]: tree-sitter grammar package compatibility with core 0.25.1 must be verified via actual npm install before finalizing grammar versions — MEDIUM confidence only
+- [Phase 6 RESOLVED]: tree-sitter grammar package compatibility confirmed — grammars use prebuilt linux-x64 binaries; core tree-sitter requires CXXFLAGS=-std=c++20 + prebuilds path workaround; all working under Bun
 
 ## Session Continuity
 
 Last session: 2026-02-28
-Stopped at: Completed 06-code-indexing/06-02-PLAN.md (AST symbol extraction engine: TypeScript/Python/Rust extractors, context headers, large chunk splitting, 27 tests, 378 total tests pass)
+Stopped at: Completed 06-code-indexing/06-01-PLAN.md (scanner.ts + parser.ts, tree-sitter verified under Bun, 411 tests pass)
 Resume file: None

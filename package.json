@@ -11,6 +11,7 @@
   "dependencies": {
     "@lancedb/lancedb": "0.26.2",
     "@modelcontextprotocol/sdk": "latest",
+    "lru-cache": "^11.2.6",
     "pino": "latest",
     "smol-toml": "latest",
     "ulidx": "^2.4.1",

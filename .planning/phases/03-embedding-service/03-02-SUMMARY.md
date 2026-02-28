@@ -142,6 +142,22 @@ None beyond the auto-fixed deviations above.
 - Phase 5 (semantic_search) can use the catch-OllamaError-then-null-vector degradation pattern demonstrated in test
 - startServer signature change is backward-compatible (config was already created before startServer call in index.ts)
 
+## Self-Check: PASSED
+
+| Item | Status |
+|------|--------|
+| src/services/embedder.ts | FOUND |
+| src/server.ts | FOUND |
+| src/index.ts | FOUND |
+| src/tools/ping.ts | FOUND |
+| test/services/health.test.ts | FOUND |
+| test/tools.test.ts | FOUND |
+| Commit 81cbca5 (Task 1 - feat) | FOUND |
+| Commit af25c02 (Task 2 - test) | FOUND |
+| All 118 tests pass | VERIFIED |
+| TypeScript compiles | VERIFIED |
+| Biome clean | VERIFIED |
+
 ---
 *Phase: 03-embedding-service*
 *Completed: 2026-02-28*

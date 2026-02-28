@@ -56,7 +56,9 @@ Decimal phases appear between their surrounding integers in numeric order.
   3. Calling query_documents when Ollama is unreachable returns results — read operations continue without embeddings
   4. Server startup logs a warning when Ollama is unreachable but the server still starts and registers tools
   5. Attempting to insert a vector that is not 768 dimensions throws an assertion error with a clear message before touching the database
-**Plans**: TBD
+**Plans**: 2 plans
+  - [ ] 03-01-PLAN.md — Error types, embedding service core (embed, cache, retry, batch, dimension assertion) via TDD
+  - [ ] 03-02-PLAN.md — Health check, startup wiring, ping tool update, write/read path patterns
 
 ### Phase 4: Document Management
 **Goal**: All document tools are operational — agents can store, version, query, update, delete, link, and get an overview of project documents with lifecycle state tracking and automatic activity logging

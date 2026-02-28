@@ -199,6 +199,26 @@ export async function initProject(
         "FTS index creation failed on doc_chunks — will create on first data insert",
       );
     }
+
+    // ── Create FTS index on code_chunks.content (Phase 7 prep) ──────────────
+    const codeChunksTable = await db.openTable("code_chunks");
+    try {
+      await codeChunksTable.createIndex("content", {
+        config: lancedb.Index.fts({
+          withPosition: true,
+          stem: false,        // preserve code identifiers exactly
+          removeStopWords: false,
+          lowercase: true,
+        }),
+        replace: true,
+      });
+      logger.debug("FTS index created on code_chunks.content");
+    } catch (err) {
+      logger.warn(
+        { error: String(err) },
+        "FTS index creation failed on code_chunks — will create on first data insert",
+      );
+    }
   }
 
   // ── Seed starter documents for fresh projects only ────────────────────────

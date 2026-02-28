@@ -3,12 +3,12 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: unknown
-last_updated: "2026-02-28T08:02:08.000Z"
+last_updated: "2026-02-28T08:13:57.000Z"
 progress:
   total_phases: 4
   completed_phases: 3
   total_plans: 11
-  completed_plans: 9
+  completed_plans: 10
 ---
 
 # Project State
@@ -23,11 +23,11 @@ See: .planning/PROJECT.md (updated 2026-02-27)
 ## Current Position
 
 Phase: 4 of 7 (Document Management)
-Plan: 2 of 4 in current phase (Plan 04-02 complete — store_document tool, init_project starter seeding)
-Status: Phase 4 in progress — Plan 04-02 complete, ready for Plan 04-03
-Last activity: 2026-02-28 — Plan 04-02 complete: store_document tool (12-category taxonomy, chunking, embedding, versioning, activity logging), init_project starter document seeding
+Plan: 3 of 4 in current phase (Plan 04-03 complete — query_documents, update_document, delete_document tools)
+Status: Phase 4 in progress — Plan 04-03 complete, ready for Plan 04-04
+Last activity: 2026-02-28 — Plan 04-03 complete: query_documents (metadata-only filtering), update_document (lifecycle management, no re-embedding), delete_document (soft/hard delete with cascade), shared doc-constants.ts
 
-Progress: [████████░░] 75%
+Progress: [█████████░] 82%
 
 ## Performance Metrics
 
@@ -43,10 +43,10 @@ Progress: [████████░░] 75%
 | 01-mcp-foundation | 2/2 | 9 min | 4.5 min |
 | 02-database-schema | 3/3 | 12 min | 4 min |
 | 03-embedding-service | 2/2 | 8 min | 4 min |
-| 04-document-management | 2/4 | 12 min | 6 min |
+| 04-document-management | 3/4 | 20 min | 6.7 min |
 
 **Recent Trend:**
-- Last 5 plans: 6 min, 4 min, 4 min, 4 min, 4 min
+- Last 5 plans: 8 min, 6 min, 4 min, 4 min, 4 min
 - Trend: stable
 
 *Updated after each plan completion*
@@ -92,6 +92,10 @@ Recent decisions affecting current work:
 - [Phase 04-02]: Max version detection uses reduce() over all rows — LanceDB query ordering not guaranteed with .where() filter
 - [Phase 04-02]: Embed rollback: delete document row if embed() throws to prevent orphaned metadata
 - [Phase 04-02]: Starter seeding guarded by tables_created > 0 — idempotent on re-init
+- [Phase 04-03]: LanceDB table objects cache state — must open fresh lancedb.connect() + openTable() to read updated rows after table.update()
+- [Phase 04-03]: update_document excludes superseded rows via predicate (status != 'superseded') — superseded docs return DOC_NOT_FOUND, not INVALID_TRANSITION
+- [Phase 04-03]: IntoSql type required for table.update() values: Record<string, IntoSql> not Record<string, unknown>
+- [Phase 04-03]: Hard delete pre-counts chunks/relationships before deletion to populate activity log metadata and return values
 
 ### Pending Todos
 
@@ -104,5 +108,5 @@ Recent decisions affecting current work:
 ## Session Continuity
 
 Last session: 2026-02-28
-Stopped at: Completed 04-document-management/04-02-PLAN.md (Phase 4 Plan 2 complete — store_document tool, init_project starter seeding)
+Stopped at: Completed 04-document-management/04-03-PLAN.md (Phase 4 Plan 3 complete — query_documents, update_document, delete_document tools, shared doc-constants.ts)
 Resume file: None

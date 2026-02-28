@@ -32,9 +32,9 @@ Requirements for initial release. Each maps to roadmap phases.
 - [x] **DOC-02**: Documents are chunked at write time using category-specific strategies (semantic_section, paragraph, fixed_size) with configurable max size and overlap
 - [x] **DOC-03**: Each chunk is prefixed with context header ("Document: {title} | Section: {header}") before embedding
 - [x] **DOC-04**: store_document with existing doc_id creates new version (version + 1) and marks old chunks as superseded
-- [ ] **DOC-05**: User can query documents by category, phase, tags, status, and priority filters via query_documents
-- [ ] **DOC-06**: User can update document metadata (status, phase, tags, priority) without re-embedding via update_document
-- [ ] **DOC-07**: User can soft-delete (archive) or hard-delete documents via delete_document
+- [x] **DOC-05**: User can query documents by category, phase, tags, status, and priority filters via query_documents
+- [x] **DOC-06**: User can update document metadata (status, phase, tags, priority) without re-embedding via update_document
+- [x] **DOC-07**: User can soft-delete (archive) or hard-delete documents via delete_document
 - [ ] **DOC-08**: project_overview returns document counts by category/status/phase, recent activity, and key documents (priority >= 4)
 - [x] **DOC-09**: Documents follow lifecycle states: draft → active → approved, with superseded and archived transitions
 - [x] **DOC-10**: Carry-forward categories (architecture_decision, design_pattern, glossary, code_pattern, dependency) are never auto-archived
@@ -136,9 +136,9 @@ Which phases cover which requirements. Updated during roadmap creation.
 | DOC-02 | Phase 4 | Complete |
 | DOC-03 | Phase 4 | Complete |
 | DOC-04 | Phase 4 | Complete |
-| DOC-05 | Phase 4 | Pending |
-| DOC-06 | Phase 4 | Pending |
-| DOC-07 | Phase 4 | Pending |
+| DOC-05 | Phase 4 | Complete |
+| DOC-06 | Phase 4 | Complete |
+| DOC-07 | Phase 4 | Complete |
 | DOC-08 | Phase 4 | Pending |
 | DOC-09 | Phase 4 | Complete |
 | DOC-10 | Phase 4 | Complete |

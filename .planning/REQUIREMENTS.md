@@ -61,9 +61,9 @@ Requirements for initial release. Each maps to roadmap phases.
 ### Code Indexing
 
 - [ ] **CODE-01**: index_codebase scans project directory for .ts, .tsx, .py, .rs files respecting .gitignore patterns
-- [ ] **CODE-02**: Files are parsed with tree-sitter to extract AST-aware chunks at function/class/method/interface/type boundaries
-- [ ] **CODE-03**: Each code chunk includes symbol_name, symbol_type, scope_chain, imports, and exports metadata
-- [ ] **CODE-04**: Code chunks are prefixed with context header ("File: {path} | {symbol_type}: {scope_chain}") before embedding
+- [x] **CODE-02**: Files are parsed with tree-sitter to extract AST-aware chunks at function/class/method/interface/type boundaries
+- [x] **CODE-03**: Each code chunk includes symbol_name, symbol_type, scope_chain, imports, and exports metadata
+- [x] **CODE-04**: Code chunks are prefixed with context header ("File: {path} | {symbol_type}: {scope_chain}") before embedding
 - [ ] **CODE-05**: Incremental indexing compares SHA-256 file hashes and only re-indexes changed files
 - [ ] **CODE-06**: Deleted files have their code_chunks and auto-generated relationships removed
 - [ ] **CODE-07**: Import/use statements are parsed to auto-generate depends_on relationships between files
@@ -156,9 +156,9 @@ Which phases cover which requirements. Updated during roadmap creation.
 | SRCH-06 | Phase 5 | Complete |
 | SRCH-07 | Phase 5 | Complete |
 | CODE-01 | Phase 6 | Pending |
-| CODE-02 | Phase 6 | Pending |
-| CODE-03 | Phase 6 | Pending |
-| CODE-04 | Phase 6 | Pending |
+| CODE-02 | Phase 6 | Complete |
+| CODE-03 | Phase 6 | Complete |
+| CODE-04 | Phase 6 | Complete |
 | CODE-05 | Phase 6 | Pending |
 | CODE-06 | Phase 6 | Pending |
 | CODE-07 | Phase 6 | Pending |

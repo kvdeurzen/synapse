@@ -18,16 +18,16 @@ progress:
 See: .planning/PROJECT.md (updated 2026-02-27)
 
 **Core value:** Agents get the right context for any task — from both project decisions and actual code — without wasting tokens on irrelevant content
-**Current focus:** Phase 5 — Document Search
+**Current focus:** Phase 6 — Code Indexing
 
 ## Current Position
 
-Phase: 5 of 5 (Document Search) — COMPLETE
-Plan: 4 of 4 in phase 05 (all plans complete — server wired, 15 tools registered)
-Status: Phase 5 COMPLETE — all 4 search tools registered, 347 tests pass, SRCH-01 through SRCH-07 implemented
-Last activity: 2026-02-28 — Plan 05-04 complete: server.ts wired with all 4 search tools (tool count = 15)
+Phase: 6 of 6 (Code Indexing) — IN PROGRESS
+Plan: 2 of 5 in phase 06 (plan 02 complete — AST symbol extractor for TypeScript/Python/Rust)
+Status: Plan 06-02 COMPLETE — extractSymbols dispatch, buildContextHeader, splitLargeChunk, 27 tests pass, 378 total tests pass
+Last activity: 2026-02-28 — Plan 06-02 complete: AST symbol extraction engine implemented (CODE-02, CODE-03, CODE-04)
 
-Progress: [██████████] 100% (All 5 phases complete)
+Progress: [████████░░] 80% (Phase 6: 2/5 plans complete)
 
 ## Performance Metrics
 
@@ -115,6 +115,10 @@ Recent decisions affecting current work:
 - [Phase 05-02]: hybridSearch falls back to fulltextSearch() when Ollama status is not 'ok' — both 'unreachable' and 'model_missing' trigger fallback with search_type='hybrid_fts_fallback'
 - [Phase 05-04]: exactOptionalPropertyTypes compliance: build filter objects conditionally (if val !== undefined) rather than spreading Zod-parsed args with T|undefined fields
 - [Phase 05-04]: RRFReranker.create(60) async factory required — constructor takes NativeRRFReranker not number; new RRFReranker(60) was both a type error and runtime bug
+- [Phase 06-02]: Context headers prepended in extractSymbols dispatch (not in language-specific functions) — avoids double-prepend if extractors are reused directly
+- [Phase 06-02]: Rust impl_item scope chain uses typeNode.text (implementing type name) not "Type for Trait" string — ensures method scope chains read "Point.method" not "Point for Display.method"
+- [Phase 06-02]: Python import_from_statement with relative_import emits raw relative path (e.g., ".models") — import-resolver in Plan 03 normalizes to file paths
+- [Phase 06-02]: lexical_declaration with non-arrow-function initializer → symbol_type="constant" — indexes config objects, MAX_RETRIES, top-level consts per user decision
 
 ### Pending Todos
 
@@ -127,5 +131,5 @@ Recent decisions affecting current work:
 ## Session Continuity
 
 Last session: 2026-02-28
-Stopped at: Completed 05-document-search/05-04-PLAN.md (server wiring: all 4 search tools registered in server.ts, tool count 15, TypeScript clean, 347 tests pass)
+Stopped at: Completed 06-code-indexing/06-02-PLAN.md (AST symbol extraction engine: TypeScript/Python/Rust extractors, context headers, large chunk splitting, 27 tests, 378 total tests pass)
 Resume file: None

@@ -77,10 +77,14 @@ export async function indexCodebase(
   }
 
   // ── 2. Scan files ─────────────────────────────────────────────────────────
-  const scanResult = await scanFiles(args.project_root, {
-    exclude_patterns: args.exclude_patterns,
-    include_patterns: args.include_patterns,
-  });
+  const scanOpts: { exclude_patterns?: string[]; include_patterns?: string[] } = {};
+  if (args.exclude_patterns !== undefined) {
+    scanOpts.exclude_patterns = args.exclude_patterns;
+  }
+  if (args.include_patterns !== undefined) {
+    scanOpts.include_patterns = args.include_patterns;
+  }
+  const scanResult = await scanFiles(args.project_root, scanOpts);
 
   // ── 3. Build file set (for import resolver) ───────────────────────────────
   const fileSet = new Set(scanResult.files.map((f) => f.relativePath));

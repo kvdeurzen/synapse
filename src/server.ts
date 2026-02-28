@@ -9,6 +9,7 @@ import { registerFulltextSearchTool } from "./tools/fulltext-search.js";
 import { registerGetRelatedDocumentsTool } from "./tools/get-related-documents.js";
 import { registerGetSmartContextTool } from "./tools/get-smart-context.js";
 import { registerHybridSearchTool } from "./tools/hybrid-search.js";
+import { registerIndexCodebaseTool } from "./tools/index-codebase.js";
 import { registerInitProjectTool } from "./tools/init-project.js";
 import { registerLinkDocumentsTool } from "./tools/link-documents.js";
 import { registerPingTool } from "./tools/ping.js";
@@ -80,6 +81,9 @@ export function createServer(config: SynapseConfig): McpServer {
   toolCount++;
 
   registerGetSmartContextTool(server, config);
+  toolCount++;
+
+  registerIndexCodebaseTool(server, config);
   toolCount++;
 
   return server;

@@ -7,6 +7,14 @@ import { extname } from "node:path";
 // Re-export SUPPORTED_EXTENSIONS from scanner for convenience
 export { SUPPORTED_EXTENSIONS } from "./scanner.js";
 
+// Grammar packages expose `language: unknown` in their type definitions,
+// which is incompatible with tree-sitter's `language: Language` recursive type.
+// Cast via `unknown` to bridge the type mismatch — runtime behavior is correct.
+type AnyLanguage = Parser.Language;
+function asLang(lang: unknown): AnyLanguage {
+  return lang as AnyLanguage;
+}
+
 // ---------------------------------------------------------------------------
 // Module-level lazy parser cache (one parser per language variant)
 // ---------------------------------------------------------------------------
@@ -19,7 +27,7 @@ let _rsParser: Parser | null = null;
 function getTsParser(): Parser {
   if (!_tsParser) {
     _tsParser = new Parser();
-    _tsParser.setLanguage(TypeScriptLang.typescript);
+    _tsParser.setLanguage(asLang(TypeScriptLang.typescript));
   }
   return _tsParser;
 }
@@ -27,7 +35,7 @@ function getTsParser(): Parser {
 function getTsxParser(): Parser {
   if (!_tsxParser) {
     _tsxParser = new Parser();
-    _tsxParser.setLanguage(TypeScriptLang.tsx);
+    _tsxParser.setLanguage(asLang(TypeScriptLang.tsx));
   }
   return _tsxParser;
 }
@@ -35,7 +43,7 @@ function getTsxParser(): Parser {
 function getPyParser(): Parser {
   if (!_pyParser) {
     _pyParser = new Parser();
-    _pyParser.setLanguage(PythonLang);
+    _pyParser.setLanguage(asLang(PythonLang));
   }
   return _pyParser;
 }
@@ -43,7 +51,7 @@ function getPyParser(): Parser {
 function getRsParser(): Parser {
   if (!_rsParser) {
     _rsParser = new Parser();
-    _rsParser.setLanguage(RustLang);
+    _rsParser.setLanguage(asLang(RustLang));
   }
   return _rsParser;
 }

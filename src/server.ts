@@ -6,6 +6,7 @@ import { registerDeleteProjectTool } from "./tools/delete-project.js";
 import { registerEchoTool } from "./tools/echo.js";
 import { registerInitProjectTool } from "./tools/init-project.js";
 import { registerPingTool } from "./tools/ping.js";
+import { registerQueryDocumentsTool } from "./tools/query-documents.js";
 import { registerStoreDocumentTool } from "./tools/store-document.js";
 import type { SynapseConfig } from "./types.js";
 
@@ -40,6 +41,9 @@ export function createServer(config: SynapseConfig): McpServer {
   toolCount++;
 
   registerStoreDocumentTool(server, config);
+  toolCount++;
+
+  registerQueryDocumentsTool(server, config);
   toolCount++;
 
   return server;

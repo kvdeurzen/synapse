@@ -91,6 +91,25 @@ export const ACTIVITY_LOG_SCHEMA = new Schema([
   new Field("created_at", new Utf8(), false),
 ]);
 
+/**
+ * Doc chunks table — 11 fields.
+ * Stores embedded document chunks separately from the documents table.
+ * vector is nullable to support starter documents without embeddings.
+ */
+export const DOC_CHUNKS_SCHEMA = new Schema([
+  new Field("chunk_id", new Utf8(), false),
+  new Field("project_id", new Utf8(), false),
+  new Field("doc_id", new Utf8(), false),
+  new Field("chunk_index", new Int32(), false),
+  new Field("content", new Utf8(), false),
+  new Field("vector", new FixedSizeList(768, new Field("item", new Float32(), true)), true),
+  new Field("header", new Utf8(), false),
+  new Field("version", new Int32(), false),
+  new Field("status", new Utf8(), false),
+  new Field("token_count", new Int32(), false),
+  new Field("created_at", new Utf8(), false),
+]);
+
 // ────────────────────────────────────────────────────────────────────────────
 // Zod Schemas (single source of truth for row validation)
 // ────────────────────────────────────────────────────────────────────────────
@@ -164,12 +183,27 @@ export const ActivityLogRowSchema = z.object({
   created_at: z.string().datetime(),
 });
 
+export const DocChunkRowSchema = z.object({
+  chunk_id: z.string().min(1),
+  project_id: z.string().min(1),
+  doc_id: z.string().min(1),
+  chunk_index: z.number().int().min(0),
+  content: z.string(),
+  vector: z.array(z.number()).length(768).nullable(),
+  header: z.string(),
+  version: z.number().int().min(1),
+  status: z.string().min(1),
+  token_count: z.number().int().min(0),
+  created_at: z.string().datetime(),
+});
+
 // ────────────────────────────────────────────────────────────────────────────
 // Table Registry
 // ────────────────────────────────────────────────────────────────────────────
 
 export const TABLE_NAMES = [
   "documents",
+  "doc_chunks",
   "code_chunks",
   "relationships",
   "project_meta",
@@ -180,6 +214,7 @@ export type TableName = (typeof TABLE_NAMES)[number];
 
 export const TABLE_SCHEMAS: Record<string, Schema> = {
   documents: DOCUMENTS_SCHEMA,
+  doc_chunks: DOC_CHUNKS_SCHEMA,
   code_chunks: CODE_CHUNKS_SCHEMA,
   relationships: RELATIONSHIPS_SCHEMA,
   project_meta: PROJECT_META_SCHEMA,

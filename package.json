@@ -10,7 +10,9 @@
   },
   "dependencies": {
     "@lancedb/lancedb": "0.26.2",
+    "@langchain/textsplitters": "^1.0.1",
     "@modelcontextprotocol/sdk": "latest",
+    "gpt-tokenizer": "^3.4.0",
     "lru-cache": "^11.2.6",
     "pino": "latest",
     "smol-toml": "latest",

@@ -3,12 +3,12 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: unknown
-last_updated: "2026-02-28T15:24:14.341Z"
+last_updated: "2026-02-28T15:29:25.781Z"
 progress:
   total_phases: 5
-  completed_phases: 4
+  completed_phases: 5
   total_plans: 15
-  completed_plans: 14
+  completed_plans: 15
 ---
 
 # Project State
@@ -22,12 +22,12 @@ See: .planning/PROJECT.md (updated 2026-02-27)
 
 ## Current Position
 
-Phase: 5 of 7 (Document Search) — IN PROGRESS
-Plan: 3 of 5 in current phase (Plans 05-02 and 05-03 both complete — three search tools + get_smart_context)
-Status: Phase 5 Plans 02+03 COMPLETE — semantic_search, fulltext_search, hybrid_search + get_smart_context built
-Last activity: 2026-02-28 — Plan 05-02 complete: semantic_search (vector cosine), fulltext_search (BM25), hybrid_search (RRFReranker k=60 with FTS fallback)
+Phase: 5 of 5 (Document Search) — COMPLETE
+Plan: 4 of 4 in phase 05 (all plans complete — server wired, 15 tools registered)
+Status: Phase 5 COMPLETE — all 4 search tools registered, 347 tests pass, SRCH-01 through SRCH-07 implemented
+Last activity: 2026-02-28 — Plan 05-04 complete: server.ts wired with all 4 search tools (tool count = 15)
 
-Progress: [████████░░] 57% (Phase 5 in progress)
+Progress: [██████████] 100% (All 5 phases complete)
 
 ## Performance Metrics
 
@@ -53,6 +53,7 @@ Progress: [████████░░] 57% (Phase 5 in progress)
 *Updated after each plan completion*
 | Phase 05-document-search P03 | 4 | 2 tasks | 2 files |
 | Phase 05-document-search P02 | 419 | 2 tasks | 6 files |
+| Phase 05-document-search P04 | 3 | 1 tasks | 5 files |
 
 ## Accumulated Context
 
@@ -110,8 +111,10 @@ Recent decisions affecting current work:
 - [Phase 05-03]: get_smart_context max_tokens min=500 — tests use 500+ with overflow-designed content for budget enforcement
 - [Phase 05-03]: get_smart_context requested docs always included regardless of budget; only related/expanded docs are budget-gated
 - [Phase 05-03]: 1-hop graph expansion keeps highest-priority relationship when doc appears via multiple paths (dedup by RELATIONSHIP_PRIORITY)
-- [Phase 05-02]: RRFReranker constructed with new rerankers.RRFReranker(60) — not static .create(); constructor works in LanceDB 0.26.2
+- [Phase 05-02]: RRFReranker CORRECTION (see 05-04): new rerankers.RRFReranker(60) was incorrect — constructor takes NativeRRFReranker, not a number; use await RRFReranker.create(60)
 - [Phase 05-02]: hybridSearch falls back to fulltextSearch() when Ollama status is not 'ok' — both 'unreachable' and 'model_missing' trigger fallback with search_type='hybrid_fts_fallback'
+- [Phase 05-04]: exactOptionalPropertyTypes compliance: build filter objects conditionally (if val !== undefined) rather than spreading Zod-parsed args with T|undefined fields
+- [Phase 05-04]: RRFReranker.create(60) async factory required — constructor takes NativeRRFReranker not number; new RRFReranker(60) was both a type error and runtime bug
 
 ### Pending Todos
 
@@ -124,5 +127,5 @@ Recent decisions affecting current work:
 ## Session Continuity
 
 Last session: 2026-02-28
-Stopped at: Completed 05-document-search/05-03-PLAN.md (get_smart_context tool: overview mode metadata scan + detailed mode 1-hop graph expansion with RELATIONSHIP_PRIORITY ordering)
+Stopped at: Completed 05-document-search/05-04-PLAN.md (server wiring: all 4 search tools registered in server.ts, tool count 15, TypeScript clean, 347 tests pass)
 Resume file: None

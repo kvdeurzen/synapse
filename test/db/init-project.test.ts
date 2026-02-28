@@ -44,6 +44,8 @@ describe("initProject", () => {
     // database_path should be a non-empty string (absolute path)
     expect(typeof result.database_path).toBe("string");
     expect(result.database_path.length).toBeGreaterThan(0);
+    // starters_seeded should reflect the 4 default starters
+    expect(result.starters_seeded).toBe(4);
   });
 
   test("is idempotent — second call skips existing tables", async () => {
@@ -112,5 +114,138 @@ describe("initProject", () => {
     await expect(initProject(tmpDir, "Has Spaces")).rejects.toThrow();
     await expect(initProject(tmpDir, "UPPERCASE")).rejects.toThrow();
     await expect(initProject(tmpDir, "special@chars")).rejects.toThrow();
+  });
+});
+
+// ── Starter document seeding (FOUND-04) ──────────────────────────────────────
+
+describe("initProject — starter document seeding", () => {
+  test("seeds 4 default starters on fresh project", async () => {
+    const result = await initProject(tmpDir, "test-proj");
+
+    expect(result.starters_seeded).toBe(4);
+
+    const db = await lancedb.connect(tmpDir);
+    const docsTable = await db.openTable("documents");
+    const docs = await docsTable.query().toArray();
+
+    expect(docs.length).toBe(4);
+  });
+
+  test("starter titles match expected values", async () => {
+    await initProject(tmpDir, "test-proj");
+
+    const db = await lancedb.connect(tmpDir);
+    const docsTable = await db.openTable("documents");
+    const docs = await docsTable.query().toArray();
+
+    const titles = docs.map((d) => d.title as string);
+    expect(titles).toContain("Project Charter");
+    expect(titles).toContain("Architecture Decision Log");
+    expect(titles).toContain("Implementation Patterns");
+    expect(titles).toContain("Project Glossary");
+  });
+
+  test("starter categories match expected values", async () => {
+    await initProject(tmpDir, "test-proj");
+
+    const db = await lancedb.connect(tmpDir);
+    const docsTable = await db.openTable("documents");
+    const docs = await docsTable.query().toArray();
+
+    const categories = docs.map((d) => d.category as string);
+    expect(categories).toContain("plan");
+    expect(categories).toContain("architecture_decision");
+    expect(categories).toContain("code_pattern");
+    expect(categories).toContain("glossary");
+  });
+
+  test("all starters have version=1 and status=active", async () => {
+    await initProject(tmpDir, "test-proj");
+
+    const db = await lancedb.connect(tmpDir);
+    const docsTable = await db.openTable("documents");
+    const docs = await docsTable.query().toArray();
+
+    for (const doc of docs) {
+      expect(doc.version).toBe(1);
+      expect(doc.status).toBe("active");
+    }
+  });
+
+  test("custom starter_types seeds only specified starters", async () => {
+    const result = await initProject(tmpDir, "test-proj", ["glossary", "adr_log"]);
+
+    expect(result.starters_seeded).toBe(2);
+
+    const db = await lancedb.connect(tmpDir);
+    const docsTable = await db.openTable("documents");
+    const docs = await docsTable.query().toArray();
+
+    expect(docs.length).toBe(2);
+    const titles = docs.map((d) => d.title as string);
+    expect(titles).toContain("Project Glossary");
+    expect(titles).toContain("Architecture Decision Log");
+  });
+
+  test("re-init does not duplicate starters (idempotent seeding)", async () => {
+    await initProject(tmpDir, "test-proj");
+    const result2 = await initProject(tmpDir, "test-proj");
+
+    // Second call: tables_created=0, so no seeding
+    expect(result2.starters_seeded).toBe(0);
+
+    const db = await lancedb.connect(tmpDir);
+    const docsTable = await db.openTable("documents");
+    const docs = await docsTable.query().toArray();
+
+    // Only the original 4 starters should exist
+    expect(docs.length).toBe(4);
+  });
+
+  test("starters have no doc_chunks rows (no Ollama dependency at init time)", async () => {
+    await initProject(tmpDir, "test-proj");
+
+    const db = await lancedb.connect(tmpDir);
+    const chunksTable = await db.openTable("doc_chunks");
+    const chunks = await chunksTable.query().toArray();
+
+    expect(chunks.length).toBe(0);
+  });
+
+  test("starter content contains markdown headers (structural scaffolds)", async () => {
+    await initProject(tmpDir, "test-proj");
+
+    const db = await lancedb.connect(tmpDir);
+    const docsTable = await db.openTable("documents");
+    const docs = await docsTable.query().toArray();
+
+    for (const doc of docs) {
+      const content = doc.content as string;
+      // All starters should contain at least one markdown header
+      expect(content).toMatch(/^#{1,2}\s+/m);
+    }
+  });
+
+  test("project charter includes Objectives and Success Criteria sections", async () => {
+    await initProject(tmpDir, "test-proj");
+
+    const db = await lancedb.connect(tmpDir);
+    const docsTable = await db.openTable("documents");
+    const docs = await docsTable.query().toArray();
+
+    const charter = docs.find((d) => d.title === "Project Charter");
+    expect(charter).toBeDefined();
+
+    const content = charter?.content as string;
+    expect(content).toContain("Objectives");
+    expect(content).toContain("Success Criteria");
+  });
+
+  test("unknown starter_types key is silently skipped", async () => {
+    const result = await initProject(tmpDir, "test-proj", ["glossary", "nonexistent_type"]);
+
+    // Only the valid one should be seeded
+    expect(result.starters_seeded).toBe(1);
   });
 });

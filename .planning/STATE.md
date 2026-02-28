@@ -3,12 +3,12 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: unknown
-last_updated: "2026-02-28T17:39:49Z"
+last_updated: "2026-02-28T17:48:42.889Z"
 progress:
   total_phases: 6
-  completed_phases: 5
+  completed_phases: 6
   total_plans: 20
-  completed_plans: 19
+  completed_plans: 20
 ---
 
 # Project State
@@ -22,12 +22,12 @@ See: .planning/PROJECT.md (updated 2026-02-27)
 
 ## Current Position
 
-Phase: 6 of 6 (Code Indexing) — IN PROGRESS
-Plan: 4 of 5 in phase 06 (plan 04 complete — indexCodebase orchestrator + MCP tool registration)
-Status: Plan 06-04 COMPLETE — indexCodebase pipeline, registerIndexCodebaseTool, 10 new tests, 449 total tests pass
-Last activity: 2026-02-28 — Plan 06-04 complete: indexCodebase orchestrator implemented (CODE-03, CODE-04, CODE-05, CODE-06, CODE-08, CODE-09)
+Phase: 6 of 6 (Code Indexing) — COMPLETE
+Plan: 5 of 5 in phase 06 (plan 05 complete — server wiring, FTS index on code_chunks, Phase 6 DONE)
+Status: Plan 06-05 COMPLETE — index_codebase registered as tool 16, code_chunks FTS index added, 449 tests pass, all CODE-01 through CODE-10 done
+Last activity: 2026-02-28 — Plan 06-05 complete: Phase 6 fully complete, all requirements implemented
 
-Progress: [█████████░] 92% (Phase 6: 4/5 plans complete)
+Progress: [██████████] 100% (Phase 6: 5/5 plans complete — ALL PHASES DONE)
 
 ## Performance Metrics
 
@@ -57,6 +57,7 @@ Progress: [█████████░] 92% (Phase 6: 4/5 plans complete)
 | Phase 06-code-indexing P01 | 5 | 2 tasks | 7 files |
 | Phase 06-code-indexing P03 | 4 | 2 tasks | 2 files |
 | Phase 06-code-indexing P04 | 4 | 2 tasks | 2 files |
+| Phase 06-code-indexing P05 | 5 | 2 tasks | 4 files |
 
 ## Accumulated Context
 
@@ -130,6 +131,8 @@ Recent decisions affecting current work:
 - [Phase 06-04]: ast_import edges use delete-then-reinsert strategy on every index cycle — prevents duplicates (CODE-08)
 - [Phase 06-04]: is_test flag embedded in imports JSON field (not a dedicated column) — avoids schema change, preserves forward compat
 - [Phase 06-04]: project_meta.last_index_at update is non-critical: wrapped in try/catch so indexing never fails on metadata update error
+- [Phase 06-05]: Tree-sitter grammar Language type mismatch: grammar packages expose language:unknown vs tree-sitter core Language recursive type — bridged via asLang() cast function through unknown intermediate
+- [Phase 06-05]: exactOptionalPropertyTypes compliance in index-codebase.ts: build scanOpts conditionally instead of spreading Zod-parsed fields with T|undefined type (same pattern as 05-04)
 
 ### Pending Todos
 
@@ -142,5 +145,5 @@ Recent decisions affecting current work:
 ## Session Continuity
 
 Last session: 2026-02-28
-Stopped at: Completed 06-code-indexing/06-04-PLAN.md (index-codebase.ts orchestrator, 10 integration tests, 449 total pass)
+Stopped at: Completed 06-code-indexing/06-05-PLAN.md (server wiring, code_chunks FTS index, 449 tests pass, Phase 6 COMPLETE — all 20 plans done)
 Resume file: None

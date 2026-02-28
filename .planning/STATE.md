@@ -2,13 +2,13 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: unknown
-last_updated: "2026-02-28T09:25:52.403Z"
+status: in_progress
+last_updated: "2026-02-28T15:12:43Z"
 progress:
-  total_phases: 4
+  total_phases: 7
   completed_phases: 4
   total_plans: 11
-  completed_plans: 11
+  completed_plans: 12
 ---
 
 # Project State
@@ -18,21 +18,21 @@ progress:
 See: .planning/PROJECT.md (updated 2026-02-27)
 
 **Core value:** Agents get the right context for any task — from both project decisions and actual code — without wasting tokens on irrelevant content
-**Current focus:** Phase 4 — Document Management
+**Current focus:** Phase 5 — Document Search
 
 ## Current Position
 
-Phase: 4 of 7 (Document Management) — COMPLETE
-Plan: 4 of 4 in current phase (Plan 04-04 complete — project_overview, link_documents, get_related_documents tools)
-Status: Phase 4 COMPLETE — all 4 plans done, ready for Phase 5
-Last activity: 2026-02-28 — Plan 04-04 complete: project_overview (dashboard: countRows aggregation, activity sort, key docs), link_documents (7 types, bidirectional, dedup, source=manual), get_related_documents (1-hop traversal, direction metadata)
+Phase: 5 of 7 (Document Search) — IN PROGRESS
+Plan: 1 of 5 in current phase (Plan 05-01 complete — FTS index in init_project, search-utils.ts shared utilities)
+Status: Phase 5 Plan 01 COMPLETE — FTS index + search utilities foundation built
+Last activity: 2026-02-28 — Plan 05-01 complete: FTS index on doc_chunks.content (init_project), search-utils.ts (normalizeVectorScore, normalizeFtsScore, extractSnippet, fetchDocMetadata, buildSearchPredicate, SearchResultItem)
 
-Progress: [██████████] 100%
+Progress: [████████░░] 57% (Phase 5 in progress)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 9
+- Total plans completed: 12
 - Average duration: 5 min
 - Total execution time: ~0.6 hours
 
@@ -44,9 +44,10 @@ Progress: [██████████] 100%
 | 02-database-schema | 3/3 | 12 min | 4 min |
 | 03-embedding-service | 2/2 | 8 min | 4 min |
 | 04-document-management | 4/4 | 28 min | 7 min |
+| 05-document-search | 1/5 | 3 min | 3 min |
 
 **Recent Trend:**
-- Last 5 plans: 8 min, 6 min, 4 min, 4 min, 4 min
+- Last 5 plans: 3 min, 8 min, 6 min, 4 min, 4 min
 - Trend: stable
 
 *Updated after each plan completion*
@@ -100,6 +101,10 @@ Recent decisions affecting current work:
 - [Phase 04-04]: Bidirectional dedup: link_documents checks reverse direction before creating to prevent partial failures
 - [Phase 04-04]: get_related_documents queries outgoing and incoming separately then resolves doc metadata in JS
 - [Phase 04-04]: Recent activity limit 50 then JS sort — LanceDB .where() has no ORDER BY support
+- [Phase 05-01]: FTS index on empty doc_chunks table gracefully degrades — wrapped in try/catch same as BTree; init_project succeeds regardless
+- [Phase 05-01]: Metadata pre-filter in buildSearchPredicate capped at 200 doc_ids (RESEARCH.md pitfall 4); beyond that postFilterRequired=true
+- [Phase 05-01]: normalizeFtsScore sigmoid (score/(score+1)) — maps positive reals to [0,1), 0 for score<=0
+- [Phase 05-01]: normalizeVectorScore uses 1-(d/2) clamped — cosine distance [0,2] to relevance [0,1]
 
 ### Pending Todos
 
@@ -112,5 +117,5 @@ Recent decisions affecting current work:
 ## Session Continuity
 
 Last session: 2026-02-28
-Stopped at: Completed 04-document-management/04-04-PLAN.md (Phase 4 complete — project_overview dashboard, link_documents with bidirectional and dedup, get_related_documents 1-hop traversal)
+Stopped at: Completed 05-document-search/05-01-PLAN.md (FTS index in init_project, search-utils.ts with normalizers/snippet/predicate/metadata utilities)
 Resume file: None

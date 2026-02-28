@@ -49,7 +49,7 @@ Requirements for initial release. Each maps to roadmap phases.
 - [ ] **SRCH-04**: get_smart_context overview phase returns summaries (~100 tokens each) from both documents and code_chunks tables (~2-4k tokens total)
 - [ ] **SRCH-05**: get_smart_context detailed phase fetches full content for agent-specified doc_ids with 1-hop relationship traversal
 - [ ] **SRCH-06**: get_smart_context respects max_tokens budget and truncates results to fit
-- [ ] **SRCH-07**: Search results include relevance scores and source attribution
+- [x] **SRCH-07**: Search results include relevance scores and source attribution
 
 ### Relationships & Graph
 
@@ -154,7 +154,7 @@ Which phases cover which requirements. Updated during roadmap creation.
 | SRCH-04 | Phase 5 | Pending |
 | SRCH-05 | Phase 5 | Pending |
 | SRCH-06 | Phase 5 | Pending |
-| SRCH-07 | Phase 5 | Pending |
+| SRCH-07 | Phase 5 | Complete |
 | CODE-01 | Phase 6 | Pending |
 | CODE-02 | Phase 6 | Pending |
 | CODE-03 | Phase 6 | Pending |

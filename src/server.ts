@@ -1,6 +1,7 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { logger } from "./logger.js";
+import { checkOllamaHealth, setOllamaStatus } from "./services/embedder.js";
 import { registerDeleteProjectTool } from "./tools/delete-project.js";
 import { registerEchoTool } from "./tools/echo.js";
 import { registerInitProjectTool } from "./tools/init-project.js";
@@ -43,8 +44,29 @@ export function createServer(config: SynapseConfig): McpServer {
 /**
  * Start the MCP server by connecting to the stdio transport.
  * Only call after createServer() — all tools must already be registered.
+ *
+ * Performs a blocking Ollama health check before connecting transport.
+ * If Ollama is unreachable or the model is missing, logs a warning but still starts.
  */
-export async function startServer(server: McpServer): Promise<void> {
+export async function startServer(server: McpServer, config: SynapseConfig): Promise<void> {
+  // Blocking health check — server waits for result before connecting transport
+  const status = await checkOllamaHealth(config.ollamaUrl, config.embedModel);
+  setOllamaStatus(status);
+
+  if (status !== "ok") {
+    logger.warn(
+      { ollamaUrl: config.ollamaUrl, embedModel: config.embedModel, status },
+      status === "unreachable"
+        ? `Ollama unreachable at ${config.ollamaUrl}. Run: ollama serve`
+        : `Model ${config.embedModel} not found. Run: ollama pull ${config.embedModel}`,
+    );
+  } else {
+    logger.info(
+      { ollamaUrl: config.ollamaUrl, embedModel: config.embedModel },
+      "Ollama health check passed",
+    );
+  }
+
   const transport = new StdioServerTransport();
   await server.connect(transport);
   logger.info("Synapse MCP server running on stdio");

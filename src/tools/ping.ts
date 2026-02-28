@@ -1,6 +1,7 @@
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { createToolLogger } from "../logger.js";
+import { getOllamaStatus, type OllamaHealthStatus } from "../services/embedder.js";
 import type { SynapseConfig, ToolResult } from "../types.js";
 
 interface PingData {
@@ -9,7 +10,7 @@ interface PingData {
   uptime: number;
   dbPath: string;
   ollamaUrl: string;
-  ollamaStatus: "unknown";
+  ollamaStatus: OllamaHealthStatus; // Live from health check, not hardcoded
   toolCount: number;
   embedModel: string;
 }
@@ -43,7 +44,7 @@ export function registerPingTool(
           uptime: process.uptime(),
           dbPath: config.db,
           ollamaUrl: config.ollamaUrl,
-          ollamaStatus: "unknown",
+          ollamaStatus: getOllamaStatus(),
           toolCount: getToolCount(),
           embedModel: config.embedModel,
         },

@@ -275,3 +275,43 @@ export async function embed(
 
   return results;
 }
+
+// ─── Ollama Health Check ───────────────────────────────────────────────────────
+
+export type OllamaHealthStatus = "ok" | "unreachable" | "model_missing";
+
+let ollamaStatus: OllamaHealthStatus = "unreachable"; // Default: assume unreachable until checked
+
+export function getOllamaStatus(): OllamaHealthStatus {
+  return ollamaStatus;
+}
+
+export function setOllamaStatus(status: OllamaHealthStatus): void {
+  ollamaStatus = status;
+}
+
+/**
+ * Check Ollama reachability and verify the embed model is available.
+ *
+ * Calls GET /api/tags with a 5-second timeout. Verifies the model is in the
+ * list (handles ":latest" tag suffix). Does NOT make a test embedding call.
+ */
+export async function checkOllamaHealth(
+  ollamaUrl: string,
+  embedModel: string,
+): Promise<OllamaHealthStatus> {
+  try {
+    const response = await _fetchImpl(`${ollamaUrl}/api/tags`, {
+      signal: AbortSignal.timeout(5_000),
+    });
+    if (!response.ok) return "unreachable";
+    const data = (await response.json()) as { models: Array<{ name: string }> };
+    // Model name may include tag suffix (e.g., "nomic-embed-text:latest")
+    const hasModel = data.models.some(
+      (m) => m.name === embedModel || m.name.startsWith(`${embedModel}:`),
+    );
+    return hasModel ? "ok" : "model_missing";
+  } catch {
+    return "unreachable";
+  }
+}

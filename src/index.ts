@@ -13,7 +13,7 @@ async function main(): Promise<void> {
   );
 
   const server = createServer(config);
-  await startServer(server);
+  await startServer(server, config);
 
   logger.info("Synapse MCP server ready");
 }

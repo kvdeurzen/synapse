@@ -2,12 +2,14 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { logger } from "./logger.js";
 import { checkOllamaHealth, setOllamaStatus } from "./services/embedder.js";
+import { registerDeleteDocumentTool } from "./tools/delete-document.js";
 import { registerDeleteProjectTool } from "./tools/delete-project.js";
 import { registerEchoTool } from "./tools/echo.js";
 import { registerInitProjectTool } from "./tools/init-project.js";
 import { registerPingTool } from "./tools/ping.js";
 import { registerQueryDocumentsTool } from "./tools/query-documents.js";
 import { registerStoreDocumentTool } from "./tools/store-document.js";
+import { registerUpdateDocumentTool } from "./tools/update-document.js";
 import type { SynapseConfig } from "./types.js";
 
 // Track registered tool count manually (McpServer._registeredTools is private)
@@ -44,6 +46,12 @@ export function createServer(config: SynapseConfig): McpServer {
   toolCount++;
 
   registerQueryDocumentsTool(server, config);
+  toolCount++;
+
+  registerUpdateDocumentTool(server, config);
+  toolCount++;
+
+  registerDeleteDocumentTool(server, config);
   toolCount++;
 
   return server;

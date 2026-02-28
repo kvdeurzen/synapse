@@ -9,40 +9,9 @@ import { logActivity } from "../services/activity-log.js";
 import { chunkDocument } from "../services/chunker.js";
 import { embed } from "../services/embedder.js";
 import type { SynapseConfig, ToolResult } from "../types.js";
+import { CARRY_FORWARD_CATEGORIES, VALID_CATEGORIES, VALID_STATUSES } from "./doc-constants.js";
 
-// ────────────────────────────────────────────────────────────────────────────
-// Category and status enumerations
-// ────────────────────────────────────────────────────────────────────────────
-
-const VALID_CATEGORIES = [
-  "architecture_decision",
-  "design_pattern",
-  "glossary",
-  "code_pattern",
-  "dependency",
-  "plan",
-  "task_spec",
-  "requirement",
-  "technical_context",
-  "change_record",
-  "research",
-  "learning",
-] as const;
-
-const VALID_STATUSES = ["draft", "active", "approved", "superseded", "archived"] as const;
-
-/**
- * Carry-forward categories are never auto-archived during re-versioning.
- * Superseding them is allowed (it means "a newer version exists"), but
- * archiving is not (it means "no longer relevant").
- */
-export const CARRY_FORWARD_CATEGORIES = new Set([
-  "architecture_decision",
-  "design_pattern",
-  "glossary",
-  "code_pattern",
-  "dependency",
-]);
+export { CARRY_FORWARD_CATEGORIES };
 
 // ────────────────────────────────────────────────────────────────────────────
 // Input schema (Zod)

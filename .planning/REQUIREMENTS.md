@@ -12,7 +12,7 @@ Requirements for initial release. Each maps to roadmap phases.
 - [x] **FOUND-01**: Server starts via stdio transport and connects to MCP clients (Claude Code, Cursor)
 - [x] **FOUND-02**: Server accepts --db path CLI arg and OLLAMA_URL, EMBED_MODEL, SYNAPSE_DB_PATH env vars
 - [x] **FOUND-03**: init_project creates LanceDB database with 5 tables (documents, code_chunks, relationships, project_meta, activity_log) and all indexes
-- [ ] **FOUND-04**: init_project seeds starter documents (project charter, ADR log template, coding guidelines, glossary)
+- [x] **FOUND-04**: init_project seeds starter documents (project charter, ADR log template, coding guidelines, glossary)
 - [x] **FOUND-05**: All queries are scoped by project_id for multi-project support
 - [x] **FOUND-06**: Schema includes v2 forward-compatibility fields (parent_id, depth, decision_type) on documents table
 - [x] **FOUND-07**: All logging goes to stderr only — no stdout contamination of MCP JSON-RPC stream
@@ -28,18 +28,18 @@ Requirements for initial release. Each maps to roadmap phases.
 
 ### Document Management
 
-- [ ] **DOC-01**: User can store a document with title, content, category (17 types), and optional metadata via store_document
+- [x] **DOC-01**: User can store a document with title, content, category (17 types), and optional metadata via store_document
 - [x] **DOC-02**: Documents are chunked at write time using category-specific strategies (semantic_section, paragraph, fixed_size) with configurable max size and overlap
 - [x] **DOC-03**: Each chunk is prefixed with context header ("Document: {title} | Section: {header}") before embedding
-- [ ] **DOC-04**: store_document with existing doc_id creates new version (version + 1) and marks old chunks as superseded
+- [x] **DOC-04**: store_document with existing doc_id creates new version (version + 1) and marks old chunks as superseded
 - [ ] **DOC-05**: User can query documents by category, phase, tags, status, and priority filters via query_documents
 - [ ] **DOC-06**: User can update document metadata (status, phase, tags, priority) without re-embedding via update_document
 - [ ] **DOC-07**: User can soft-delete (archive) or hard-delete documents via delete_document
 - [ ] **DOC-08**: project_overview returns document counts by category/status/phase, recent activity, and key documents (priority >= 4)
-- [ ] **DOC-09**: Documents follow lifecycle states: draft → active → approved, with superseded and archived transitions
-- [ ] **DOC-10**: Carry-forward categories (architecture_decision, design_pattern, glossary, code_pattern, dependency) are never auto-archived
+- [x] **DOC-09**: Documents follow lifecycle states: draft → active → approved, with superseded and archived transitions
+- [x] **DOC-10**: Carry-forward categories (architecture_decision, design_pattern, glossary, code_pattern, dependency) are never auto-archived
 - [x] **DOC-11**: All mutations are logged to activity_log with actor, action, and timestamp
-- [ ] **DOC-12**: store_document returns doc_id, chunk_count, version, and token_estimate
+- [x] **DOC-12**: store_document returns doc_id, chunk_count, version, and token_estimate
 
 ### Search
 
@@ -131,19 +131,19 @@ Which phases cover which requirements. Updated during roadmap creation.
 | EMBED-04 | Phase 3 | Complete |
 | EMBED-05 | Phase 3 | Complete |
 | EMBED-06 | Phase 3 | Complete |
-| FOUND-04 | Phase 4 | Pending |
-| DOC-01 | Phase 4 | Pending |
+| FOUND-04 | Phase 4 | Complete |
+| DOC-01 | Phase 4 | Complete |
 | DOC-02 | Phase 4 | Complete |
 | DOC-03 | Phase 4 | Complete |
-| DOC-04 | Phase 4 | Pending |
+| DOC-04 | Phase 4 | Complete |
 | DOC-05 | Phase 4 | Pending |
 | DOC-06 | Phase 4 | Pending |
 | DOC-07 | Phase 4 | Pending |
 | DOC-08 | Phase 4 | Pending |
-| DOC-09 | Phase 4 | Pending |
-| DOC-10 | Phase 4 | Pending |
+| DOC-09 | Phase 4 | Complete |
+| DOC-10 | Phase 4 | Complete |
 | DOC-11 | Phase 4 | Complete |
-| DOC-12 | Phase 4 | Pending |
+| DOC-12 | Phase 4 | Complete |
 | GRAPH-01 | Phase 4 | Pending |
 | GRAPH-02 | Phase 4 | Pending |
 | GRAPH-03 | Phase 4 | Pending |

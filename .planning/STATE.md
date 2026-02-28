@@ -3,12 +3,12 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: unknown
-last_updated: "2026-02-28T07:54:15.467Z"
+last_updated: "2026-02-28T08:02:08.000Z"
 progress:
   total_phases: 4
   completed_phases: 3
   total_plans: 11
-  completed_plans: 8
+  completed_plans: 9
 ---
 
 # Project State
@@ -23,16 +23,16 @@ See: .planning/PROJECT.md (updated 2026-02-27)
 ## Current Position
 
 Phase: 4 of 7 (Document Management)
-Plan: 1 of 4 in current phase (Plan 04-01 complete — infrastructure: doc_chunks schema, chunker service, activity log)
-Status: Phase 4 in progress — Plan 04-01 complete, ready for Plan 04-02
-Last activity: 2026-02-28 — Plan 04-01 complete: doc_chunks schema, chunker service (3 strategies, 12 categories), activity log helper
+Plan: 2 of 4 in current phase (Plan 04-02 complete — store_document tool, init_project starter seeding)
+Status: Phase 4 in progress — Plan 04-02 complete, ready for Plan 04-03
+Last activity: 2026-02-28 — Plan 04-02 complete: store_document tool (12-category taxonomy, chunking, embedding, versioning, activity logging), init_project starter document seeding
 
-Progress: [████████░░] 73%
+Progress: [████████░░] 75%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 7
+- Total plans completed: 9
 - Average duration: 5 min
 - Total execution time: ~0.6 hours
 
@@ -43,7 +43,7 @@ Progress: [████████░░] 73%
 | 01-mcp-foundation | 2/2 | 9 min | 4.5 min |
 | 02-database-schema | 3/3 | 12 min | 4 min |
 | 03-embedding-service | 2/2 | 8 min | 4 min |
-| 04-document-management | 1/4 | 6 min | 6 min |
+| 04-document-management | 2/4 | 12 min | 6 min |
 
 **Recent Trend:**
 - Last 5 plans: 6 min, 4 min, 4 min, 4 min, 4 min
@@ -87,6 +87,11 @@ Recent decisions affecting current work:
 - [Phase 04-01]: gpt-tokenizer (pure JS BPE, cl100k_base, Bun-compatible) selected for token counting
 - [Phase 04-01]: logActivity actor hardcoded to 'agent' — MCP SDK has no caller identity
 - [Phase 04-01]: Category-to-strategy hardcoded: 7 semantic_section, 3 paragraph, 2 fixed_size; unknown defaults to semantic_section
+- [Phase 04-02]: Runtime Zod validation in storeDocument() core function — TypeScript types erased at runtime, explicit parse() required for correctness
+- [Phase 04-02]: LanceDB returns FixedSizeList as Float32Array (typed array) not plain Array — test assertions use .length not Array.isArray()
+- [Phase 04-02]: Max version detection uses reduce() over all rows — LanceDB query ordering not guaranteed with .where() filter
+- [Phase 04-02]: Embed rollback: delete document row if embed() throws to prevent orphaned metadata
+- [Phase 04-02]: Starter seeding guarded by tables_created > 0 — idempotent on re-init
 
 ### Pending Todos
 
@@ -99,5 +104,5 @@ Recent decisions affecting current work:
 ## Session Continuity
 
 Last session: 2026-02-28
-Stopped at: Completed 04-document-management/04-01-PLAN.md (Phase 4 Plan 1 complete — doc_chunks schema, chunker service, activity log helper)
+Stopped at: Completed 04-document-management/04-02-PLAN.md (Phase 4 Plan 2 complete — store_document tool, init_project starter seeding)
 Resume file: None

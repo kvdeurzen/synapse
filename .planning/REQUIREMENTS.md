@@ -35,7 +35,7 @@ Requirements for initial release. Each maps to roadmap phases.
 - [x] **DOC-05**: User can query documents by category, phase, tags, status, and priority filters via query_documents
 - [x] **DOC-06**: User can update document metadata (status, phase, tags, priority) without re-embedding via update_document
 - [x] **DOC-07**: User can soft-delete (archive) or hard-delete documents via delete_document
-- [ ] **DOC-08**: project_overview returns document counts by category/status/phase, recent activity, and key documents (priority >= 4)
+- [x] **DOC-08**: project_overview returns document counts by category/status/phase, recent activity, and key documents (priority >= 4)
 - [x] **DOC-09**: Documents follow lifecycle states: draft → active → approved, with superseded and archived transitions
 - [x] **DOC-10**: Carry-forward categories (architecture_decision, design_pattern, glossary, code_pattern, dependency) are never auto-archived
 - [x] **DOC-11**: All mutations are logged to activity_log with actor, action, and timestamp
@@ -53,10 +53,10 @@ Requirements for initial release. Each maps to roadmap phases.
 
 ### Relationships & Graph
 
-- [ ] **GRAPH-01**: User can create manual relationships between documents via link_documents with type (implements, depends_on, supersedes, references, contradicts, child_of, related_to)
-- [ ] **GRAPH-02**: link_documents supports bidirectional relationship creation
-- [ ] **GRAPH-03**: 1-hop graph traversal surfaces related documents when fetching context
-- [ ] **GRAPH-04**: Relationships track source attribution (manual vs ast_import) for distinguishing human-created from auto-generated edges
+- [x] **GRAPH-01**: User can create manual relationships between documents via link_documents with type (implements, depends_on, supersedes, references, contradicts, child_of, related_to)
+- [x] **GRAPH-02**: link_documents supports bidirectional relationship creation
+- [x] **GRAPH-03**: 1-hop graph traversal surfaces related documents when fetching context
+- [x] **GRAPH-04**: Relationships track source attribution (manual vs ast_import) for distinguishing human-created from auto-generated edges
 
 ### Code Indexing
 
@@ -139,15 +139,15 @@ Which phases cover which requirements. Updated during roadmap creation.
 | DOC-05 | Phase 4 | Complete |
 | DOC-06 | Phase 4 | Complete |
 | DOC-07 | Phase 4 | Complete |
-| DOC-08 | Phase 4 | Pending |
+| DOC-08 | Phase 4 | Complete |
 | DOC-09 | Phase 4 | Complete |
 | DOC-10 | Phase 4 | Complete |
 | DOC-11 | Phase 4 | Complete |
 | DOC-12 | Phase 4 | Complete |
-| GRAPH-01 | Phase 4 | Pending |
-| GRAPH-02 | Phase 4 | Pending |
-| GRAPH-03 | Phase 4 | Pending |
-| GRAPH-04 | Phase 4 | Pending |
+| GRAPH-01 | Phase 4 | Complete |
+| GRAPH-02 | Phase 4 | Complete |
+| GRAPH-03 | Phase 4 | Complete |
+| GRAPH-04 | Phase 4 | Complete |
 | SRCH-01 | Phase 5 | Pending |
 | SRCH-02 | Phase 5 | Pending |
 | SRCH-03 | Phase 5 | Pending |

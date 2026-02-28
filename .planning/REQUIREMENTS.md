@@ -64,11 +64,11 @@ Requirements for initial release. Each maps to roadmap phases.
 - [x] **CODE-02**: Files are parsed with tree-sitter to extract AST-aware chunks at function/class/method/interface/type boundaries
 - [x] **CODE-03**: Each code chunk includes symbol_name, symbol_type, scope_chain, imports, and exports metadata
 - [x] **CODE-04**: Code chunks are prefixed with context header ("File: {path} | {symbol_type}: {scope_chain}") before embedding
-- [ ] **CODE-05**: Incremental indexing compares SHA-256 file hashes and only re-indexes changed files
-- [ ] **CODE-06**: Deleted files have their code_chunks and auto-generated relationships removed
-- [ ] **CODE-07**: Import/use statements are parsed to auto-generate depends_on relationships between files
-- [ ] **CODE-08**: Auto-generated relationships (source: "ast_import") are replaced on re-index to stay fresh
-- [ ] **CODE-09**: index_codebase returns files_scanned, files_indexed, chunks_created, skipped_unchanged counts
+- [x] **CODE-05**: Incremental indexing compares SHA-256 file hashes and only re-indexes changed files
+- [x] **CODE-06**: Deleted files have their code_chunks and auto-generated relationships removed
+- [x] **CODE-07**: Import/use statements are parsed to auto-generate depends_on relationships between files
+- [x] **CODE-08**: Auto-generated relationships (source: "ast_import") are replaced on re-index to stay fresh
+- [x] **CODE-09**: index_codebase returns files_scanned, files_indexed, chunks_created, skipped_unchanged counts
 - [x] **CODE-10**: TypeScript, Python, and Rust languages are supported with appropriate tree-sitter grammars
 
 ### Code Search
@@ -159,11 +159,11 @@ Which phases cover which requirements. Updated during roadmap creation.
 | CODE-02 | Phase 6 | Complete |
 | CODE-03 | Phase 6 | Complete |
 | CODE-04 | Phase 6 | Complete |
-| CODE-05 | Phase 6 | Pending |
-| CODE-06 | Phase 6 | Pending |
-| CODE-07 | Phase 6 | Pending |
-| CODE-08 | Phase 6 | Pending |
-| CODE-09 | Phase 6 | Pending |
+| CODE-05 | Phase 6 | Complete |
+| CODE-06 | Phase 6 | Complete |
+| CODE-07 | Phase 6 | Complete |
+| CODE-08 | Phase 6 | Complete |
+| CODE-09 | Phase 6 | Complete |
 | CODE-10 | Phase 6 | Complete |
 | CSRCH-01 | Phase 7 | Pending |
 | CSRCH-02 | Phase 7 | Pending |

@@ -3,12 +3,12 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: unknown
-last_updated: "2026-02-28T17:34:39.213Z"
+last_updated: "2026-02-28T17:39:49Z"
 progress:
   total_phases: 6
   completed_phases: 5
   total_plans: 20
-  completed_plans: 18
+  completed_plans: 19
 ---
 
 # Project State
@@ -23,11 +23,11 @@ See: .planning/PROJECT.md (updated 2026-02-27)
 ## Current Position
 
 Phase: 6 of 6 (Code Indexing) — IN PROGRESS
-Plan: 3 of 5 in phase 06 (plan 03 complete — import resolver for TypeScript/Python/Rust)
-Status: Plan 06-03 COMPLETE — resolveImports, resolveTsImport, resolvePyImport, resolveRustImport, 28 tests pass, 439 total tests pass
-Last activity: 2026-02-28 — Plan 06-03 complete: import path resolver implemented (CODE-07, CODE-08)
+Plan: 4 of 5 in phase 06 (plan 04 complete — indexCodebase orchestrator + MCP tool registration)
+Status: Plan 06-04 COMPLETE — indexCodebase pipeline, registerIndexCodebaseTool, 10 new tests, 449 total tests pass
+Last activity: 2026-02-28 — Plan 06-04 complete: indexCodebase orchestrator implemented (CODE-03, CODE-04, CODE-05, CODE-06, CODE-08, CODE-09)
 
-Progress: [█████████░] 84% (Phase 6: 3/5 plans complete)
+Progress: [█████████░] 92% (Phase 6: 4/5 plans complete)
 
 ## Performance Metrics
 
@@ -56,6 +56,7 @@ Progress: [█████████░] 84% (Phase 6: 3/5 plans complete)
 | Phase 05-document-search P04 | 3 | 1 tasks | 5 files |
 | Phase 06-code-indexing P01 | 5 | 2 tasks | 7 files |
 | Phase 06-code-indexing P03 | 4 | 2 tasks | 2 files |
+| Phase 06-code-indexing P04 | 4 | 2 tasks | 2 files |
 
 ## Accumulated Context
 
@@ -124,6 +125,11 @@ Recent decisions affecting current work:
 - [Phase 06-01]: tree-sitter Bun NAPI workaround: index.js Bun code path expects prebuilds/linux-x64/tree-sitter.node but bun install builds to build/Release/ — postinstall script copies binary; CXXFLAGS=-std=c++20 required for compilation
 - [Phase 06-01]: Grammar packages tree-sitter-typescript@0.23.2, tree-sitter-python@0.25.0, tree-sitter-rust@0.24.0 use prebuilt linux-x64 binaries — ABI compatibility with core 0.25.0 confirmed, no compilation needed for grammars
 - [Phase 06-code-indexing]: super:: in Rust resolved as filesystem parent directory traversal — from src/db/connection.rs, super::models → src/models.rs; progressive segment matching for crate:: handles type-level use statements
+- [Phase 06-04]: indexCodebase processes files sequentially (not parallel) to avoid OOM from tree-sitter + Ollama memory pressure
+- [Phase 06-04]: doc_id = file_path for code_chunks rows — enables join-free lookup by file path (CODE-03)
+- [Phase 06-04]: ast_import edges use delete-then-reinsert strategy on every index cycle — prevents duplicates (CODE-08)
+- [Phase 06-04]: is_test flag embedded in imports JSON field (not a dedicated column) — avoids schema change, preserves forward compat
+- [Phase 06-04]: project_meta.last_index_at update is non-critical: wrapped in try/catch so indexing never fails on metadata update error
 
 ### Pending Todos
 
@@ -136,5 +142,5 @@ Recent decisions affecting current work:
 ## Session Continuity
 
 Last session: 2026-02-28
-Stopped at: Completed 06-code-indexing/06-03-PLAN.md (import-resolver.ts, TypeScript/Python/Rust resolvers, 28 tests, 439 total pass)
+Stopped at: Completed 06-code-indexing/06-04-PLAN.md (index-codebase.ts orchestrator, 10 integration tests, 449 total pass)
 Resume file: None

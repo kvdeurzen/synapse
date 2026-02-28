@@ -91,7 +91,7 @@ export function registerInitProjectTool(server: McpServer, config: SynapseConfig
     {
       description:
         "Initialize a Synapse project database with all required tables. " +
-        "Creates the database directory and 5 LanceDB tables (documents, code_chunks, " +
+        "Creates the database directory and 6 LanceDB tables (documents, doc_chunks, code_chunks, " +
         "relationships, project_meta, activity_log). Idempotent — safe to call multiple times.",
       inputSchema: z.object({
         project_id: z

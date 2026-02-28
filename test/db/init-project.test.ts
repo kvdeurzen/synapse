@@ -7,7 +7,14 @@ import { insertBatch } from "../../src/db/batch.js";
 import { ProjectMetaRowSchema } from "../../src/db/schema.js";
 import { initProject } from "../../src/tools/init-project.js";
 
-const TABLE_NAMES = ["documents", "code_chunks", "relationships", "project_meta", "activity_log"];
+const TABLE_NAMES = [
+  "documents",
+  "doc_chunks",
+  "code_chunks",
+  "relationships",
+  "project_meta",
+  "activity_log",
+];
 
 let tmpDir: string;
 
@@ -20,7 +27,7 @@ afterEach(() => {
 });
 
 describe("initProject", () => {
-  test("creates all 5 tables in a new database", async () => {
+  test("creates all 6 tables in a new database", async () => {
     await initProject(tmpDir, "test-project");
     const db = await lancedb.connect(tmpDir);
     const tableNames = await db.tableNames();
@@ -31,7 +38,7 @@ describe("initProject", () => {
 
   test("returns correct creation summary", async () => {
     const result = await initProject(tmpDir, "test-project");
-    expect(result.tables_created).toBe(5);
+    expect(result.tables_created).toBe(6);
     expect(result.tables_skipped).toBe(0);
     expect(result.project_id).toBe("test-project");
     // database_path should be a non-empty string (absolute path)
@@ -43,7 +50,7 @@ describe("initProject", () => {
     await initProject(tmpDir, "proj");
     const result2 = await initProject(tmpDir, "proj");
     expect(result2.tables_created).toBe(0);
-    expect(result2.tables_skipped).toBe(5);
+    expect(result2.tables_skipped).toBe(6);
   });
 
   test("does not overwrite data on re-init", async () => {

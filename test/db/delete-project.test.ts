@@ -69,7 +69,7 @@ describe("deleteProject", () => {
   test("returns cleanup summary", async () => {
     await initProject(tmpDir, "proj");
     const result = await deleteProject(tmpDir, "proj");
-    expect(result.tables_cleaned).toBe(5);
+    expect(result.tables_cleaned).toBe(6);
     expect(result.project_id).toBe("proj");
   });
 
@@ -77,7 +77,7 @@ describe("deleteProject", () => {
     await initProject(tmpDir, "proj");
     // No data inserted — just call delete
     const result = await deleteProject(tmpDir, "proj");
-    expect(result.tables_cleaned).toBe(5);
+    expect(result.tables_cleaned).toBe(6);
     expect(result.project_id).toBe("proj");
   });
 

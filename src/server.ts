@@ -6,6 +6,7 @@ import { registerDeleteProjectTool } from "./tools/delete-project.js";
 import { registerEchoTool } from "./tools/echo.js";
 import { registerInitProjectTool } from "./tools/init-project.js";
 import { registerPingTool } from "./tools/ping.js";
+import { registerStoreDocumentTool } from "./tools/store-document.js";
 import type { SynapseConfig } from "./types.js";
 
 // Track registered tool count manually (McpServer._registeredTools is private)
@@ -36,6 +37,9 @@ export function createServer(config: SynapseConfig): McpServer {
   toolCount++;
 
   registerDeleteProjectTool(server, config);
+  toolCount++;
+
+  registerStoreDocumentTool(server, config);
   toolCount++;
 
   return server;

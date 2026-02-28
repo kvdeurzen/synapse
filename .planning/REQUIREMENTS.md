@@ -21,9 +21,9 @@ Requirements for initial release. Each maps to roadmap phases.
 
 - [x] **EMBED-01**: Embedding service calls Ollama /api/embed with nomic-embed-text model (768 dimensions)
 - [x] **EMBED-02**: Embedding service supports single and batch embedding
-- [ ] **EMBED-03**: Write operations (store_document, index_codebase) fail fast with clear error when Ollama is unreachable
-- [ ] **EMBED-04**: Read operations (semantic_search, search_code, query_documents) continue working without Ollama
-- [ ] **EMBED-05**: Non-blocking health check on startup logs warning if Ollama is down but server starts anyway
+- [x] **EMBED-03**: Write operations (store_document, index_codebase) fail fast with clear error when Ollama is unreachable
+- [x] **EMBED-04**: Read operations (semantic_search, search_code, query_documents) continue working without Ollama
+- [x] **EMBED-05**: Non-blocking health check on startup logs warning if Ollama is down but server starts anyway
 - [x] **EMBED-06**: Embedding dimension assertion prevents inserting vectors with wrong dimensions
 
 ### Document Management
@@ -127,9 +127,9 @@ Which phases cover which requirements. Updated during roadmap creation.
 | FOUND-06 | Phase 2 | Complete |
 | EMBED-01 | Phase 3 | Complete |
 | EMBED-02 | Phase 3 | Complete |
-| EMBED-03 | Phase 3 | Pending |
-| EMBED-04 | Phase 3 | Pending |
-| EMBED-05 | Phase 3 | Pending |
+| EMBED-03 | Phase 3 | Complete |
+| EMBED-04 | Phase 3 | Complete |
+| EMBED-05 | Phase 3 | Complete |
 | EMBED-06 | Phase 3 | Complete |
 | FOUND-04 | Phase 4 | Pending |
 | DOC-01 | Phase 4 | Pending |

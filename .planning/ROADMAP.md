@@ -14,7 +14,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 
 - [x] **Phase 1: MCP Foundation** - Scaffold stdio MCP server with stderr-only logging discipline before any business logic is written (completed 2026-02-27)
 - [x] **Phase 2: Database Schema** - Define and freeze all 5 LanceDB table schemas with v2 forward-compatibility fields before any data is written (completed 2026-02-27)
-- [ ] **Phase 3: Embedding Service** - Build the shared Ollama embedding service with fail-fast on writes, dimension assertion, and startup health check
+- [x] **Phase 3: Embedding Service** - Build the shared Ollama embedding service with fail-fast on writes, dimension assertion, and startup health check (completed 2026-02-28)
 - [ ] **Phase 4: Document Management** - Implement all 9 document tools with versioning, lifecycle, relationships, and activity logging
 - [ ] **Phase 5: Document Search** - Implement hybrid search (RRF), semantic search, FTS, and two-phase smart context assembly
 - [ ] **Phase 6: Code Indexing** - Build AST-aware tree-sitter indexing pipeline with incremental hashing and auto-relationship generation
@@ -117,7 +117,7 @@ Note: Phase 6 depends on Phase 3 (not Phase 5), so Phases 5 and 6 could run in p
 |-------|----------------|--------|-----------|
 | 1. MCP Foundation | 2/2 | Complete   | 2026-02-27 |
 | 2. Database Schema | 2/2 | Complete   | 2026-02-27 |
-| 3. Embedding Service | 1/2 | In Progress|  |
+| 3. Embedding Service | 2/2 | Complete   | 2026-02-28 |
 | 4. Document Management | 0/TBD | Not started | - |
 | 5. Document Search | 0/TBD | Not started | - |
 | 6. Code Indexing | 0/TBD | Not started | - |

@@ -3,12 +3,12 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: unknown
-last_updated: "2026-02-28T05:46:25.120Z"
+last_updated: "2026-02-28T05:53:39.775Z"
 progress:
   total_phases: 3
-  completed_phases: 2
+  completed_phases: 3
   total_plans: 7
-  completed_plans: 6
+  completed_plans: 7
 ---
 
 # Project State
@@ -23,11 +23,11 @@ See: .planning/PROJECT.md (updated 2026-02-27)
 ## Current Position
 
 Phase: 3 of 7 (Embedding Service)
-Plan: 1 of 2 in current phase (plan complete — Phase 3 in progress)
-Status: Phase 3 in progress
-Last activity: 2026-02-28 — Plan 03-01 complete: embedding service with LRU cache, retry, batch chunking, dimension assertion
+Plan: 2 of 2 in current phase (phase complete — Phase 3 done)
+Status: Phase 3 complete — ready for Phase 4
+Last activity: 2026-02-28 — Plan 03-02 complete: health check wiring, ping live status, write/read path patterns
 
-Progress: [█████░░░░░] 42%
+Progress: [██████░░░░] 57%
 
 ## Performance Metrics
 
@@ -42,10 +42,10 @@ Progress: [█████░░░░░] 42%
 |-------|-------|-------|----------|
 | 01-mcp-foundation | 2/2 | 9 min | 4.5 min |
 | 02-database-schema | 3/3 | 12 min | 4 min |
-| 03-embedding-service | 1/2 | 4 min | 4 min |
+| 03-embedding-service | 2/2 | 8 min | 4 min |
 
 **Recent Trend:**
-- Last 5 plans: 5 min, 4 min, 6 min, 4 min, 4 min
+- Last 5 plans: 4 min, 6 min, 4 min, 4 min, 4 min
 - Trend: stable
 
 *Updated after each plan completion*
@@ -78,6 +78,10 @@ Recent decisions affecting current work:
 - [Phase 03-01]: Used _setFetchImpl() test hook for mockable fetch injection — simpler than Bun mock.module
 - [Phase 03-01]: AbortSignal.timeout() for 30s per-request timeout — no manual abort controller needed
 - [Phase 03-01]: Fail-fast on OllamaModelNotFoundError and EmbedDimensionError; retry on transient errors (TypeError, DOMException, HTTP 5xx)
+- [Phase 03-02]: checkOllamaHealth uses GET /api/tags metadata endpoint — no test embed call on startup
+- [Phase 03-02]: Model name matching handles ':latest' tag suffix via startsWith() — nomic-embed-text matches nomic-embed-text:latest
+- [Phase 03-02]: startServer() warns but does NOT abort on unreachable Ollama — server starts in all cases
+- [Phase 03-02]: Module-level ollamaStatus defaults to 'unreachable' until checkOllamaHealth runs — safe default for write-path callers
 
 ### Pending Todos
 
@@ -90,5 +94,5 @@ Recent decisions affecting current work:
 ## Session Continuity
 
 Last session: 2026-02-28
-Stopped at: Completed 03-embedding-service/03-01-PLAN.md (Phase 3 Plan 1 complete — embedding service core built)
+Stopped at: Completed 03-embedding-service/03-02-PLAN.md (Phase 3 Plan 2 complete — health check integration and path patterns)
 Resume file: None

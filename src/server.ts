@@ -5,7 +5,9 @@ import { checkOllamaHealth, setOllamaStatus } from "./services/embedder.js";
 import { registerDeleteDocumentTool } from "./tools/delete-document.js";
 import { registerDeleteProjectTool } from "./tools/delete-project.js";
 import { registerEchoTool } from "./tools/echo.js";
+import { registerGetRelatedDocumentsTool } from "./tools/get-related-documents.js";
 import { registerInitProjectTool } from "./tools/init-project.js";
+import { registerLinkDocumentsTool } from "./tools/link-documents.js";
 import { registerPingTool } from "./tools/ping.js";
 import { registerProjectOverviewTool } from "./tools/project-overview.js";
 import { registerQueryDocumentsTool } from "./tools/query-documents.js";
@@ -56,6 +58,12 @@ export function createServer(config: SynapseConfig): McpServer {
   toolCount++;
 
   registerProjectOverviewTool(server, config);
+  toolCount++;
+
+  registerLinkDocumentsTool(server, config);
+  toolCount++;
+
+  registerGetRelatedDocumentsTool(server, config);
   toolCount++;
 
   return server;

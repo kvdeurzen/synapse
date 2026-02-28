@@ -6,16 +6,22 @@
     "start": "bun run src/index.ts",
     "test": "bun test",
     "lint": "bunx biome check src/ test/",
-    "format": "bunx biome format --write src/ test/"
+    "format": "bunx biome format --write src/ test/",
+    "postinstall": "node scripts/setup-tree-sitter.js"
   },
   "dependencies": {
     "@lancedb/lancedb": "0.26.2",
     "@langchain/textsplitters": "^1.0.1",
     "@modelcontextprotocol/sdk": "latest",
     "gpt-tokenizer": "^3.4.0",
+    "ignore": "^7.0.5",
     "lru-cache": "^11.2.6",
     "pino": "latest",
     "smol-toml": "latest",
+    "tree-sitter": "^0.25.0",
+    "tree-sitter-python": "^0.25.0",
+    "tree-sitter-rust": "^0.24.0",
+    "tree-sitter-typescript": "^0.23.2",
     "ulidx": "^2.4.1",
     "zod": "^4.0.0"
   },

@@ -2,13 +2,13 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: in_progress
-last_updated: "2026-02-28T15:12:43Z"
+status: unknown
+last_updated: "2026-02-28T15:21:27.689Z"
 progress:
-  total_phases: 7
+  total_phases: 5
   completed_phases: 4
-  total_plans: 11
-  completed_plans: 12
+  total_plans: 15
+  completed_plans: 13
 ---
 
 # Project State
@@ -23,9 +23,9 @@ See: .planning/PROJECT.md (updated 2026-02-27)
 ## Current Position
 
 Phase: 5 of 7 (Document Search) — IN PROGRESS
-Plan: 1 of 5 in current phase (Plan 05-01 complete — FTS index in init_project, search-utils.ts shared utilities)
-Status: Phase 5 Plan 01 COMPLETE — FTS index + search utilities foundation built
-Last activity: 2026-02-28 — Plan 05-01 complete: FTS index on doc_chunks.content (init_project), search-utils.ts (normalizeVectorScore, normalizeFtsScore, extractSnippet, fetchDocMetadata, buildSearchPredicate, SearchResultItem)
+Plan: 3 of 5 in current phase (Plan 05-03 complete — get_smart_context tool: overview mode + detailed mode with 1-hop graph expansion)
+Status: Phase 5 Plan 03 COMPLETE — get_smart_context two-phase context assembly tool built
+Last activity: 2026-02-28 — Plan 05-03 complete: get_smart_context MCP tool (overview metadata scan + detailed 1-hop graph expansion, token budget, RELATIONSHIP_PRIORITY ordering)
 
 Progress: [████████░░] 57% (Phase 5 in progress)
 
@@ -44,13 +44,14 @@ Progress: [████████░░] 57% (Phase 5 in progress)
 | 02-database-schema | 3/3 | 12 min | 4 min |
 | 03-embedding-service | 2/2 | 8 min | 4 min |
 | 04-document-management | 4/4 | 28 min | 7 min |
-| 05-document-search | 1/5 | 3 min | 3 min |
+| 05-document-search | 3/5 | ~11 min | ~4 min |
 
 **Recent Trend:**
 - Last 5 plans: 3 min, 8 min, 6 min, 4 min, 4 min
 - Trend: stable
 
 *Updated after each plan completion*
+| Phase 05-document-search P03 | 4 | 2 tasks | 2 files |
 
 ## Accumulated Context
 
@@ -105,6 +106,9 @@ Recent decisions affecting current work:
 - [Phase 05-01]: Metadata pre-filter in buildSearchPredicate capped at 200 doc_ids (RESEARCH.md pitfall 4); beyond that postFilterRequired=true
 - [Phase 05-01]: normalizeFtsScore sigmoid (score/(score+1)) — maps positive reals to [0,1), 0 for score<=0
 - [Phase 05-01]: normalizeVectorScore uses 1-(d/2) clamped — cosine distance [0,2] to relevance [0,1]
+- [Phase 05-03]: get_smart_context max_tokens min=500 — tests use 500+ with overflow-designed content for budget enforcement
+- [Phase 05-03]: get_smart_context requested docs always included regardless of budget; only related/expanded docs are budget-gated
+- [Phase 05-03]: 1-hop graph expansion keeps highest-priority relationship when doc appears via multiple paths (dedup by RELATIONSHIP_PRIORITY)
 
 ### Pending Todos
 
@@ -117,5 +121,5 @@ Recent decisions affecting current work:
 ## Session Continuity
 
 Last session: 2026-02-28
-Stopped at: Completed 05-document-search/05-01-PLAN.md (FTS index in init_project, search-utils.ts with normalizers/snippet/predicate/metadata utilities)
+Stopped at: Completed 05-document-search/05-03-PLAN.md (get_smart_context tool: overview mode metadata scan + detailed mode 1-hop graph expansion with RELATIONSHIP_PRIORITY ordering)
 Resume file: None

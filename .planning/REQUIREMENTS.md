@@ -46,9 +46,9 @@ Requirements for initial release. Each maps to roadmap phases.
 - [ ] **SRCH-01**: User can run semantic search across documents with optional category, phase, tags, status filters and min_relevance threshold
 - [ ] **SRCH-02**: User can run full-text search across documents
 - [ ] **SRCH-03**: Hybrid search merges semantic and FTS results via Reciprocal Rank Fusion (k=60)
-- [ ] **SRCH-04**: get_smart_context overview phase returns summaries (~100 tokens each) from both documents and code_chunks tables (~2-4k tokens total)
-- [ ] **SRCH-05**: get_smart_context detailed phase fetches full content for agent-specified doc_ids with 1-hop relationship traversal
-- [ ] **SRCH-06**: get_smart_context respects max_tokens budget and truncates results to fit
+- [x] **SRCH-04**: get_smart_context overview phase returns summaries (~100 tokens each) from both documents and code_chunks tables (~2-4k tokens total)
+- [x] **SRCH-05**: get_smart_context detailed phase fetches full content for agent-specified doc_ids with 1-hop relationship traversal
+- [x] **SRCH-06**: get_smart_context respects max_tokens budget and truncates results to fit
 - [x] **SRCH-07**: Search results include relevance scores and source attribution
 
 ### Relationships & Graph
@@ -151,9 +151,9 @@ Which phases cover which requirements. Updated during roadmap creation.
 | SRCH-01 | Phase 5 | Pending |
 | SRCH-02 | Phase 5 | Pending |
 | SRCH-03 | Phase 5 | Pending |
-| SRCH-04 | Phase 5 | Pending |
-| SRCH-05 | Phase 5 | Pending |
-| SRCH-06 | Phase 5 | Pending |
+| SRCH-04 | Phase 5 | Complete |
+| SRCH-05 | Phase 5 | Complete |
+| SRCH-06 | Phase 5 | Complete |
 | SRCH-07 | Phase 5 | Complete |
 | CODE-01 | Phase 6 | Pending |
 | CODE-02 | Phase 6 | Pending |

@@ -29,8 +29,8 @@ Requirements for initial release. Each maps to roadmap phases.
 ### Document Management
 
 - [ ] **DOC-01**: User can store a document with title, content, category (17 types), and optional metadata via store_document
-- [ ] **DOC-02**: Documents are chunked at write time using category-specific strategies (semantic_section, paragraph, fixed_size) with configurable max size and overlap
-- [ ] **DOC-03**: Each chunk is prefixed with context header ("Document: {title} | Section: {header}") before embedding
+- [x] **DOC-02**: Documents are chunked at write time using category-specific strategies (semantic_section, paragraph, fixed_size) with configurable max size and overlap
+- [x] **DOC-03**: Each chunk is prefixed with context header ("Document: {title} | Section: {header}") before embedding
 - [ ] **DOC-04**: store_document with existing doc_id creates new version (version + 1) and marks old chunks as superseded
 - [ ] **DOC-05**: User can query documents by category, phase, tags, status, and priority filters via query_documents
 - [ ] **DOC-06**: User can update document metadata (status, phase, tags, priority) without re-embedding via update_document
@@ -38,7 +38,7 @@ Requirements for initial release. Each maps to roadmap phases.
 - [ ] **DOC-08**: project_overview returns document counts by category/status/phase, recent activity, and key documents (priority >= 4)
 - [ ] **DOC-09**: Documents follow lifecycle states: draft → active → approved, with superseded and archived transitions
 - [ ] **DOC-10**: Carry-forward categories (architecture_decision, design_pattern, glossary, code_pattern, dependency) are never auto-archived
-- [ ] **DOC-11**: All mutations are logged to activity_log with actor, action, and timestamp
+- [x] **DOC-11**: All mutations are logged to activity_log with actor, action, and timestamp
 - [ ] **DOC-12**: store_document returns doc_id, chunk_count, version, and token_estimate
 
 ### Search
@@ -133,8 +133,8 @@ Which phases cover which requirements. Updated during roadmap creation.
 | EMBED-06 | Phase 3 | Complete |
 | FOUND-04 | Phase 4 | Pending |
 | DOC-01 | Phase 4 | Pending |
-| DOC-02 | Phase 4 | Pending |
-| DOC-03 | Phase 4 | Pending |
+| DOC-02 | Phase 4 | Complete |
+| DOC-03 | Phase 4 | Complete |
 | DOC-04 | Phase 4 | Pending |
 | DOC-05 | Phase 4 | Pending |
 | DOC-06 | Phase 4 | Pending |
@@ -142,7 +142,7 @@ Which phases cover which requirements. Updated during roadmap creation.
 | DOC-08 | Phase 4 | Pending |
 | DOC-09 | Phase 4 | Pending |
 | DOC-10 | Phase 4 | Pending |
-| DOC-11 | Phase 4 | Pending |
+| DOC-11 | Phase 4 | Complete |
 | DOC-12 | Phase 4 | Pending |
 | GRAPH-01 | Phase 4 | Pending |
 | GRAPH-02 | Phase 4 | Pending |

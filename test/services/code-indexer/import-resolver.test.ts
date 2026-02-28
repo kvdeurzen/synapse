@@ -306,13 +306,26 @@ describe("resolveImports — Rust", () => {
     expect(edges).toHaveLength(0);
   });
 
-  it("Test 6: super:: import with non-existent target — no edge", () => {
-    // src/db/connection.rs super:: goes to src/db/ level, models doesn't exist there
+  it("Test 6: super:: from src/db/connection.rs resolves to src/models.rs", () => {
+    // In Rust, super:: from src/db/connection.rs goes up to the parent module (src/ level).
+    // super::models → src/models.rs which exists in fileSet → creates an edge.
     const edges = resolveImports({
       fileSet,
       language: "rust",
       filePath: "src/db/connection.rs",
       imports: ["super::models"],
+    });
+    expect(edges).toHaveLength(1);
+    expect(edges[0]).toEqual({ from: "src/db/connection.rs", to: "src/models.rs", symbols: [] });
+  });
+
+  it("super:: import with truly non-existent target — no edge", () => {
+    // super::nonexistent → src/nonexistent.rs — not in fileSet → no edge
+    const edges = resolveImports({
+      fileSet,
+      language: "rust",
+      filePath: "src/db/connection.rs",
+      imports: ["super::nonexistent"],
     });
     expect(edges).toHaveLength(0);
   });

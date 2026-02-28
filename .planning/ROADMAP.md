@@ -120,5 +120,5 @@ Note: Phase 6 depends on Phase 3 (not Phase 5), so Phases 5 and 6 could run in p
 | 3. Embedding Service | 2/2 | Complete   | 2026-02-28 |
 | 4. Document Management | 4/4 | Complete   | 2026-02-28 |
 | 5. Document Search | 4/4 | Complete   | 2026-02-28 |
-| 6. Code Indexing | 2/5 | In Progress|  |
+| 6. Code Indexing | 3/5 | In Progress|  |
 | 7. Code Search and Integration Validation | 0/TBD | Not started | - |

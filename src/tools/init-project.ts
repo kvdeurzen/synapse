@@ -178,6 +178,29 @@ export async function initProject(
     }
   }
 
+  // ── Create FTS index on doc_chunks.content (Phase 5) ────────────────────
+  // Only needed for fresh databases. replace: true handles re-init idempotency.
+  if (tables_created > 0) {
+    const docChunksTable = await db.openTable("doc_chunks");
+    try {
+      await docChunksTable.createIndex("content", {
+        config: lancedb.Index.fts({
+          withPosition: true,
+          stem: false, // preserve technical terms exactly
+          removeStopWords: false,
+          lowercase: true,
+        }),
+        replace: true, // idempotent on re-init
+      });
+      logger.debug("FTS index created on doc_chunks.content");
+    } catch (err) {
+      logger.warn(
+        { error: String(err) },
+        "FTS index creation failed on doc_chunks — will create on first data insert",
+      );
+    }
+  }
+
   // ── Seed starter documents for fresh projects only ────────────────────────
   // Only seed if at least one table was created (fresh project, not a re-init)
   let starters_seeded = 0;

@@ -10,6 +10,8 @@ import { registerGetIndexStatusTool } from "./tools/get-index-status.js";
 import { registerGetRelatedDocumentsTool } from "./tools/get-related-documents.js";
 import { registerCheckPrecedentTool } from "./tools/check-precedent.js";
 import { registerCreateTaskTool } from "./tools/create-task.js";
+import { registerUpdateTaskTool } from "./tools/update-task.js";
+import { registerGetTaskTreeTool } from "./tools/get-task-tree.js";
 import { registerQueryDecisionsTool as registerQueryDecisionsMcpTool } from "./tools/query-decisions.js";
 import { registerStoreDecisionTool } from "./tools/store-decision.js";
 import { registerGetSmartContextTool } from "./tools/get-smart-context.js";
@@ -108,6 +110,12 @@ export function createServer(config: SynapseConfig): McpServer {
   toolCount++;
 
   registerCreateTaskTool(server, config);
+  toolCount++;
+
+  registerUpdateTaskTool(server, config); // tool 23
+  toolCount++;
+
+  registerGetTaskTreeTool(server, config); // tool 24
   toolCount++;
 
   return server;

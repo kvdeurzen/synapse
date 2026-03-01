@@ -597,7 +597,7 @@ describe("searchCode", () => {
 // ── Server registration ────────────────────────────────────────────────────
 
 describe("server registration", () => {
-  test("search_code tool is registered and tool count is 22 (after create_task added in Phase 11)", () => {
+  test("search_code tool is registered and tool count is 24 (after task tools added in Phase 11)", () => {
     const config = { ...TEST_CONFIG, db: tmpDir };
     const server = createServer(config);
 
@@ -608,8 +608,8 @@ describe("server registration", () => {
     expect(typeof registeredTools).toBe("object");
     expect("search_code" in registeredTools).toBe(true);
 
-    // Tool count is 22 (create_task added in Phase 11)
+    // Tool count is 24 (create_task, update_task, get_task_tree added in Phase 11)
     const toolCount = Object.keys(registeredTools).length;
-    expect(toolCount).toBe(22);
+    expect(toolCount).toBe(24);
   });
 });

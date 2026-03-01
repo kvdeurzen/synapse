@@ -1,14 +1,14 @@
 ---
 gsd_state_version: 1.0
-milestone: v1.0
-milestone_name: milestone
-status: unknown
-last_updated: "2026-03-01T06:58:07.389Z"
+milestone: v2.0
+milestone_name: Agentic Framework
+status: ready_to_plan
+last_updated: "2026-03-01T00:00:00.000Z"
 progress:
-  total_phases: 9
-  completed_phases: 9
-  total_plans: 24
-  completed_plans: 24
+  total_phases: 5
+  completed_phases: 0
+  total_plans: 0
+  completed_plans: 0
 ---
 
 # Project State
@@ -18,21 +18,26 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-01)
 
 **Core value:** Agents get the right context for any task — from both project decisions and actual code — without wasting tokens on irrelevant content. The orchestrator ensures agents respect established decisions and decompose work to context-window-sized executable units.
-**Current focus:** Defining requirements for v2.0 Agentic Framework
+**Current focus:** v2.0 Agentic Framework — Phase 10 (Decision Tracking Tooling)
+**Previous milestone:** v1.0 Data Layer — shipped 2026-03-01 (50/50 requirements, 9 phases, 24 plans)
 
 ## Current Position
 
-Phase: 09-tech-debt-cleanup (complete)
-Plan: 01 (complete)
-Status: Phase 9 complete — all v1 tech debt closed
-Last activity: 2026-03-01 — Completed Phase 9 Plan 1 (tech debt documentation cleanup)
+Phase: 10 of 14 (Decision Tracking Tooling)
+Plan: Not started
+Status: Roadmap complete — ready to plan Phase 10
+Last activity: 2026-03-01 — v2.0 roadmap created (Phases 10-14 defined, 61 requirements mapped)
+
+Progress: [░░░░░░░░░░] 0% (v2.0 milestone)
 
 ## Performance Metrics
 
-**Velocity (v1.0):**
-- Total plans completed: 23
-- Total phases completed: 8 (Phase 9 tech debt skipped)
-- 495 tests passing at milestone close
+**Velocity (v1.0 reference):**
+- Total plans completed: 24
+- Total phases completed: 9
+- 495 tests passing at v1.0 close
+
+**v2.0:** Not started — metrics will populate after first plan completes
 
 ## Accumulated Context
 
@@ -40,37 +45,26 @@ Last activity: 2026-03-01 — Completed Phase 9 Plan 1 (tech debt documentation 
 
 Decisions are logged in PROJECT.md Key Decisions table.
 
-**v1.0 decisions (all ✓ Good):** LanceDB embedded, write-time chunking, fail-fast Ollama, superseded-row versioning, RRF hybrid search, two-phase smart context, tree-sitter code parsing, separate code_chunks table, auto relationships from AST, v2 schema foundations, open source.
-
 **v2.0 decisions (pending validation):**
-- Claude Agent SDK over custom runtime
-- 10 specialized agents (GSD-inspired narrow focus)
-- Skills as prompt injection, not code plugins
-- Trust matrix as config file, not DB table
-- Clean Synapse/Orchestrator boundary: data layer vs control layer
-
-### Key v1.0 Implementation Patterns
-
-- registerXTool(server, config, ...) pattern for all tool registrations
-- Two-export pattern: core functions exported separately from registerXTool wrappers
-- exactOptionalPropertyTypes compliance: build filter objects conditionally
-- LanceDB table objects cache state — must open fresh connection to read updates
-- Utf8 for enums, pipe-separated tags, JSON strings for arrays (LanceDB schema pattern)
-- delete+insert upsert pattern for LanceDB (no native upsert)
-- BTree/FTS index graceful degradation via try/catch
+- Claude Agent SDK over custom runtime (battle-tested, Anthropic-maintained)
+- 10 specialized agents with narrow cognitive focus (GSD pattern)
+- Skills as prompt injection, not code plugins (simpler, no runtime code loading)
+- Trust matrix as YAML config file, not DB table (explicit, auditable)
+- Clean Synapse/Orchestrator process boundary: data layer vs control layer
 
 ### Pending Todos
 
-- (09-01) Documentation-only plan: all 4 fixes are surgical text replacements with zero behavioral impact
-- (09-01) Three separate REQUIREMENTS.md edits committed in two separate commits to preserve atomic task history
+None.
 
 ### Blockers/Concerns
 
-- Orchestrator integration tests require Claude API calls (cost consideration)
-- Claude Agent SDK compatibility with Bun needs verification in Phase 10
+- (Phase 12) Orchestrator integration tests require Claude API calls — mock/record/replay harness must be established first
+- (Phase 12) Claude Agent SDK compatibility with Bun needs verification at bootstrap time
+- (Phase 13) Agent prompt engineering is iterative — research-phase required before building all 10 agent definitions
+- (Phase 14) Wave controller and SubagentStop completion detection have limited public examples — research-phase required
 
 ## Session Continuity
 
 Last session: 2026-03-01
-Stopped at: Completed 09-01-PLAN.md (tech debt documentation cleanup — all 4 items fixed)
+Stopped at: v2.0 roadmap created — Phases 10-14 with 61 requirements mapped (100% coverage)
 Resume file: None

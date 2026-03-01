@@ -1,7 +1,7 @@
 # Requirements: Synapse
 
 **Defined:** 2026-02-27
-**Updated:** 2026-03-01 (v2.0 milestone started)
+**Updated:** 2026-03-01 (v2.0 roadmap created — all 61 requirements mapped)
 **Core Value:** Agents get the right context for any task — from both project decisions and actual code — without wasting tokens on irrelevant content. The orchestrator ensures agents respect established decisions and decompose work to context-window-sized executable units.
 
 ## v1.0 Requirements (Complete)
@@ -40,7 +40,7 @@ All 50 requirements shipped and verified. See traceability section for phase map
 - [x] **DOC-06**: User can update document metadata (status, phase, tags, priority) without re-embedding via update_document
 - [x] **DOC-07**: User can soft-delete (archive) or hard-delete documents via delete_document
 - [x] **DOC-08**: project_overview returns document counts by category/status/phase, recent activity, and key documents (priority >= 4)
-- [x] **DOC-09**: Documents follow lifecycle states: draft → active → approved, with superseded and archived transitions
+- [x] **DOC-09**: Documents follow lifecycle states: draft -> active -> approved, with superseded and archived transitions
 - [x] **DOC-10**: Carry-forward categories (architecture_decision, design_pattern, glossary, code_pattern, dependency) are never auto-archived
 - [x] **DOC-11**: All mutations are logged to activity_log with actor, action, and timestamp
 - [x] **DOC-12**: store_document returns doc_id, chunk_count, version, and token_estimate
@@ -94,7 +94,7 @@ Requirements for the Agentic Framework milestone. Each maps to roadmap phases 10
 - [ ] **DEC-02**: Decision rationale is embedded as a 768-dim vector for semantic precedent search
 - [ ] **DEC-03**: Agent can query decisions by tier, status, subject, tags, and precedent flag via query_decisions
 - [ ] **DEC-04**: Agent can check if a similar precedent exists via check_precedent with 0.85+ similarity threshold and decision_type pre-filtering
-- [ ] **DEC-05**: Decisions follow lifecycle: active → superseded → revoked
+- [ ] **DEC-05**: Decisions follow lifecycle: active -> superseded -> revoked
 - [ ] **DEC-06**: init_project creates the decisions table with Arrow schema, BTree indexes, and FTS index
 - [ ] **DEC-07**: All decision mutations are logged to activity_log
 - [ ] **DEC-08**: check_precedent returns has_precedent boolean plus matching decisions with similarity scores
@@ -104,7 +104,7 @@ Requirements for the Agentic Framework milestone. Each maps to roadmap phases 10
 - [ ] **TASK-01**: Agent can create a task with parent_id, depth (0-3), title, description, and dependencies via create_task
 - [ ] **TASK-02**: Task tree supports 4 depth levels: Epic (0), Feature (1), Component (2), Task (3)
 - [ ] **TASK-03**: Agent can update task status, assigned_agent, priority, and other fields via update_task
-- [ ] **TASK-04**: Cascade status propagation: all children complete → parent completes; any child blocked → parent blocked
+- [ ] **TASK-04**: Cascade status propagation: all children complete -> parent completes; any child blocked -> parent blocked
 - [ ] **TASK-05**: Agent can retrieve full task tree via get_task_tree with rollup statistics (total/complete/blocked counts)
 - [ ] **TASK-06**: get_task_tree uses JS-side BFS with root_id denormalization (max depth 5, 200-task cap)
 - [ ] **TASK-07**: Dependency cycles are detected and rejected on create_task and update_task
@@ -151,7 +151,7 @@ Requirements for the Agentic Framework milestone. Each maps to roadmap phases 10
 - [ ] **TRUST-01**: Trust-Knowledge Matrix stored as YAML config file (not DB table)
 - [ ] **TRUST-02**: Per-domain autonomy levels: autopilot (agent decides), co-pilot (agent proposes, user approves), advisory (agent suggests, user decides)
 - [ ] **TRUST-03**: Tier 0 (Product Strategy) decisions always require user approval regardless of trust config
-- [ ] **TRUST-04**: Trust config drives hook decisions: autopilot → allow, co-pilot → ask, advisory → ask with explanation
+- [ ] **TRUST-04**: Trust config drives hook decisions: autopilot -> allow, co-pilot -> ask, advisory -> ask with explanation
 - [ ] **TRUST-05**: Decision tier authority matrix maps each agent role to its permitted decision tiers
 
 ### Quality Gates (GATE)
@@ -166,12 +166,12 @@ Requirements for the Agentic Framework milestone. Each maps to roadmap phases 10
 
 ### PEV Workflow (WFLOW)
 
-- [ ] **WFLOW-01**: Plan-Execute-Validate loop orchestrates Decomposer → Executor → Validator sequence
+- [ ] **WFLOW-01**: Plan-Execute-Validate loop orchestrates Decomposer -> Executor -> Validator sequence
 - [ ] **WFLOW-02**: PEV loop capped at 3 iterations; iteration 3 failure escalates to user
 - [ ] **WFLOW-03**: Wave-based parallel execution: independent leaf tasks in the same wave execute concurrently
 - [ ] **WFLOW-04**: Wave N+1 starts only after all tasks in wave N are validated complete
 - [ ] **WFLOW-05**: Executor failures trigger Debugger agent for root-cause analysis before retry
-- [ ] **WFLOW-06**: Decomposer ↔ Plan Reviewer verification loop (max 3 iterations) gates execution start
+- [ ] **WFLOW-06**: Decomposer <-> Plan Reviewer verification loop (max 3 iterations) gates execution start
 
 ## Future Requirements
 
@@ -267,18 +267,78 @@ Which phases cover which requirements. Updated during roadmap creation.
 | CSRCH-03 | Phase 7 | Complete |
 | CSRCH-04 | Phase 7 | Complete |
 
-### v2.0 (Pending — updated by roadmapper)
+### v2.0 (Pending)
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| *(populated during roadmap creation)* | | |
+| DEC-01 | Phase 10 | Pending |
+| DEC-02 | Phase 10 | Pending |
+| DEC-03 | Phase 10 | Pending |
+| DEC-04 | Phase 10 | Pending |
+| DEC-05 | Phase 10 | Pending |
+| DEC-06 | Phase 10 | Pending |
+| DEC-07 | Phase 10 | Pending |
+| DEC-08 | Phase 10 | Pending |
+| TASK-01 | Phase 11 | Pending |
+| TASK-02 | Phase 11 | Pending |
+| TASK-03 | Phase 11 | Pending |
+| TASK-04 | Phase 11 | Pending |
+| TASK-05 | Phase 11 | Pending |
+| TASK-06 | Phase 11 | Pending |
+| TASK-07 | Phase 11 | Pending |
+| TASK-08 | Phase 11 | Pending |
+| TASK-09 | Phase 11 | Pending |
+| TASK-10 | Phase 11 | Pending |
+| ORCH-01 | Phase 12 | Pending |
+| ORCH-02 | Phase 12 | Pending |
+| ORCH-03 | Phase 12 | Pending |
+| ORCH-04 | Phase 12 | Pending |
+| ORCH-05 | Phase 12 | Pending |
+| ORCH-06 | Phase 12 | Pending |
+| ROLE-01 | Phase 13 | Pending |
+| ROLE-02 | Phase 13 | Pending |
+| ROLE-03 | Phase 13 | Pending |
+| ROLE-04 | Phase 13 | Pending |
+| ROLE-05 | Phase 13 | Pending |
+| ROLE-06 | Phase 13 | Pending |
+| ROLE-07 | Phase 13 | Pending |
+| ROLE-08 | Phase 13 | Pending |
+| ROLE-09 | Phase 13 | Pending |
+| ROLE-10 | Phase 13 | Pending |
+| ROLE-11 | Phase 13 | Pending |
+| ROLE-12 | Phase 13 | Pending |
+| ROLE-13 | Phase 13 | Pending |
+| SKILL-01 | Phase 13 | Pending |
+| SKILL-02 | Phase 13 | Pending |
+| SKILL-03 | Phase 13 | Pending |
+| SKILL-04 | Phase 13 | Pending |
+| SKILL-05 | Phase 13 | Pending |
+| SKILL-06 | Phase 13 | Pending |
+| TRUST-01 | Phase 13 | Pending |
+| TRUST-02 | Phase 13 | Pending |
+| TRUST-03 | Phase 13 | Pending |
+| TRUST-04 | Phase 13 | Pending |
+| TRUST-05 | Phase 13 | Pending |
+| GATE-01 | Phase 14 | Pending |
+| GATE-02 | Phase 14 | Pending |
+| GATE-03 | Phase 14 | Pending |
+| GATE-04 | Phase 14 | Pending |
+| GATE-05 | Phase 14 | Pending |
+| GATE-06 | Phase 14 | Pending |
+| GATE-07 | Phase 14 | Pending |
+| WFLOW-01 | Phase 14 | Pending |
+| WFLOW-02 | Phase 14 | Pending |
+| WFLOW-03 | Phase 14 | Pending |
+| WFLOW-04 | Phase 14 | Pending |
+| WFLOW-05 | Phase 14 | Pending |
+| WFLOW-06 | Phase 14 | Pending |
 
 **Coverage:**
 - v1.0 requirements: 50 total — 50 complete
-- v2.0 requirements: 54 total
-- Mapped to phases: 0 (pending roadmap)
-- Unmapped: 54
+- v2.0 requirements: 61 total
+- Mapped to phases: 61 (100% coverage)
+- Unmapped: 0
 
 ---
 *Requirements defined: 2026-02-27*
-*Last updated: 2026-03-01 after v2.0 milestone requirements definition*
+*Last updated: 2026-03-01 — v2.0 roadmap created, all 61 requirements mapped to Phases 10-14*

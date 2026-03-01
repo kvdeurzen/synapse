@@ -74,7 +74,7 @@ Agents get the right context for any task — from both project decisions and ac
 
 ## Context
 
-**Existing codebase (v1.0):** 18 MCP tools, 6 LanceDB tables, 495 tests passing. Synapse MCP server is fully operational as a data layer. Codebase map at `.planning/codebase/`.
+**Shipped v1.0 (2026-03-01):** 18 MCP tools, 6 LanceDB tables, 495 tests passing, 18,561 LOC TypeScript. Synapse MCP server is fully operational as a data layer. 50/50 requirements satisfied, 9 phases complete. See `.planning/MILESTONES.md` and `.planning/milestones/v1.0-ROADMAP.md` for full details.
 
 **Problem being solved:** The v1.0 data layer gives agents memory. The v2.0 coordination layer gives agents structure — knowing *what* to work on, *who* should do it, *what decisions* to respect, and *when* to ask the user. Without this, agents either operate in isolation (no coordination) or dump everything into a single context window (no scalability).
 
@@ -119,4 +119,4 @@ Agents get the right context for any task — from both project decisions and ac
 | Synapse/Orchestrator boundary: data vs control | Synapse stores data without knowing about agents; orchestrator knows about agents without owning storage | — Pending |
 
 ---
-*Last updated: 2026-03-01 after v2.0 milestone start*
+*Last updated: 2026-03-01 after v1.0 milestone completion*

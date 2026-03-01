@@ -111,3 +111,13 @@ None - no external service configuration required.
 ---
 *Phase: 02-database-schema*
 *Completed: 2026-02-27*
+
+## Self-Check: PASSED
+
+- FOUND: src/tools/init-project.ts
+- FOUND: src/tools/delete-project.ts
+- FOUND: test/db/init-project.test.ts
+- FOUND: .planning/phases/02-database-schema/02-03-SUMMARY.md
+- FOUND commit: 950ab5c (feat: wire connectDb)
+- FOUND commit: d4c1431 (test: BTree assertion)
+- FOUND commit: e49eafe (docs: plan complete)

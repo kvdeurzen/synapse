@@ -1,28 +1,14 @@
 # Roadmap: Synapse
 
-## Overview
+## Milestones
 
-Synapse is built in seven phases derived from its natural dependency graph. Phase 1 establishes the MCP scaffold and stdout discipline — the one pitfall that silently breaks everything if deferred. Phase 2 locks the database schema before any data touches it. Phase 3 builds the shared embedding service that both document and code write paths depend on. Phase 4 delivers all document management tools and relationship linking. Phase 5 delivers all search capabilities including two-phase smart context assembly. Phase 6 delivers the code indexing pipeline. Phase 7 delivers code search and validates the cross-table integration that makes Synapse a unified project brain rather than two separate tools.
+- ✅ **v1.0 Data Layer** - Phases 1-9 (shipped 2026-03-01)
+- 🚧 **v2.0 Agentic Framework** - Phases 10-14 (in progress)
 
 ## Phases
 
-**Phase Numbering:**
-- Integer phases (1, 2, 3): Planned milestone work
-- Decimal phases (2.1, 2.2): Urgent insertions (marked with INSERTED)
-
-Decimal phases appear between their surrounding integers in numeric order.
-
-- [x] **Phase 1: MCP Foundation** - Scaffold stdio MCP server with stderr-only logging discipline before any business logic is written (completed 2026-02-27)
-- [x] **Phase 2: Database Schema** - Define and freeze all 5 LanceDB table schemas with v2 forward-compatibility fields before any data is written (completed 2026-02-27)
-- [x] **Phase 3: Embedding Service** - Build the shared Ollama embedding service with fail-fast on writes, dimension assertion, and startup health check (completed 2026-02-28)
-- [x] **Phase 4: Document Management** - Implement all 9 document tools with versioning, lifecycle, relationships, and activity logging (completed 2026-02-28)
-- [x] **Phase 5: Document Search** - Implement hybrid search (RRF), semantic search, FTS, and two-phase smart context assembly (1/5 plans complete) (completed 2026-02-28)
-- [x] **Phase 6: Code Indexing** - Build AST-aware tree-sitter indexing pipeline with incremental hashing and auto-relationship generation (completed 2026-02-28)
-- [x] **Phase 7: Code Search and Integration Validation** - Implement code search tools and validate cross-table unified search end-to-end (completed 2026-03-01)
-- [x] **Phase 8: Fix project_meta Integration Wiring** - Seed project_meta row in init_project and fix upsert semantics in index_codebase (Gap Closure: INT-01, Flow 6) (completed 2026-03-01)
-- [x] **Phase 9: Tech Debt Documentation Cleanup** - Fix stale requirement descriptions, missing summary frontmatter, and tool description accuracy (Gap Closure: tech debt) (completed 2026-03-01)
-
-## Phase Details
+<details>
+<summary>✅ v1.0 Data Layer (Phases 1-9) - SHIPPED 2026-03-01</summary>
 
 ### Phase 1: MCP Foundation
 **Goal**: A running MCP server that accepts connections via stdio, registers tools with Zod-validated inputs, and provably writes nothing to stdout
@@ -34,8 +20,10 @@ Decimal phases appear between their surrounding integers in numeric order.
   3. Piping the server's stdout through a JSON parser produces no parse errors (no console.log contamination)
   4. All server log output appears on stderr, none on stdout
 **Plans**: 2 plans
-  - [ ] 01-01-PLAN.md — Project scaffolding, config loader, logger, shared types
-  - [ ] 01-02-PLAN.md — MCP server with stdio transport, ping/echo tools, stdout smoke test
+
+Plans:
+- [x] 01-01: Project scaffolding, config loader, logger, shared types
+- [x] 01-02: MCP server with stdio transport, ping/echo tools, stdout smoke test
 
 ### Phase 2: Database Schema
 **Goal**: All 5 LanceDB tables exist with complete Arrow schemas — including v2 forward-compatibility fields — and the batched insert pattern is established before any data is written
@@ -46,7 +34,12 @@ Decimal phases appear between their surrounding integers in numeric order.
   2. Every table includes a project_id column with BTree index for multi-project query scoping
   3. Documents table includes v2 forward-compatibility fields (parent_id, depth, decision_type) as nullable columns
   4. Re-running init_project on an existing database does not overwrite data (idempotent)
-**Plans**: TBD
+**Plans**: 3 plans
+
+Plans:
+- [x] 02-01: Arrow schemas, LanceDB connection, init_project skeleton
+- [x] 02-02: Index creation, project_id scoping, idempotent init
+- [x] 02-03: Integration tests for schema correctness and idempotency
 
 ### Phase 3: Embedding Service
 **Goal**: A shared embedding service that embeds text via Ollama, asserts correct dimensions on every vector, fails fast on write paths when Ollama is unreachable, and allows read paths to continue without embeddings
@@ -59,8 +52,10 @@ Decimal phases appear between their surrounding integers in numeric order.
   4. Server startup logs a warning when Ollama is unreachable but the server still starts and registers tools
   5. Attempting to insert a vector that is not 768 dimensions throws an assertion error with a clear message before touching the database
 **Plans**: 2 plans
-  - [ ] 03-01-PLAN.md — Error types, embedding service core (embed, cache, retry, batch, dimension assertion) via TDD
-  - [ ] 03-02-PLAN.md — Health check, startup wiring, ping tool update, write/read path patterns
+
+Plans:
+- [x] 03-01: Error types, embedding service core (embed, cache, retry, batch, dimension assertion) via TDD
+- [x] 03-02: Health check, startup wiring, ping tool update, write/read path patterns
 
 ### Phase 4: Document Management
 **Goal**: All document tools are operational — agents can store, version, query, update, delete, link, and get an overview of project documents with lifecycle state tracking and automatic activity logging
@@ -72,7 +67,13 @@ Decimal phases appear between their surrounding integers in numeric order.
   3. An agent can filter documents by category, phase, tags, status, and priority via query_documents without triggering any embedding calls
   4. An agent can update document metadata (status, phase, tags, priority) via update_document without the document being re-chunked or re-embedded
   5. An agent can create bidirectional relationships between documents via link_documents with source attribution distinguishing manual from auto-generated edges
-**Plans**: TBD
+**Plans**: 4 plans
+
+Plans:
+- [x] 04-01: store_document with chunking, versioning, activity logging
+- [x] 04-02: query_documents, update_document, delete_document
+- [x] 04-03: project_overview, document lifecycle, carry-forward categories
+- [x] 04-04: link_documents, relationship types, bidirectional creation
 
 ### Phase 5: Document Search
 **Goal**: Agents can find relevant project knowledge via semantic search, full-text search, hybrid RRF-merged search, and the two-phase smart context tool that assembles token-budget-aware context from both overview summaries and detailed content with 1-hop graph expansion
@@ -84,7 +85,13 @@ Decimal phases appear between their surrounding integers in numeric order.
   3. Hybrid search results visibly differ from pure vector results — FTS re-ranks exact keyword matches higher than vector-only would
   4. get_smart_context respects a max_tokens budget and truncates results rather than exceeding it
   5. All search results include relevance scores and identify which table (documents vs code_chunks) they originated from
-**Plans**: TBD
+**Plans**: 4 plans
+
+Plans:
+- [x] 05-01: semantic_search with filters and relevance scores
+- [x] 05-02: FTS and hybrid RRF merge
+- [x] 05-03: get_smart_context overview phase
+- [x] 05-04: get_smart_context detailed phase with 1-hop traversal and token budget
 
 ### Phase 6: Code Indexing
 **Goal**: The code indexing pipeline scans TypeScript, Python, and Rust files with AST-aware symbol extraction, embeds code chunks with context headers, tracks file hashes for incremental re-indexing, removes stale chunks on deletion, and auto-generates relationship edges from import statements
@@ -96,7 +103,14 @@ Decimal phases appear between their surrounding integers in numeric order.
   3. Deleting a file and re-running index_codebase removes that file's code_chunks and its auto-generated relationship edges from the database
   4. Each indexed code chunk includes symbol_name, symbol_type, scope_chain, imports, exports metadata and was embedded with a "File: {path} | {symbol_type}: {scope_chain}" context header
   5. Import statements are parsed to create depends_on relationships between files — re-indexing replaces these edges rather than appending duplicates
-**Plans**: TBD
+**Plans**: 5 plans
+
+Plans:
+- [x] 06-01: tree-sitter grammar setup, TypeScript parser
+- [x] 06-02: Python and Rust parsers, scope_chain extraction
+- [x] 06-03: index_codebase tool, file scanning, gitignore support
+- [x] 06-04: Incremental indexing (SHA-256 hashing), deleted file cleanup
+- [x] 06-05: Auto-relationship generation from imports, ast_import source attribution
 
 ### Phase 7: Code Search and Integration Validation
 **Goal**: Agents can search code via semantic, fulltext, and hybrid modes with rich result metadata; get_smart_context searches both documents and code_chunks tables together; and cross-table hybrid search quality is validated with realistic data
@@ -108,8 +122,10 @@ Decimal phases appear between their surrounding integers in numeric order.
   3. An agent can call get_index_status and see total files indexed, total chunks, last index time, per-language breakdown, and stale file count
   4. A get_smart_context overview call against a project with both stored documents and indexed code returns summaries from both tables in a single response
 **Plans**: 2 plans
-  - [ ] 07-01-PLAN.md — search_code tool with semantic, fulltext, hybrid modes and code-specific filters
-  - [ ] 07-02-PLAN.md — get_index_status tool, get_smart_context cross-table extension
+
+Plans:
+- [x] 07-01: search_code tool with semantic, fulltext, hybrid modes and code-specific filters
+- [x] 07-02: get_index_status tool, get_smart_context cross-table extension
 
 ### Phase 8: Fix project_meta Integration Wiring
 **Goal**: Seed project_meta row in init_project so last_index_at is tracked correctly, and fix index_codebase to use upsert semantics for project_meta updates
@@ -119,10 +135,12 @@ Decimal phases appear between their surrounding integers in numeric order.
 **Success Criteria** (what must be TRUE):
   1. After init_project, project_meta table contains a row with last_index_at as null (not empty table)
   2. After index_codebase, project_meta.last_index_at is set to current timestamp (upsert works regardless of existing row)
-  3. get_index_status returns non-null last_index_at after an init_project → index_codebase flow
+  3. get_index_status returns non-null last_index_at after an init_project -> index_codebase flow
   4. Running index_codebase twice updates (not duplicates) the project_meta row
 **Plans**: 1 plan
-  - [x] 08-01-PLAN.md — Seed project_meta row in init_project, fix delete+insert upsert in index_codebase
+
+Plans:
+- [x] 08-01: Seed project_meta row in init_project, fix delete+insert upsert in index_codebase
 
 ### Phase 9: Tech Debt Documentation Cleanup
 **Goal**: Fix stale requirement descriptions, missing summary frontmatter, and inaccurate tool descriptions identified by the v1 audit
@@ -135,22 +153,111 @@ Decimal phases appear between their surrounding integers in numeric order.
   3. REQUIREMENTS.md FOUND-04 description matches locked decision ("Implementation Patterns")
   4. delete_project tool description accurately reflects table count
 **Plans**: 1 plan
-  - [x] 09-01-PLAN.md — Fix 03-01-SUMMARY.md frontmatter, DOC-01/FOUND-04 descriptions, delete_project table count
+
+Plans:
+- [x] 09-01: Fix 03-01-SUMMARY.md frontmatter, DOC-01/FOUND-04 descriptions, delete_project table count
+
+</details>
+
+### 🚧 v2.0 Agentic Framework (In Progress)
+
+**Milestone Goal:** Build a coordination layer on top of Synapse's data layer — 10 specialized agents orchestrated via the Claude Agent SDK, with decision precedent tracking, recursive task decomposition, and tiered authority enforcement.
+
+**Phase Numbering (v2.0):**
+Starting at Phase 10. Dependency order is strict: 10 -> 11 -> 12 -> 13 -> 14.
+
+- [ ] **Phase 10: Decision Tracking Tooling** - Add decisions table and three MCP tools (store_decision, query_decisions, check_precedent) to the Synapse server
+- [ ] **Phase 11: Task Hierarchy Tooling** - Add tasks table and three MCP tools (create_task, update_task, get_task_tree) with cascade status propagation
+- [ ] **Phase 12: Orchestrator Bootstrap** - Create the orchestrator/ package, Orchestrator class, Synapse subprocess wiring, session lifecycle, and mock/record/replay test harness
+- [ ] **Phase 13: Agent Specialization, Skill Loading, and Trust** - Define 10 AgentDefinition factory functions, skill registry with token budgets, and Trust-Knowledge Matrix config
+- [ ] **Phase 14: Quality Gates and PEV Workflow** - Implement all four hook modules and the Plan-Execute-Validate loop with wave-based parallel execution
+
+## Phase Details
+
+### Phase 10: Decision Tracking Tooling
+**Goal**: Agents can store architectural decisions with semantic rationale embeddings and query precedent — three new MCP tools following the existing registerXTool pattern, backed by a new decisions LanceDB table
+**Depends on**: Phase 9 (v1.0 complete)
+**Requirements**: DEC-01, DEC-02, DEC-03, DEC-04, DEC-05, DEC-06, DEC-07, DEC-08
+**Research flag**: Standard patterns — skip research-phase
+**Success Criteria** (what must be TRUE):
+  1. An agent can store a decision with tier (0-3), subject, choice, rationale, and tags via store_decision and receive a decision_id back
+  2. An agent can query decisions by tier, status, subject, and tags via query_decisions with results ranked by relevance
+  3. An agent can call check_precedent with a proposed decision and receive a has_precedent boolean plus matching decisions with similarity scores — threshold is 0.85+
+  4. init_project creates the decisions table with Arrow schema, BTree indexes, and FTS index alongside the existing tables
+  5. A decision can be superseded (active -> superseded -> revoked lifecycle) and superseded decisions are excluded from precedent results by default
+**Plans**: TBD
+
+### Phase 11: Task Hierarchy Tooling
+**Goal**: Agents can create and manage a recursive task tree (Epic/Feature/Component/Task) with cascade status propagation, dependency cycle detection, and BFS tree retrieval — three new MCP tools in the Synapse server
+**Depends on**: Phase 10
+**Requirements**: TASK-01, TASK-02, TASK-03, TASK-04, TASK-05, TASK-06, TASK-07, TASK-08, TASK-09, TASK-10
+**Research flag**: Standard patterns — skip research-phase
+**Success Criteria** (what must be TRUE):
+  1. An agent can create a task with parent_id, depth (0=Epic, 1=Feature, 2=Component, 3=Task), title, description, and dependencies via create_task
+  2. An agent can retrieve a full task tree rooted at any epic via get_task_tree with rollup statistics (total/complete/blocked counts) — BFS traversal capped at depth 5, 200-task max
+  3. Completing all children of a parent task automatically propagates "complete" status to the parent; blocking any child propagates "blocked" to the parent
+  4. Creating a task with a dependency cycle (A depends on B, B depends on A) is rejected with a clear error
+  5. init_project creates the tasks table and all required indexes alongside the existing tables
+**Plans**: TBD
+
+### Phase 12: Orchestrator Bootstrap
+**Goal**: The orchestrator process exists as a separate package, spawns Synapse as an MCP subprocess, validates the connection on startup, manages session lifecycle, and has a mock/record/replay test harness that prevents live API calls in unit tests
+**Depends on**: Phase 11
+**Requirements**: ORCH-01, ORCH-02, ORCH-03, ORCH-04, ORCH-05, ORCH-06
+**Research flag**: Standard patterns — skip research-phase; mock harness must be established here (all subsequent phases depend on it)
+**Success Criteria** (what must be TRUE):
+  1. The orchestrator/ directory has its own package.json with @anthropic-ai/claude-agent-sdk as a dependency and starts via bun run (not bun build)
+  2. The orchestrator spawns Synapse as an MCP subprocess via mcpServers stdio config and throws a clear error if the Synapse connection status is not "connected" on the init message
+  3. The orchestrator can start a new session and resume an existing session by project_id
+  4. Zod-validated config loading rejects missing or malformed synapse path, project_id, model, or API key before spawning anything
+  5. The mock/record/replay test harness allows all orchestrator tests to run without live API calls — integration test proves the orchestrator can call project_overview via Synapse MCP and receive a valid response
+**Plans**: TBD
+
+### Phase 13: Agent Specialization, Skill Loading, and Trust
+**Goal**: All 10 specialized agents are defined as AgentDefinition factory functions with explicit tool allowlists and tier assignments; the skill registry injects project-specific behavior at spawn time; and the Trust-Knowledge Matrix drives per-domain autonomy levels
+**Depends on**: Phase 12
+**Requirements**: ROLE-01, ROLE-02, ROLE-03, ROLE-04, ROLE-05, ROLE-06, ROLE-07, ROLE-08, ROLE-09, ROLE-10, ROLE-11, ROLE-12, ROLE-13, SKILL-01, SKILL-02, SKILL-03, SKILL-04, SKILL-05, SKILL-06, TRUST-01, TRUST-02, TRUST-03, TRUST-04, TRUST-05
+**Research flag**: Flag for research-phase — agent prompt engineering is iterative; Trust-Knowledge Matrix YAML schema has no reference implementation
+**Success Criteria** (what must be TRUE):
+  1. All 10 agents (Product Strategist, Researcher, Architect, Decomposer, Plan Reviewer, Executor, Validator, Integration Checker, Debugger, Codebase Analyst) exist as AgentDefinition factory functions with explicit tools arrays — no agent includes Task in its tools array
+  2. Each agent's system prompt is loaded from a markdown template file at runtime, not hardcoded
+  3. The skill registry reads markdown skill files, maps project attributes to skill bundles, and injects skill content deterministically into agent system prompts — per-agent skill budget enforced (max 2K tokens per skill, max 3 skills for Executor)
+  4. Skill content hashes are validated before injection to prevent tampered skill files from executing
+  5. The Trust-Knowledge Matrix YAML config file defines per-domain autonomy levels (autopilot/co-pilot/advisory) and a decision tier authority map that correctly assigns permitted tiers per agent role
+**Plans**: TBD
+
+### Phase 14: Quality Gates and PEV Workflow
+**Goal**: Hook-based enforcement prevents agents from exceeding their authority at the infrastructure level; the Plan-Execute-Validate loop orchestrates the full workflow with wave-based parallel execution; and the complete system can run a user prompt through task decomposition, execution, and validation end-to-end
+**Depends on**: Phase 13
+**Requirements**: GATE-01, GATE-02, GATE-03, GATE-04, GATE-05, GATE-06, GATE-07, WFLOW-01, WFLOW-02, WFLOW-03, WFLOW-04, WFLOW-05, WFLOW-06
+**Research flag**: Flag for research-phase — wave controller and SubagentStop completion detection have limited public implementation examples
+**Success Criteria** (what must be TRUE):
+  1. A PreToolUse hook denies any store_decision call from an agent whose permitted tier is lower than the decision tier being stored — the denial happens at the infrastructure level before the tool executes
+  2. A PreToolUse hook denies any tool call not present in the calling agent's explicit tools array
+  3. A PostToolUse hook logs every tool call to file with timestamp, agent identity, tool name, and result summary — the hook is async and does not block the agent loop
+  4. Every hook callback survives being called with null or malformed input without throwing an unhandled exception — hooks degrade gracefully under any input
+  5. A user can trigger the PEV loop with a goal, watch Decomposer break it into a task tree, Executors process independent tasks in parallel waves, Validators check each task, and iteration 3 failure escalates to the user rather than silently looping
+**Plans**: TBD
 
 ## Progress
 
 **Execution Order:**
-Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7 → 8 → 9
-Phases 8-9 are gap closure phases from the v1 audit.
+v1.0 complete: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7 -> 8 -> 9 (all shipped 2026-03-01)
+v2.0 in progress: 10 -> 11 -> 12 -> 13 -> 14
 
-| Phase | Plans Complete | Status | Completed |
-|-------|----------------|--------|-----------|
-| 1. MCP Foundation | 2/2 | Complete   | 2026-02-27 |
-| 2. Database Schema | 3/3 | Complete   | 2026-02-27 |
-| 3. Embedding Service | 2/2 | Complete   | 2026-02-28 |
-| 4. Document Management | 4/4 | Complete   | 2026-02-28 |
-| 5. Document Search | 4/4 | Complete   | 2026-02-28 |
-| 6. Code Indexing | 5/5 | Complete   | 2026-02-28 |
-| 7. Code Search and Integration Validation | 2/2 | Complete   | 2026-03-01 |
-| 8. Fix project_meta Integration Wiring | 1/1 | Complete   | 2026-03-01 |
-| 9. Tech Debt Documentation Cleanup | 1/1 | Complete   | 2026-03-01 |
+| Phase | Milestone | Plans Complete | Status | Completed |
+|-------|-----------|----------------|--------|-----------|
+| 1. MCP Foundation | v1.0 | 2/2 | Complete | 2026-02-27 |
+| 2. Database Schema | v1.0 | 3/3 | Complete | 2026-02-27 |
+| 3. Embedding Service | v1.0 | 2/2 | Complete | 2026-02-28 |
+| 4. Document Management | v1.0 | 4/4 | Complete | 2026-02-28 |
+| 5. Document Search | v1.0 | 4/4 | Complete | 2026-02-28 |
+| 6. Code Indexing | v1.0 | 5/5 | Complete | 2026-02-28 |
+| 7. Code Search and Integration Validation | v1.0 | 2/2 | Complete | 2026-03-01 |
+| 8. Fix project_meta Integration Wiring | v1.0 | 1/1 | Complete | 2026-03-01 |
+| 9. Tech Debt Documentation Cleanup | v1.0 | 1/1 | Complete | 2026-03-01 |
+| 10. Decision Tracking Tooling | v2.0 | 0/TBD | Not started | - |
+| 11. Task Hierarchy Tooling | v2.0 | 0/TBD | Not started | - |
+| 12. Orchestrator Bootstrap | v2.0 | 0/TBD | Not started | - |
+| 13. Agent Specialization, Skill Loading, and Trust | v2.0 | 0/TBD | Not started | - |
+| 14. Quality Gates and PEV Workflow | v2.0 | 0/TBD | Not started | - |

@@ -3,12 +3,12 @@ gsd_state_version: 1.0
 milestone: v2.0
 milestone_name: Agentic Framework
 status: unknown
-last_updated: "2026-03-01T16:39:56.412Z"
+last_updated: "2026-03-01T17:36:56Z"
 progress:
   total_phases: 1
   completed_phases: 1
-  total_plans: 2
-  completed_plans: 2
+  total_plans: 3
+  completed_plans: 3
 ---
 
 # Project State
@@ -18,17 +18,17 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-01)
 
 **Core value:** Agents get the right context for any task — from both project decisions and actual code — without wasting tokens on irrelevant content. The orchestrator ensures agents respect established decisions and decompose work to context-window-sized executable units.
-**Current focus:** v2.0 Agentic Framework — Phase 10 (Decision Tracking Tooling)
+**Current focus:** v2.0 Agentic Framework — Phase 11 (Task Hierarchy Tooling)
 **Previous milestone:** v1.0 Data Layer — shipped 2026-03-01 (50/50 requirements, 9 phases, 24 plans)
 
 ## Current Position
 
-Phase: 10 of 14 (Decision Tracking Tooling) — COMPLETE
-Plan: 02 complete — Phase 10 done, ready for Phase 11
-Status: Phase 10 complete (2/2 plans)
-Last activity: 2026-03-01 — Phase 10 Plan 02 executed (query_decisions + check_precedent tools, 21 total tools)
+Phase: 11 of 14 (Task Hierarchy Tooling) — IN PROGRESS
+Plan: 01 complete — ready for Plan 02 (update_task + get_task_tree)
+Status: Phase 11 plan 01 complete (1/2 plans)
+Last activity: 2026-03-01 — Phase 11 Plan 01 executed (tasks schema, create_task tool, 22 total tools)
 
-Progress: [██░░░░░░░░] 20% (v2.0 milestone — Phase 10 complete, 2/2 Phase 10 plans done)
+Progress: [███░░░░░░░] 30% (v2.0 milestone — Phase 10 complete, Phase 11 Plan 01 done)
 
 ## Performance Metrics
 
@@ -42,6 +42,7 @@ Progress: [██░░░░░░░░] 20% (v2.0 milestone — Phase 10 comp
 |-------|------|----------|-------|-------|
 | 10 | 01 | 8min | 2 | 11 |
 | 10 | 02 | 7min | 2 | 7 |
+| 11 | 01 | 9min | 2 | 9 |
 
 ## Accumulated Context
 
@@ -63,6 +64,14 @@ Decisions are logged in PROJECT.md Key Decisions table.
 - query_decisions uses SQL WHERE for indexed fields + JS post-filter for subject/tags (LanceDB LIKE limitations)
 - check_precedent gracefully degrades on Ollama unreachable (read operation, unlike store_decision which fails fast)
 
+**Phase 11 decisions (validated):**
+- Bool type used for is_blocked/is_cancelled in TASKS_SCHEMA (LanceDB supports Bool natively; not Int32)
+- detectCycles exported from create-task.ts for unit testing without integration setup overhead
+- root_id = task_id for epics (depth=0), inherited from parent.root_id for all others — enables O(1) subtree queries
+- Dependency edge: from_id = dependent task (blocked), to_id = dependency task (blocker)
+- New tasks always start with status "pending" — no status field accepted at creation time
+- Ollama embedding is fail-fast at create_task level (write operation, unlike check_precedent reads)
+
 ### Pending Todos
 
 None.
@@ -77,5 +86,5 @@ None.
 ## Session Continuity
 
 Last session: 2026-03-01
-Stopped at: Completed 10-02-PLAN.md — query_decisions + check_precedent tools, Phase 10 complete (536 tests passing)
+Stopped at: Completed 11-01-PLAN.md — tasks schema, create_task tool with cycle detection, 22 tools total (586 tests passing)
 Resume file: None

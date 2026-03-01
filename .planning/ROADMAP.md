@@ -202,7 +202,11 @@ Plans:
   3. Completing all children of a parent task automatically propagates "complete" status to the parent; blocking any child propagates "blocked" to the parent
   4. Creating a task with a dependency cycle (A depends on B, B depends on A) is rejected with a clear error
   5. init_project creates the tasks table and all required indexes alongside the existing tables
-**Plans**: TBD
+**Plans**: 2 plans
+
+Plans:
+- [x] 11-01: Task schema (TASKS_SCHEMA, TaskRowSchema, task-constants.ts), create_task tool with cycle detection (TDD)
+- [ ] 11-02: update_task, get_task_tree tools with cascade status propagation and BFS retrieval
 
 ### Phase 12: Orchestrator Bootstrap
 **Goal**: The orchestrator process exists as a separate package, spawns Synapse as an MCP subprocess, validates the connection on startup, manages session lifecycle, and has a mock/record/replay test harness that prevents live API calls in unit tests
@@ -261,7 +265,7 @@ v2.0 in progress: 10 -> 11 -> 12 -> 13 -> 14
 | 8. Fix project_meta Integration Wiring | v1.0 | 1/1 | Complete | 2026-03-01 |
 | 9. Tech Debt Documentation Cleanup | v1.0 | 1/1 | Complete | 2026-03-01 |
 | 10. Decision Tracking Tooling | v2.0 | Complete    | 2026-03-01 | 2026-03-01 |
-| 11. Task Hierarchy Tooling | v2.0 | 0/TBD | Not started | - |
+| 11. Task Hierarchy Tooling | v2.0 | 1/2 | In Progress | - |
 | 12. Orchestrator Bootstrap | v2.0 | 0/TBD | Not started | - |
 | 13. Agent Specialization, Skill Loading, and Trust | v2.0 | 0/TBD | Not started | - |
 | 14. Quality Gates and PEV Workflow | v2.0 | 0/TBD | Not started | - |

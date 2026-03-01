@@ -12,7 +12,7 @@ Requirements for initial release. Each maps to roadmap phases.
 - [x] **FOUND-01**: Server starts via stdio transport and connects to MCP clients (Claude Code, Cursor)
 - [x] **FOUND-02**: Server accepts --db path CLI arg and OLLAMA_URL, EMBED_MODEL, SYNAPSE_DB_PATH env vars
 - [x] **FOUND-03**: init_project creates LanceDB database with 5 tables (documents, code_chunks, relationships, project_meta, activity_log) and all indexes
-- [x] **FOUND-04**: init_project seeds starter documents (project charter, ADR log template, coding guidelines, glossary)
+- [x] **FOUND-04**: init_project seeds starter documents (project charter, ADR log template, implementation patterns, glossary)
 - [x] **FOUND-05**: All queries are scoped by project_id for multi-project support
 - [x] **FOUND-06**: Schema includes v2 forward-compatibility fields (parent_id, depth, decision_type) on documents table
 - [x] **FOUND-07**: All logging goes to stderr only — no stdout contamination of MCP JSON-RPC stream

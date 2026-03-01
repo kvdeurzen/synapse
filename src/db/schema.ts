@@ -1,10 +1,15 @@
 // Arrow types come from apache-arrow (installed as lancedb transitive dep — no explicit install needed)
-import { Field, FixedSizeList, Float32, Int32, Schema, Utf8 } from "apache-arrow";
+import { Bool, Field, FixedSizeList, Float32, Int32, Schema, Utf8 } from "apache-arrow";
 import { z } from "zod";
 import {
   VALID_DECISION_STATUSES,
   VALID_DECISION_TYPES,
 } from "../tools/decision-constants.js";
+import {
+  VALID_AGENT_ROLES,
+  VALID_TASK_PRIORITIES,
+  VALID_TASK_STATUSES,
+} from "../tools/task-constants.js";
 
 // ────────────────────────────────────────────────────────────────────────────
 // Arrow Schemas
@@ -247,6 +252,56 @@ export const DecisionRowSchema = z.object({
   vector: z.array(z.number()).length(768).nullable(),
 });
 
+/**
+ * Tasks table — 19 fields (Phase 11).
+ * Stores the recursive task hierarchy with 4 depth levels (0=Epic, 1=Feature, 2=Component, 3=Task).
+ * Bool fields for is_blocked and is_cancelled (auto-computed from dependencies).
+ * vector is nullable — fail-fast enforcement is at the create_task level.
+ */
+export const TASKS_SCHEMA = new Schema([
+  new Field("task_id", new Utf8(), false),
+  new Field("project_id", new Utf8(), false),
+  new Field("parent_id", new Utf8(), true),
+  new Field("root_id", new Utf8(), false),
+  new Field("depth", new Int32(), false),
+  new Field("title", new Utf8(), false),
+  new Field("description", new Utf8(), false),
+  new Field("status", new Utf8(), false),
+  new Field("is_blocked", new Bool(), false),
+  new Field("is_cancelled", new Bool(), false),
+  new Field("block_reason", new Utf8(), true),
+  new Field("priority", new Utf8(), true),
+  new Field("assigned_agent", new Utf8(), true),
+  new Field("estimated_effort", new Utf8(), true),
+  new Field("tags", new Utf8(), false),
+  new Field("phase", new Utf8(), true),
+  new Field("created_at", new Utf8(), false),
+  new Field("updated_at", new Utf8(), false),
+  new Field("vector", new FixedSizeList(768, new Field("item", new Float32(), true)), true),
+]);
+
+export const TaskRowSchema = z.object({
+  task_id: z.string().min(1),
+  project_id: z.string().min(1),
+  parent_id: z.string().nullable(),
+  root_id: z.string().min(1),
+  depth: z.number().int().min(0).max(3),
+  title: z.string().min(1),
+  description: z.string(),
+  status: z.enum(VALID_TASK_STATUSES),
+  is_blocked: z.boolean(),
+  is_cancelled: z.boolean(),
+  block_reason: z.string().nullable(),
+  priority: z.enum(VALID_TASK_PRIORITIES).nullable(),
+  assigned_agent: z.enum(VALID_AGENT_ROLES).nullable(),
+  estimated_effort: z.string().nullable(),
+  tags: z.string(),
+  phase: z.string().nullable(),
+  created_at: z.string(),
+  updated_at: z.string(),
+  vector: z.array(z.number()).length(768).nullable(),
+});
+
 // ────────────────────────────────────────────────────────────────────────────
 // Table Registry
 // ────────────────────────────────────────────────────────────────────────────
@@ -259,6 +314,7 @@ export const TABLE_NAMES = [
   "project_meta",
   "activity_log",
   "decisions",
+  "tasks",
 ] as const;
 
 export type TableName = (typeof TABLE_NAMES)[number];
@@ -271,4 +327,5 @@ export const TABLE_SCHEMAS: Record<string, Schema> = {
   project_meta: PROJECT_META_SCHEMA,
   activity_log: ACTIVITY_LOG_SCHEMA,
   decisions: DECISIONS_SCHEMA,
+  tasks: TASKS_SCHEMA,
 };

@@ -16,6 +16,8 @@ import {
   ProjectMetaRowSchema,
   RELATIONSHIPS_SCHEMA,
   RelationshipRowSchema,
+  TASKS_SCHEMA,
+  TaskRowSchema,
   TABLE_NAMES,
   TABLE_SCHEMAS,
 } from "../../src/db/schema.js";
@@ -417,8 +419,8 @@ describe("insertBatch empty array", () => {
 // ────────────────────────────────────────────────────────────────────────────
 
 describe("TABLE_NAMES and TABLE_SCHEMAS registry", () => {
-  test("TABLE_NAMES has exactly 7 entries", () => {
-    expect(TABLE_NAMES.length).toBe(7);
+  test("TABLE_NAMES has exactly 8 entries", () => {
+    expect(TABLE_NAMES.length).toBe(8);
   });
 
   test("TABLE_SCHEMAS has entry for each TABLE_NAME", () => {
@@ -431,5 +433,180 @@ describe("TABLE_NAMES and TABLE_SCHEMAS registry", () => {
     for (const name of TABLE_NAMES) {
       expect(TABLE_SCHEMAS[name]).toBeInstanceOf(Schema);
     }
+  });
+
+  test("TABLE_NAMES includes 'tasks'", () => {
+    expect(TABLE_NAMES).toContain("tasks");
+  });
+});
+
+// ────────────────────────────────────────────────────────────────────────────
+// 9. TASKS_SCHEMA tests (Phase 11)
+// ────────────────────────────────────────────────────────────────────────────
+
+describe("TASKS_SCHEMA Arrow schema", () => {
+  test("tasks schema has 19 fields", () => {
+    expect(TASKS_SCHEMA.fields.length).toBe(19);
+  });
+
+  test("task_id is non-null in tasks schema", () => {
+    const field = TASKS_SCHEMA.fields.find((f) => f.name === "task_id");
+    expect(field).toBeDefined();
+    expect(field?.nullable).toBe(false);
+  });
+
+  test("parent_id is nullable in tasks schema", () => {
+    const field = TASKS_SCHEMA.fields.find((f) => f.name === "parent_id");
+    expect(field).toBeDefined();
+    expect(field?.nullable).toBe(true);
+  });
+
+  test("is_blocked is non-null Bool in tasks schema", () => {
+    const field = TASKS_SCHEMA.fields.find((f) => f.name === "is_blocked");
+    expect(field).toBeDefined();
+    expect(field?.nullable).toBe(false);
+    // Bool type check — type name should include "Bool"
+    expect(field?.type.toString()).toContain("Bool");
+  });
+
+  test("is_cancelled is non-null Bool in tasks schema", () => {
+    const field = TASKS_SCHEMA.fields.find((f) => f.name === "is_cancelled");
+    expect(field).toBeDefined();
+    expect(field?.nullable).toBe(false);
+    expect(field?.type.toString()).toContain("Bool");
+  });
+
+  test("vector field is nullable in tasks schema (768-dim)", () => {
+    const field = TASKS_SCHEMA.fields.find((f) => f.name === "vector");
+    expect(field).toBeDefined();
+    expect(field?.nullable).toBe(true);
+  });
+
+  test("depth field is non-null Int32 in tasks schema", () => {
+    const field = TASKS_SCHEMA.fields.find((f) => f.name === "depth");
+    expect(field).toBeDefined();
+    expect(field?.nullable).toBe(false);
+  });
+});
+
+describe("Zod TaskRowSchema validation", () => {
+  const nowIso2 = new Date().toISOString();
+  const validTask = {
+    task_id: ulid(),
+    project_id: "test-project",
+    parent_id: null,
+    root_id: ulid(),
+    depth: 0,
+    title: "Test Epic",
+    description: "An epic task",
+    status: "pending" as const,
+    is_blocked: false,
+    is_cancelled: false,
+    block_reason: null,
+    priority: null,
+    assigned_agent: null,
+    estimated_effort: null,
+    tags: "",
+    phase: null,
+    created_at: nowIso2,
+    updated_at: nowIso2,
+    vector: null,
+  };
+
+  test("valid task row passes", () => {
+    const result = TaskRowSchema.safeParse(validTask);
+    expect(result.success).toBe(true);
+  });
+
+  test("depth 0-3 passes", () => {
+    for (const depth of [0, 1, 2, 3]) {
+      const result = TaskRowSchema.safeParse({ ...validTask, depth });
+      expect(result.success).toBe(true);
+    }
+  });
+
+  test("depth 4 fails", () => {
+    const result = TaskRowSchema.safeParse({ ...validTask, depth: 4 });
+    expect(result.success).toBe(false);
+  });
+
+  test("depth -1 fails", () => {
+    const result = TaskRowSchema.safeParse({ ...validTask, depth: -1 });
+    expect(result.success).toBe(false);
+  });
+
+  test("valid status values pass", () => {
+    for (const status of ["pending", "ready", "in_progress", "review", "done"] as const) {
+      const result = TaskRowSchema.safeParse({ ...validTask, status });
+      expect(result.success).toBe(true);
+    }
+  });
+
+  test("invalid status fails", () => {
+    // biome-ignore lint/suspicious/noExplicitAny: intentional invalid value for test
+    const result = TaskRowSchema.safeParse({ ...validTask, status: "invalid" as any });
+    expect(result.success).toBe(false);
+  });
+
+  test("is_blocked boolean validation", () => {
+    expect(TaskRowSchema.safeParse({ ...validTask, is_blocked: true }).success).toBe(true);
+    expect(TaskRowSchema.safeParse({ ...validTask, is_blocked: false }).success).toBe(true);
+    // biome-ignore lint/suspicious/noExplicitAny: intentional invalid value for test
+    expect(TaskRowSchema.safeParse({ ...validTask, is_blocked: "true" as any }).success).toBe(false);
+  });
+
+  test("valid priority values pass", () => {
+    for (const priority of ["critical", "high", "medium", "low"] as const) {
+      const result = TaskRowSchema.safeParse({ ...validTask, priority });
+      expect(result.success).toBe(true);
+    }
+  });
+
+  test("null priority passes (optional)", () => {
+    const result = TaskRowSchema.safeParse({ ...validTask, priority: null });
+    expect(result.success).toBe(true);
+  });
+
+  test("invalid priority fails", () => {
+    // biome-ignore lint/suspicious/noExplicitAny: intentional invalid value for test
+    const result = TaskRowSchema.safeParse({ ...validTask, priority: "urgent" as any });
+    expect(result.success).toBe(false);
+  });
+
+  test("valid assigned_agent role passes", () => {
+    const result = TaskRowSchema.safeParse({ ...validTask, assigned_agent: "executor" });
+    expect(result.success).toBe(true);
+  });
+
+  test("null assigned_agent passes (optional)", () => {
+    const result = TaskRowSchema.safeParse({ ...validTask, assigned_agent: null });
+    expect(result.success).toBe(true);
+  });
+
+  test("invalid assigned_agent role fails", () => {
+    // biome-ignore lint/suspicious/noExplicitAny: intentional invalid value for test
+    const result = TaskRowSchema.safeParse({ ...validTask, assigned_agent: "superman" as any });
+    expect(result.success).toBe(false);
+  });
+
+  test("vector null passes (nullable)", () => {
+    const result = TaskRowSchema.safeParse({ ...validTask, vector: null });
+    expect(result.success).toBe(true);
+  });
+
+  test("vector 768-dim array passes", () => {
+    const result = TaskRowSchema.safeParse({
+      ...validTask,
+      vector: Array.from({ length: 768 }, () => 0.1),
+    });
+    expect(result.success).toBe(true);
+  });
+
+  test("vector wrong dimension fails", () => {
+    const result = TaskRowSchema.safeParse({
+      ...validTask,
+      vector: Array.from({ length: 100 }, () => 0.1),
+    });
+    expect(result.success).toBe(false);
   });
 });

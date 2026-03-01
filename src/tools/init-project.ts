@@ -266,6 +266,26 @@ export async function initProject(
         "FTS index creation failed on decisions.rationale — will create on first data insert",
       );
     }
+
+    // ── Create FTS index on tasks.title (Phase 11) ───────────────────────────
+    const tasksTable = await db.openTable("tasks");
+    try {
+      await tasksTable.createIndex("title", {
+        config: lancedb.Index.fts({
+          withPosition: true,
+          stem: false,
+          removeStopWords: false,
+          lowercase: true,
+        }),
+        replace: true,
+      });
+      logger.debug("FTS index created on tasks.title");
+    } catch (err) {
+      logger.warn(
+        { error: String(err) },
+        "FTS index creation failed on tasks.title — will create on first data insert",
+      );
+    }
   }
 
   // ── Seed starter documents for fresh projects only ────────────────────────
@@ -349,8 +369,8 @@ export function registerInitProjectTool(server: McpServer, config: SynapseConfig
     {
       description:
         "Initialize a Synapse project database with all required tables. " +
-        "Creates the database directory and 7 LanceDB tables (documents, doc_chunks, code_chunks, " +
-        "relationships, project_meta, activity_log, decisions). Idempotent — safe to call multiple times.",
+        "Creates the database directory and 8 LanceDB tables (documents, doc_chunks, code_chunks, " +
+        "relationships, project_meta, activity_log, decisions, tasks). Idempotent — safe to call multiple times.",
       inputSchema: z.object({
         project_id: z
           .string()

@@ -2,13 +2,13 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: unknown
-last_updated: "2026-03-01T05:29:30.259Z"
+status: in_progress
+last_updated: "2026-03-01T05:48:00.000Z"
 progress:
-  total_phases: 7
-  completed_phases: 7
-  total_plans: 22
-  completed_plans: 22
+  total_phases: 9
+  completed_phases: 8
+  total_plans: 23
+  completed_plans: 23
 ---
 
 # Project State
@@ -18,16 +18,16 @@ progress:
 See: .planning/PROJECT.md (updated 2026-02-27)
 
 **Core value:** Agents get the right context for any task — from both project decisions and actual code — without wasting tokens on irrelevant content
-**Current focus:** Phase 7 — Code Search and Integration Validation
+**Current focus:** Phase 8 — Fix project_meta Integration Wiring — COMPLETE
 
 ## Current Position
 
-Phase: 7 of 7 (Code Search and Integration Validation) — COMPLETE
-Plan: 2 of 2 in phase 07 — ALL PLANS COMPLETE — v1.0 milestone achieved
-Status: Plan 07-02 COMPLETE — get_index_status + extended get_smart_context, 18 tools, 488 tests pass, CSRCH-04 done
-Last activity: 2026-03-01 — Plan 07-02 complete: get_index_status + unified cross-table get_smart_context
+Phase: 8 of 9 (Fix project_meta Integration Wiring) — COMPLETE
+Plan: 1 of 1 in phase 08 — ALL PLANS COMPLETE
+Status: Plan 08-01 COMPLETE — project_meta seeding in init_project, delete+insert upsert in index_codebase, 495 tests pass, INT-01 closed
+Last activity: 2026-03-01 — Plan 08-01 complete: project_meta seeded on init, last_index_at upsert fixed
 
-Progress: [██████████] 100% (Phase 7: 2/2 plans complete — ALL PHASES DONE)
+Progress: [████████░░] 89% (Phase 8: 1/1 plans complete — Phase 9 remaining)
 
 ## Performance Metrics
 
@@ -60,6 +60,7 @@ Progress: [██████████] 100% (Phase 7: 2/2 plans complete —
 | Phase 06-code-indexing P05 | 5 | 2 tasks | 4 files |
 | Phase 07-code-search P01 | 3 | 2 tasks | 3 files |
 | Phase 07-code-search P02 | 9 | 2 tasks | 6 files |
+| Phase 08-project-meta-fix P01 | 3 | 2 tasks | 4 files |
 
 ## Accumulated Context
 
@@ -144,6 +145,10 @@ Recent decisions affecting current work:
 - [Phase 07-02]: bias parameter weights relevance before merging: doc_score = baseScore * (1+bias), code_score = baseScore * (1+(1-bias))
 - [Phase 07-02]: Unified ID list in detailed mode: try documents first, then code_chunks for unmatched IDs (Pitfall 5 pattern)
 - [Phase 07-02]: Tool count is now 18 after get_index_status registration
+- [Phase 08-01]: init_project seeds project_meta row on EVERY call (not just fresh tables) using delete+insert upsert — last_index_at always null after init
+- [Phase 08-01]: index_codebase removes conditional if (existing.length > 0) guard — unconditional delete+insert always sets last_index_at
+- [Phase 08-01]: escapeSQL duplicated in init-project.ts (copy from index-codebase.ts) — shared extraction deferred to Phase 9 tech debt
+- [Phase 08-01]: Integration tests in get-index-status.test.ts use simulateIndexCodebase helper to test upsert pattern without requiring Ollama
 
 ### Pending Todos
 
@@ -156,5 +161,5 @@ Recent decisions affecting current work:
 ## Session Continuity
 
 Last session: 2026-03-01
-Stopped at: Completed 07-code-search-and-integration-validation/07-02-PLAN.md (get_index_status + unified get_smart_context, 488 tests pass, CSRCH-04 done, v1.0 COMPLETE)
+Stopped at: Completed 08-project-meta-fix/08-01-PLAN.md (project_meta seeding + delete+insert upsert fix, 495 tests pass, INT-01 closed)
 Resume file: None

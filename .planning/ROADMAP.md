@@ -19,7 +19,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] **Phase 5: Document Search** - Implement hybrid search (RRF), semantic search, FTS, and two-phase smart context assembly (1/5 plans complete) (completed 2026-02-28)
 - [x] **Phase 6: Code Indexing** - Build AST-aware tree-sitter indexing pipeline with incremental hashing and auto-relationship generation (completed 2026-02-28)
 - [x] **Phase 7: Code Search and Integration Validation** - Implement code search tools and validate cross-table unified search end-to-end (completed 2026-03-01)
-- [ ] **Phase 8: Fix project_meta Integration Wiring** - Seed project_meta row in init_project and fix upsert semantics in index_codebase (Gap Closure: INT-01, Flow 6)
+- [x] **Phase 8: Fix project_meta Integration Wiring** - Seed project_meta row in init_project and fix upsert semantics in index_codebase (Gap Closure: INT-01, Flow 6) (completed 2026-03-01)
 - [ ] **Phase 9: Tech Debt Documentation Cleanup** - Fix stale requirement descriptions, missing summary frontmatter, and tool description accuracy (Gap Closure: tech debt)
 
 ## Phase Details
@@ -122,7 +122,7 @@ Decimal phases appear between their surrounding integers in numeric order.
   3. get_index_status returns non-null last_index_at after an init_project → index_codebase flow
   4. Running index_codebase twice updates (not duplicates) the project_meta row
 **Plans**: 1 plan
-  - [ ] 08-01-PLAN.md — Seed project_meta row in init_project, fix delete+insert upsert in index_codebase
+  - [x] 08-01-PLAN.md — Seed project_meta row in init_project, fix delete+insert upsert in index_codebase
 
 ### Phase 9: Tech Debt Documentation Cleanup
 **Goal**: Fix stale requirement descriptions, missing summary frontmatter, and inaccurate tool descriptions identified by the v1 audit
@@ -151,5 +151,5 @@ Phases 8-9 are gap closure phases from the v1 audit.
 | 5. Document Search | 4/4 | Complete   | 2026-02-28 |
 | 6. Code Indexing | 5/5 | Complete   | 2026-02-28 |
 | 7. Code Search and Integration Validation | 2/2 | Complete   | 2026-03-01 |
-| 8. Fix project_meta Integration Wiring | 0/? | Planned | — |
+| 8. Fix project_meta Integration Wiring | 1/1 | Complete   | 2026-03-01 |
 | 9. Tech Debt Documentation Cleanup | 0/? | Planned | — |

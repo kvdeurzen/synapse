@@ -188,7 +188,7 @@ Starting at Phase 10. Dependency order is strict: 10 -> 11 -> 12 -> 13 -> 14.
 **Plans**: 2 plans
 
 Plans:
-- [ ] 10-01: Decision schema, types, constants, init_project extension, store_decision tool (TDD)
+- [x] 10-01: Decision schema, types, constants, init_project extension, store_decision tool (TDD)
 - [ ] 10-02: query_decisions + check_precedent tools, server wiring (TDD)
 
 ### Phase 11: Task Hierarchy Tooling
@@ -260,7 +260,7 @@ v2.0 in progress: 10 -> 11 -> 12 -> 13 -> 14
 | 7. Code Search and Integration Validation | v1.0 | 2/2 | Complete | 2026-03-01 |
 | 8. Fix project_meta Integration Wiring | v1.0 | 1/1 | Complete | 2026-03-01 |
 | 9. Tech Debt Documentation Cleanup | v1.0 | 1/1 | Complete | 2026-03-01 |
-| 10. Decision Tracking Tooling | v2.0 | 0/2 | Planned | - |
+| 10. Decision Tracking Tooling | v2.0 | 1/2 | In Progress | - |
 | 11. Task Hierarchy Tooling | v2.0 | 0/TBD | Not started | - |
 | 12. Orchestrator Bootstrap | v2.0 | 0/TBD | Not started | - |
 | 13. Agent Specialization, Skill Loading, and Trust | v2.0 | 0/TBD | Not started | - |

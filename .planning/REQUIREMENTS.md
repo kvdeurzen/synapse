@@ -90,13 +90,13 @@ Requirements for the Agentic Framework milestone. Each maps to roadmap phases 10
 
 ### Decision Tracking (DEC)
 
-- [ ] **DEC-01**: Agent can store a decision with tier (0-3), subject, choice, rationale, and tags via store_decision
-- [ ] **DEC-02**: Decision rationale is embedded as a 768-dim vector for semantic precedent search
+- [x] **DEC-01**: Agent can store a decision with tier (0-3), subject, choice, rationale, and tags via store_decision
+- [x] **DEC-02**: Decision rationale is embedded as a 768-dim vector for semantic precedent search
 - [ ] **DEC-03**: Agent can query decisions by tier, status, subject, tags, and precedent flag via query_decisions
 - [ ] **DEC-04**: Agent can check if a similar precedent exists via check_precedent with 0.85+ similarity threshold and decision_type pre-filtering
-- [ ] **DEC-05**: Decisions follow lifecycle: active -> superseded -> revoked
-- [ ] **DEC-06**: init_project creates the decisions table with Arrow schema, BTree indexes, and FTS index
-- [ ] **DEC-07**: All decision mutations are logged to activity_log
+- [x] **DEC-05**: Decisions follow lifecycle: active -> superseded -> revoked
+- [x] **DEC-06**: init_project creates the decisions table with Arrow schema, BTree indexes, and FTS index
+- [x] **DEC-07**: All decision mutations are logged to activity_log
 - [ ] **DEC-08**: check_precedent returns has_precedent boolean plus matching decisions with similarity scores
 
 ### Task Hierarchy (TASK)
@@ -271,13 +271,13 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| DEC-01 | Phase 10 | Pending |
-| DEC-02 | Phase 10 | Pending |
+| DEC-01 | Phase 10 | Complete |
+| DEC-02 | Phase 10 | Complete |
 | DEC-03 | Phase 10 | Pending |
 | DEC-04 | Phase 10 | Pending |
-| DEC-05 | Phase 10 | Pending |
-| DEC-06 | Phase 10 | Pending |
-| DEC-07 | Phase 10 | Pending |
+| DEC-05 | Phase 10 | Complete |
+| DEC-06 | Phase 10 | Complete |
+| DEC-07 | Phase 10 | Complete |
 | DEC-08 | Phase 10 | Pending |
 | TASK-01 | Phase 11 | Pending |
 | TASK-02 | Phase 11 | Pending |

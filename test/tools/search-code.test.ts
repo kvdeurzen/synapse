@@ -597,7 +597,7 @@ describe("searchCode", () => {
 // ── Server registration ────────────────────────────────────────────────────
 
 describe("server registration", () => {
-  test("search_code tool is registered and tool count is 18 (after get_index_status added)", () => {
+  test("search_code tool is registered and tool count is 19 (after store_decision added)", () => {
     const config = { ...TEST_CONFIG, db: tmpDir };
     const server = createServer(config);
 
@@ -608,8 +608,8 @@ describe("server registration", () => {
     expect(typeof registeredTools).toBe("object");
     expect("search_code" in registeredTools).toBe(true);
 
-    // Tool count is 18 (get_index_status added in Phase 7 Plan 02)
+    // Tool count is 19 (store_decision added in Phase 10 Plan 01)
     const toolCount = Object.keys(registeredTools).length;
-    expect(toolCount).toBe(18);
+    expect(toolCount).toBe(19);
   });
 });

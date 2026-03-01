@@ -61,8 +61,8 @@ export function registerDeleteProjectTool(server: McpServer, config: SynapseConf
     {
       description:
         "Delete all data for a project across all tables. " +
-        "Removes rows matching the given project_id from all 6 tables " +
-        "(documents, doc_chunks, code_chunks, relationships, project_meta, activity_log).",
+        "Removes rows matching the given project_id from all 7 tables " +
+        "(documents, doc_chunks, code_chunks, relationships, project_meta, activity_log, decisions).",
       inputSchema: z.object({
         project_id: z.string().describe("Project identifier to delete (lowercase slug)"),
         db_path: z

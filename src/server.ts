@@ -8,6 +8,7 @@ import { registerEchoTool } from "./tools/echo.js";
 import { registerFulltextSearchTool } from "./tools/fulltext-search.js";
 import { registerGetIndexStatusTool } from "./tools/get-index-status.js";
 import { registerGetRelatedDocumentsTool } from "./tools/get-related-documents.js";
+import { registerStoreDecisionTool } from "./tools/store-decision.js";
 import { registerGetSmartContextTool } from "./tools/get-smart-context.js";
 import { registerHybridSearchTool } from "./tools/hybrid-search.js";
 import { registerIndexCodebaseTool } from "./tools/index-codebase.js";
@@ -92,6 +93,9 @@ export function createServer(config: SynapseConfig): McpServer {
   toolCount++;
 
   registerGetIndexStatusTool(server, config);
+  toolCount++;
+
+  registerStoreDecisionTool(server, config);
   toolCount++;
 
   return server;

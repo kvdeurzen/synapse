@@ -1,11 +1,15 @@
 # Requirements: Synapse
 
 **Defined:** 2026-02-27
-**Core Value:** Agents get the right context for any task — from both project decisions and actual code — without wasting tokens on irrelevant content
+**Updated:** 2026-03-01 (v2.0 milestone started)
+**Core Value:** Agents get the right context for any task — from both project decisions and actual code — without wasting tokens on irrelevant content. The orchestrator ensures agents respect established decisions and decompose work to context-window-sized executable units.
 
-## v1 Requirements
+## v1.0 Requirements (Complete)
 
-Requirements for initial release. Each maps to roadmap phases.
+All 50 requirements shipped and verified. See traceability section for phase mapping.
+
+<details>
+<summary>v1.0 requirements (all complete)</summary>
 
 ### Foundation
 
@@ -78,18 +82,106 @@ Requirements for initial release. Each maps to roadmap phases.
 - [x] **CSRCH-03**: Code search results include file_path, symbol_name, scope_chain, content, relevance_score, start_line, end_line
 - [x] **CSRCH-04**: get_index_status returns total files indexed, total chunks, last index time, languages breakdown, stale files count
 
-## v2 Requirements
+</details>
 
-Deferred to future release. Tracked but not in current roadmap.
+## v2.0 Requirements
 
-### Agentic Workflow
+Requirements for the Agentic Framework milestone. Each maps to roadmap phases 10-14.
 
-- **AGENT-01**: Task decomposition system (understand → scope → plan → subdivide → execute → validate)
-- **AGENT-02**: Agent role profiles with per-role context assembly and token budgets
-- **AGENT-03**: User preference learning (style preferences + architectural patterns)
-- **AGENT-04**: Decision threshold system (auto-resolve low-impact, involve user on new decisions with suggestions/pros/cons)
-- **AGENT-05**: Three-layer validation pipeline (automated tests, parent agent review, user checkpoints)
-- **AGENT-06**: Slash commands and phase management workflow
+### Decision Tracking (DEC)
+
+- [ ] **DEC-01**: Agent can store a decision with tier (0-3), subject, choice, rationale, and tags via store_decision
+- [ ] **DEC-02**: Decision rationale is embedded as a 768-dim vector for semantic precedent search
+- [ ] **DEC-03**: Agent can query decisions by tier, status, subject, tags, and precedent flag via query_decisions
+- [ ] **DEC-04**: Agent can check if a similar precedent exists via check_precedent with 0.85+ similarity threshold and decision_type pre-filtering
+- [ ] **DEC-05**: Decisions follow lifecycle: active → superseded → revoked
+- [ ] **DEC-06**: init_project creates the decisions table with Arrow schema, BTree indexes, and FTS index
+- [ ] **DEC-07**: All decision mutations are logged to activity_log
+- [ ] **DEC-08**: check_precedent returns has_precedent boolean plus matching decisions with similarity scores
+
+### Task Hierarchy (TASK)
+
+- [ ] **TASK-01**: Agent can create a task with parent_id, depth (0-3), title, description, and dependencies via create_task
+- [ ] **TASK-02**: Task tree supports 4 depth levels: Epic (0), Feature (1), Component (2), Task (3)
+- [ ] **TASK-03**: Agent can update task status, assigned_agent, priority, and other fields via update_task
+- [ ] **TASK-04**: Cascade status propagation: all children complete → parent completes; any child blocked → parent blocked
+- [ ] **TASK-05**: Agent can retrieve full task tree via get_task_tree with rollup statistics (total/complete/blocked counts)
+- [ ] **TASK-06**: get_task_tree uses JS-side BFS with root_id denormalization (max depth 5, 200-task cap)
+- [ ] **TASK-07**: Dependency cycles are detected and rejected on create_task and update_task
+- [ ] **TASK-08**: init_project creates the tasks table with Arrow schema and indexes
+- [ ] **TASK-09**: All task mutations are logged to activity_log
+- [ ] **TASK-10**: Task description is embedded as a 768-dim vector for semantic search
+
+### Orchestrator Foundation (ORCH)
+
+- [ ] **ORCH-01**: Orchestrator runs as a separate process in orchestrator/ with its own package.json
+- [ ] **ORCH-02**: Orchestrator spawns Synapse as MCP subprocess via Agent SDK mcpServers stdio config
+- [ ] **ORCH-03**: Orchestrator checks init-message MCP server status and throws if Synapse connection fails
+- [ ] **ORCH-04**: Orchestrator supports session lifecycle: start new session and resume existing session
+- [ ] **ORCH-05**: Orchestrator config is Zod-validated (synapse path, project_id, model, API key)
+- [ ] **ORCH-06**: Mock/record/replay test harness established for testing without API token cost
+
+### Agent Specialization (ROLE)
+
+- [ ] **ROLE-01**: 10 agent roles defined as AgentDefinition factory functions with explicit tool allowlists
+- [ ] **ROLE-02**: Product Strategist (opus) handles Tier 0 decisions with mandatory user approval
+- [ ] **ROLE-03**: Researcher (sonnet) is read-only — cannot modify state or create decisions
+- [ ] **ROLE-04**: Architect (opus) handles Tier 1-2 decisions and creates epic-level task structure
+- [ ] **ROLE-05**: Decomposer (opus) breaks epics into executable leaf tasks within context window limits
+- [ ] **ROLE-06**: Plan Reviewer (opus) verifies task plans against decisions before execution begins
+- [ ] **ROLE-07**: Executor (sonnet) implements leaf tasks, constrained to Tier 3 decisions only
+- [ ] **ROLE-08**: Validator (sonnet) checks completed tasks against specs and relevant decisions
+- [ ] **ROLE-09**: Integration Checker (sonnet) validates cross-task integration at feature/epic boundaries
+- [ ] **ROLE-10**: Debugger (sonnet) performs root-cause analysis on execution and validation failures
+- [ ] **ROLE-11**: Codebase Analyst (sonnet) maintains codebase analysis via index_codebase and store_document
+- [ ] **ROLE-12**: No agent includes Task in its tools array — flat two-level hierarchy enforced
+- [ ] **ROLE-13**: System prompts loaded from markdown template files at runtime
+
+### Skill Loading (SKILL)
+
+- [ ] **SKILL-01**: Skill registry maps project attributes (tech stack, domain) to skill bundles
+- [ ] **SKILL-02**: Skills are markdown files containing domain knowledge, quality criteria, and vocabulary
+- [ ] **SKILL-03**: Skills are injected deterministically into agent system prompts at spawn time
+- [ ] **SKILL-04**: Progressive skill loading: skill names at init, full body loaded on demand
+- [ ] **SKILL-05**: Per-agent skill budget enforced (max 2K tokens per skill, max 3 skills for Executor)
+- [ ] **SKILL-06**: Skill content hash validated before injection to prevent tampering
+
+### Trust & Authority (TRUST)
+
+- [ ] **TRUST-01**: Trust-Knowledge Matrix stored as YAML config file (not DB table)
+- [ ] **TRUST-02**: Per-domain autonomy levels: autopilot (agent decides), co-pilot (agent proposes, user approves), advisory (agent suggests, user decides)
+- [ ] **TRUST-03**: Tier 0 (Product Strategy) decisions always require user approval regardless of trust config
+- [ ] **TRUST-04**: Trust config drives hook decisions: autopilot → allow, co-pilot → ask, advisory → ask with explanation
+- [ ] **TRUST-05**: Decision tier authority matrix maps each agent role to its permitted decision tiers
+
+### Quality Gates (GATE)
+
+- [ ] **GATE-01**: PreToolUse hook enforces tier authority — agents cannot store decisions above their permitted tier
+- [ ] **GATE-02**: PreToolUse hook enforces tool allowlists — agents can only call tools in their definition
+- [ ] **GATE-03**: PreToolUse precedent-gate injects "check precedent first" context before decision storage
+- [ ] **GATE-04**: PreToolUse user-approval hook returns "ask" for Tier 0 decisions
+- [ ] **GATE-05**: PostToolUse audit hook logs all tool calls to file with timestamp, agent, tool, and result summary
+- [ ] **GATE-06**: Every hook callback wrapped in top-level try/catch to prevent fatal orchestrator crashes
+- [ ] **GATE-07**: Hook ordering is tested: deny takes priority over ask over allow
+
+### PEV Workflow (WFLOW)
+
+- [ ] **WFLOW-01**: Plan-Execute-Validate loop orchestrates Decomposer → Executor → Validator sequence
+- [ ] **WFLOW-02**: PEV loop capped at 3 iterations; iteration 3 failure escalates to user
+- [ ] **WFLOW-03**: Wave-based parallel execution: independent leaf tasks in the same wave execute concurrently
+- [ ] **WFLOW-04**: Wave N+1 starts only after all tasks in wave N are validated complete
+- [ ] **WFLOW-05**: Executor failures trigger Debugger agent for root-cause analysis before retry
+- [ ] **WFLOW-06**: Decomposer ↔ Plan Reviewer verification loop (max 3 iterations) gates execution start
+
+## Future Requirements
+
+Deferred beyond v2.0. Tracked but not in current roadmap.
+
+### Progressive Verification (P2)
+
+- **PVER-01**: Progressive verification at epic granularity (Integration Checker after related features complete)
+- **PVER-02**: Progressive verification at project granularity (full Integration Check at milestone boundaries)
+- **PVER-03**: SubagentStop hook wired to verification pipeline trigger
 
 ### Extended Features
 
@@ -99,23 +191,28 @@ Deferred to future release. Tracked but not in current roadmap.
 - **EXT-04**: Batch store operations
 - **EXT-05**: GSD/BMad import tools
 - **EXT-06**: MCP resources and prompt templates
+- **EXT-07**: ConfigChange hook for hot-reload of Trust-Knowledge Matrix without restart
+- **EXT-08**: Decision enforcement in Plan Review phase (Plan Reviewer auto-calls check_precedent)
 
 ## Out of Scope
 
 | Feature | Reason |
 |---------|--------|
-| HTTP/SSE transport | Adds auth complexity and security surface with zero benefit for local dev; stdio is standard |
-| Multiple embedding providers | Mixing embedding spaces fractures vector search; fail-fast on Ollama is intentional |
-| Automatic context injection (push model) | Forces context on agents; two-phase pull model is better |
-| Multi-hop graph traversal (>1 hop) | Exponential blowup; agent can call again to go deeper |
-| Real-time file watching / auto-index | Background processes cause orphaned process bugs; explicit index_codebase is safer |
-| Cross-encoder reranking | Additional model inference latency exceeds benefit at v1 scale; RRF is sufficient |
-| 20+ language support | TS/Python/Rust covers target users; add languages based on demand |
-| Mobile/web client | MCP server is a dev tool; stdio transport only |
+| ML-based preference learning | No training signal until significant post-usage data exists; explicit config is more predictable |
+| Multi-user/collaborative orchestration | Requires session isolation, conflict resolution; single-user is sufficient for v2.0 |
+| Dynamic agent spawning based on task analysis | Unnecessary complexity; 10 well-defined roles cover the workflow |
+| Agents deciding their own tool permissions | Safety non-negotiable; hook enforcement is the correct model |
+| Web UI or monitoring dashboard | CLI/MCP interface only; activity_log queryable via existing MCP tools |
+| Cloud deployment / hosted service | Local-first; local Ollama + local LanceDB |
+| HTTP/SSE transport | Stdio is standard for Claude Code; adds auth complexity with zero benefit |
+| Multiple embedding providers | Mixing embedding spaces fractures vector search |
+| Slash commands / phase management CLI | Out of scope for v2.0; orchestrator manages workflow programmatically |
 
 ## Traceability
 
 Which phases cover which requirements. Updated during roadmap creation.
+
+### v1.0 (all Complete)
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
@@ -170,11 +267,18 @@ Which phases cover which requirements. Updated during roadmap creation.
 | CSRCH-03 | Phase 7 | Complete |
 | CSRCH-04 | Phase 7 | Complete |
 
+### v2.0 (Pending — updated by roadmapper)
+
+| Requirement | Phase | Status |
+|-------------|-------|--------|
+| *(populated during roadmap creation)* | | |
+
 **Coverage:**
-- v1 requirements: 50 total
-- Mapped to phases: 50
-- Unmapped: 0
+- v1.0 requirements: 50 total — 50 complete
+- v2.0 requirements: 54 total
+- Mapped to phases: 0 (pending roadmap)
+- Unmapped: 54
 
 ---
 *Requirements defined: 2026-02-27*
-*Last updated: 2026-02-27 — Traceability updated after roadmap creation*
+*Last updated: 2026-03-01 after v2.0 milestone requirements definition*

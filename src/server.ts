@@ -6,6 +6,7 @@ import { registerDeleteDocumentTool } from "./tools/delete-document.js";
 import { registerDeleteProjectTool } from "./tools/delete-project.js";
 import { registerEchoTool } from "./tools/echo.js";
 import { registerFulltextSearchTool } from "./tools/fulltext-search.js";
+import { registerGetIndexStatusTool } from "./tools/get-index-status.js";
 import { registerGetRelatedDocumentsTool } from "./tools/get-related-documents.js";
 import { registerGetSmartContextTool } from "./tools/get-smart-context.js";
 import { registerHybridSearchTool } from "./tools/hybrid-search.js";
@@ -88,6 +89,9 @@ export function createServer(config: SynapseConfig): McpServer {
   toolCount++;
 
   registerSearchCodeTool(server, config);
+  toolCount++;
+
+  registerGetIndexStatusTool(server, config);
   toolCount++;
 
   return server;

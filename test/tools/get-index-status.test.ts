@@ -332,7 +332,7 @@ describe("getIndexStatus", () => {
   // ── f. Server registers get_index_status tool ─────────────────────────────
 
   describe("server registration", () => {
-    test("get_index_status tool is registered and tool count is 21", () => {
+    test("get_index_status tool is registered and tool count is 22", () => {
       const config = { ...TEST_CONFIG, db: tmpDir };
       const server = createServer(config);
 
@@ -343,9 +343,9 @@ describe("getIndexStatus", () => {
       expect(typeof registeredTools).toBe("object");
       expect("get_index_status" in registeredTools).toBe(true);
 
-      // Verify tool count is 21 (includes store_decision, query_decisions, check_precedent added in Phase 10)
+      // Verify tool count is 22 (includes create_task added in Phase 11)
       const toolCount = Object.keys(registeredTools).length;
-      expect(toolCount).toBe(21);
+      expect(toolCount).toBe(22);
     });
   });
 });

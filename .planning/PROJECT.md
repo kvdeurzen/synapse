@@ -1,88 +1,122 @@
-# Synapse — Database-Backed Project Knowledge & Code Search MCP Server
+# Synapse — AI Agent Coordination Platform
 
 ## What This Is
 
-Synapse is an MCP server that gives AI agents a unified interface for storing, querying, and searching both project knowledge (requirements, architecture decisions, design patterns) and source code. Documents are chunked and embedded at write time into LanceDB, enabling semantic search, hybrid search (vector + FTS), and smart context assembly — all without loading full markdown files into context windows. Built as an open-source tool for the AI-assisted development community.
+Synapse is an MCP-based platform for AI agent coordination. The data layer (v1.0) provides 18 MCP tools for storing, querying, and searching project knowledge and source code via LanceDB with semantic/hybrid search. The coordination layer (v2.0) adds an orchestrator built on the Claude Agent SDK that coordinates 10 specialized agents through Synapse's MCP tools — with decision tracking as "case law," recursive task decomposition, tiered authority, and a skill loading system for project-specific behavior. Built as an open-source tool for the AI-assisted development community.
 
 ## Core Value
 
-Agents get the right context for any task — from both project decisions and actual code — without wasting tokens on irrelevant content. The two-phase smart context (overview then detailed) puts the agent in control of what it loads.
+Agents get the right context for any task — from both project decisions and actual code — without wasting tokens on irrelevant content. The orchestrator ensures agents respect established decisions and decompose work to context-window-sized executable units.
+
+## Current Milestone: v2.0 Agentic Framework
+
+**Goal:** Build a coordination layer on top of Synapse's data layer — 10 specialized agents orchestrated via the Claude Agent SDK, with decision precedent tracking, recursive task decomposition, and tiered authority enforcement.
+
+**Target features:**
+- Decision tracking system ("Case Law") with semantic precedent search
+- Recursive task hierarchy (Epic → Feature → Component → Task)
+- Orchestrator process using Claude Agent SDK
+- 10 specialized agents with distinct authority and tool restrictions
+- Skill loading system for project-specific agent behavior
+- Config-based Trust-Knowledge Matrix for adaptive oversight
+- Hook-based quality gates and tier enforcement
+- Plan-Execute-Validate workflow
 
 ## Requirements
 
 ### Validated
 
-- ✓ Existing codebase structure with src/ layout — existing
-- ✓ TypeScript project configuration — existing
-- ✓ MCP server entry point scaffolding — existing
+<!-- Shipped and confirmed valuable in v1.0. -->
+
+- ✓ LanceDB embedded database with 6 tables (documents, doc_chunks, code_chunks, relationships, project_meta, activity_log) — v1.0
+- ✓ Embedding service via Ollama (nomic-embed-text, 768-dim) with fail-fast on unavailability — v1.0
+- ✓ Document chunking with category-specific strategies (semantic_section, paragraph, fixed_size) — v1.0
+- ✓ 9 document tools: init_project, store_document, query_documents, semantic_search, get_smart_context, link_documents, update_document, delete_document, project_overview — v1.0
+- ✓ 3 code tools: index_codebase, search_code, get_index_status — v1.0
+- ✓ AST-aware code indexing via tree-sitter for TypeScript, Python, and Rust — v1.0
+- ✓ Incremental code indexing using file hash comparison — v1.0
+- ✓ Auto-generated relationships from import/use statements — v1.0
+- ✓ Hybrid search via Reciprocal Rank Fusion (semantic + FTS) — v1.0
+- ✓ Two-phase smart context assembly (overview summaries, then detailed fetch) — v1.0
+- ✓ 1-hop graph traversal for relationship-aware context — v1.0
+- ✓ Document versioning (superseded rows, version counter) — v1.0
+- ✓ Document lifecycle (draft → active → approved → superseded/archived) — v1.0
+- ✓ Multi-project support via project_id — v1.0
+- ✓ Schema foundations for v2 decomposition (parent_id, depth, decision_type fields) — v1.0
+- ✓ MCP stdio transport with stderr-only logging — v1.0
+- ✓ Zod-validated tool inputs — v1.0
 
 ### Active
 
-- [ ] LanceDB embedded database with 5 tables (documents, code_chunks, relationships, project_meta, activity_log)
-- [ ] Embedding service via Ollama (nomic-embed-text, 768-dim) with fail-fast on unavailability
-- [ ] Document chunking with category-specific strategies (semantic_section, paragraph, fixed_size)
-- [ ] 9 document tools: init_project, store_document, query_documents, semantic_search, get_smart_context, link_documents, update_document, delete_document, project_overview
-- [ ] 3 code tools: index_codebase, search_code, get_index_status
-- [ ] AST-aware code indexing via tree-sitter for TypeScript, Python, and Rust
-- [ ] Incremental code indexing using file hash comparison
-- [ ] Auto-generated relationships from import/use statements
-- [ ] Hybrid search via Reciprocal Rank Fusion (semantic + FTS)
-- [ ] Two-phase smart context assembly (overview summaries, then detailed fetch)
-- [ ] 1-hop graph traversal for relationship-aware context
-- [ ] Document versioning (superseded rows, version counter)
-- [ ] Document lifecycle (draft → active → approved → superseded/archived)
-- [ ] Multi-project support via project_id
-- [ ] Schema foundations for v2 decomposition (parent_id, depth, decision_type fields)
+<!-- Current scope — v2.0 Agentic Framework. See REQUIREMENTS.md for REQ-IDs. -->
+
+- [ ] Decision tracking: `decisions` LanceDB table with semantic search on rationale
+- [ ] Decision tools: store_decision, query_decisions, check_precedent
+- [ ] Task hierarchy: `tasks` LanceDB table with recursive parent_id
+- [ ] Task tools: create_task, update_task, get_task_tree
+- [ ] Orchestrator process using Claude Agent SDK (`@anthropic-ai/claude-agent-sdk`)
+- [ ] 10 specialized agents: Product Strategist, Researcher, Architect, Decomposer, Plan Reviewer, Executor, Validator, Integration Checker, Debugger, Codebase Analyst
+- [ ] Agent tier authority enforcement (Tier 0-3 decision hierarchy)
+- [ ] Skill loading system: generic agents + project-specific skills injected at runtime
+- [ ] Config-based Trust-Knowledge Matrix (per-domain autonomy levels)
+- [ ] Hook-based quality gates (tier enforcement, precedent checking, tool audit)
+- [ ] Plan-Execute-Validate (PEV) workflow with wave-based parallel execution
 
 ### Out of Scope
 
-- Agent role profiles with per-role context assembly — v2 (agentic workflow milestone)
-- Slash commands and phase management workflow — v2
-- GSD/BMad import tools — v2
-- MCP resources and prompt templates — v2
-- Additional languages beyond TS/Python/Rust — v2
-- Task decomposition and planning workflow — v2
-- User preference learning system — v2
-- Automated validation pipeline — v2
+- GSD/BMad import tools — future milestone
+- MCP resources and prompt templates — future milestone
+- Additional code languages beyond TS/Python/Rust — future milestone
+- Automated preference learning from past decisions — v2.0 uses explicit config, not ML
+- Real-time collaboration (multiple users) — single-user orchestrator for now
+- Web UI or dashboard — CLI/MCP interface only
+- Cloud deployment / hosted service — local-first
 
 ## Context
 
-**Existing codebase:** There is existing code in the project directory, but Synapse itself is a fresh build. The codebase map documents the current state at `.planning/codebase/`.
+**Existing codebase (v1.0):** 18 MCP tools, 6 LanceDB tables, 495 tests passing. Synapse MCP server is fully operational as a data layer. Codebase map at `.planning/codebase/`.
 
-**Problem being solved:** AI dev frameworks (GSD, BMad, SuperClaude) store project docs in flat markdown files. This causes documentation bloat, subagents getting wrong-sized context, forgotten decisions, and wasted context window tokens. Synapse replaces flat files with chunked, embedded, queryable storage.
+**Problem being solved:** The v1.0 data layer gives agents memory. The v2.0 coordination layer gives agents structure — knowing *what* to work on, *who* should do it, *what decisions* to respect, and *when* to ask the user. Without this, agents either operate in isolation (no coordination) or dump everything into a single context window (no scalability).
 
-**V2 vision — agentic project management:** Synapse will grow into a project management layer where large projects get gradually decomposed into executable tasks. The flow: understand → scope → plan → subdivide into subplans → execute → validate upward. Key v2 concepts:
-- Tasks are "executable" when completable within a context window (~200k tokens) with testable deliverables
-- Three-layer validation: automated tests, parent agent review, user checkpoints at milestones
-- Decision system: threshold-based auto-resolution for low-impact decisions (configurable), user involvement for new decision points with suggestions + pros/cons, accumulated preference learning from past decisions
-- Both style preferences ("always use Tailwind") and architectural patterns ("JWT with refresh tokens") are remembered and reused
+**Architecture:** Two-process design. Orchestrator spawns Synapse as an MCP subprocess via the Agent SDK's `mcpServers` config. Clean boundary: Synapse stores data, orchestrator controls workflow/authority/agent lifecycle.
+
+**Agent roster:** 10 agents inspired by GSD's 11-agent architecture. Key patterns adopted: research-before-action, plan-then-verify loop (max 3 iterations), wave-based parallel execution, progressive verification (per-task → per-feature → per-epic → per-project).
+
+**Skill loading:** Agent roles are generic templates. Skills are project-specific capabilities (domain knowledge, quality criteria, vocabulary) injected at runtime via the skill registry. This makes the framework domain-agnostic.
 
 **Ollama:** Running locally with nomic-embed-text model available.
 
 ## Constraints
 
-- **Embedding provider**: Ollama only — fail-fast, no fallback. Dirty data (mixed embedding spaces) is worse than no data
+- **Embedding provider**: Ollama only — fail-fast, no fallback
 - **Transport**: MCP stdio — standard for Claude Code, no HTTP server
 - **Storage**: LanceDB embedded — zero-config, no separate database process
-- **Code languages v1**: TypeScript, Python, Rust only
+- **Code languages**: TypeScript, Python, Rust only (v1.0 scope, unchanged)
 - **Vector dimensions**: 768 (nomic-embed-text) — all vectors must use same model
-- **Schema forward-compatibility**: Include parent_id, depth, decision_type fields in v1 schema to support v2 decomposition without migration
+- **Agent SDK**: `@anthropic-ai/claude-agent-sdk` — no custom agent runtime
+- **Trust matrix**: Config file, not DB table — simple and explicit
+- **Orchestrator**: Same monorepo as Synapse, separate `orchestrator/` package
 
 ## Key Decisions
 
 | Decision | Rationale | Outcome |
 |----------|-----------|---------|
-| LanceDB embedded over Postgres/SQLite+pgvector | Zero-config, vector + FTS + SQL in one, append-friendly Lance format | — Pending |
-| Chunk at write time, not query time | Better embedding quality at ~512 tokens; avoids runtime chunking overhead | — Pending |
-| Fail-fast on missing Ollama | Mixed embedding spaces fracture vector search; reads still work without Ollama | — Pending |
-| Versioning via superseded rows | Full history preserved, append-friendly for Lance format | — Pending |
-| RRF for hybrid search | Simple, no score normalization needed, well-proven in literature | — Pending |
-| Two-phase get_smart_context | Agent controls what it loads instead of being force-fed 50+ chunks | — Pending |
-| tree-sitter for code parsing | Fast, incremental, multi-language; industry standard (VS Code, Neovim) | — Pending |
-| Separate code_chunks table | Different schema from documents; avoids polluting doc queries; independent indexing lifecycle | — Pending |
-| Auto relationships from AST imports | Knowledge graph stays fresh without manual maintenance; imports are ground truth | — Pending |
-| Include v2 schema foundations in v1 | parent_id, depth, decision_type fields now; cheaper than migration later | — Pending |
-| Open source from the start | Building for the community, not just personal use | — Pending |
+| LanceDB embedded over Postgres/SQLite+pgvector | Zero-config, vector + FTS + SQL in one, append-friendly Lance format | ✓ Good |
+| Chunk at write time, not query time | Better embedding quality at ~512 tokens; avoids runtime chunking overhead | ✓ Good |
+| Fail-fast on missing Ollama | Mixed embedding spaces fracture vector search; reads still work without Ollama | ✓ Good |
+| Versioning via superseded rows | Full history preserved, append-friendly for Lance format | ✓ Good |
+| RRF for hybrid search | Simple, no score normalization needed, well-proven in literature | ✓ Good |
+| Two-phase get_smart_context | Agent controls what it loads instead of being force-fed 50+ chunks | ✓ Good |
+| tree-sitter for code parsing | Fast, incremental, multi-language; industry standard (VS Code, Neovim) | ✓ Good |
+| Separate code_chunks table | Different schema from documents; avoids polluting doc queries; independent indexing lifecycle | ✓ Good |
+| Auto relationships from AST imports | Knowledge graph stays fresh without manual maintenance; imports are ground truth | ✓ Good |
+| Include v2 schema foundations in v1 | parent_id, depth, decision_type fields now; cheaper than migration later | ✓ Good |
+| Open source from the start | Building for the community, not just personal use | ✓ Good |
+| Claude Agent SDK over custom runtime | Battle-tested, maintained by Anthropic, provides query(), subagents, hooks, MCP client | — Pending |
+| 10 agents over 3 | Narrow focus per agent (GSD pattern); distinct cognitive tasks need distinct prompts/constraints | — Pending |
+| Skills as prompt injection, not code plugins | Simpler, no runtime code loading; skills are system prompt content + quality criteria | — Pending |
+| Trust matrix as config, not DB table | Explicit, auditable, no premature complexity; can migrate to DB later if needed | — Pending |
+| Synapse/Orchestrator boundary: data vs control | Synapse stores data without knowing about agents; orchestrator knows about agents without owning storage | — Pending |
 
 ---
-*Last updated: 2026-02-27 after initialization*
+*Last updated: 2026-03-01 after v2.0 milestone start*

@@ -20,7 +20,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] **Phase 6: Code Indexing** - Build AST-aware tree-sitter indexing pipeline with incremental hashing and auto-relationship generation (completed 2026-02-28)
 - [x] **Phase 7: Code Search and Integration Validation** - Implement code search tools and validate cross-table unified search end-to-end (completed 2026-03-01)
 - [x] **Phase 8: Fix project_meta Integration Wiring** - Seed project_meta row in init_project and fix upsert semantics in index_codebase (Gap Closure: INT-01, Flow 6) (completed 2026-03-01)
-- [ ] **Phase 9: Tech Debt Documentation Cleanup** - Fix stale requirement descriptions, missing summary frontmatter, and tool description accuracy (Gap Closure: tech debt)
+- [x] **Phase 9: Tech Debt Documentation Cleanup** - Fix stale requirement descriptions, missing summary frontmatter, and tool description accuracy (Gap Closure: tech debt) (completed 2026-03-01)
 
 ## Phase Details
 
@@ -134,7 +134,8 @@ Decimal phases appear between their surrounding integers in numeric order.
   2. REQUIREMENTS.md DOC-01 description matches actual category count (12, not 17)
   3. REQUIREMENTS.md FOUND-04 description matches locked decision ("Implementation Patterns")
   4. delete_project tool description accurately reflects table count
-**Plans**: TBD
+**Plans**: 1 plan
+  - [x] 09-01-PLAN.md — Fix 03-01-SUMMARY.md frontmatter, DOC-01/FOUND-04 descriptions, delete_project table count
 
 ## Progress
 
@@ -152,4 +153,4 @@ Phases 8-9 are gap closure phases from the v1 audit.
 | 6. Code Indexing | 5/5 | Complete   | 2026-02-28 |
 | 7. Code Search and Integration Validation | 2/2 | Complete   | 2026-03-01 |
 | 8. Fix project_meta Integration Wiring | 1/1 | Complete   | 2026-03-01 |
-| 9. Tech Debt Documentation Cleanup | 0/? | Planned | — |
+| 9. Tech Debt Documentation Cleanup | 1/1 | Complete   | 2026-03-01 |

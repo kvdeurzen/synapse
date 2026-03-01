@@ -73,9 +73,9 @@ Requirements for initial release. Each maps to roadmap phases.
 
 ### Code Search
 
-- [ ] **CSRCH-01**: User can search code via search_code with query, language, symbol_type, and file_pattern filters
-- [ ] **CSRCH-02**: Code search supports semantic, fulltext, and hybrid (RRF) search modes
-- [ ] **CSRCH-03**: Code search results include file_path, symbol_name, scope_chain, content, relevance_score, start_line, end_line
+- [x] **CSRCH-01**: User can search code via search_code with query, language, symbol_type, and file_pattern filters
+- [x] **CSRCH-02**: Code search supports semantic, fulltext, and hybrid (RRF) search modes
+- [x] **CSRCH-03**: Code search results include file_path, symbol_name, scope_chain, content, relevance_score, start_line, end_line
 - [ ] **CSRCH-04**: get_index_status returns total files indexed, total chunks, last index time, languages breakdown, stale files count
 
 ## v2 Requirements
@@ -165,9 +165,9 @@ Which phases cover which requirements. Updated during roadmap creation.
 | CODE-08 | Phase 6 | Complete |
 | CODE-09 | Phase 6 | Complete |
 | CODE-10 | Phase 6 | Complete |
-| CSRCH-01 | Phase 7 | Pending |
-| CSRCH-02 | Phase 7 | Pending |
-| CSRCH-03 | Phase 7 | Pending |
+| CSRCH-01 | Phase 7 | Complete |
+| CSRCH-02 | Phase 7 | Complete |
+| CSRCH-03 | Phase 7 | Complete |
 | CSRCH-04 | Phase 7 | Pending |
 
 **Coverage:**

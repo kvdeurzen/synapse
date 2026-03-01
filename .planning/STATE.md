@@ -2,13 +2,13 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: unknown
-last_updated: "2026-02-28T17:54:01.492Z"
+status: in_progress
+last_updated: "2026-03-01T05:10:44Z"
 progress:
-  total_phases: 6
+  total_phases: 7
   completed_phases: 6
-  total_plans: 20
-  completed_plans: 20
+  total_plans: 22
+  completed_plans: 21
 ---
 
 # Project State
@@ -18,16 +18,16 @@ progress:
 See: .planning/PROJECT.md (updated 2026-02-27)
 
 **Core value:** Agents get the right context for any task — from both project decisions and actual code — without wasting tokens on irrelevant content
-**Current focus:** Phase 6 — Code Indexing
+**Current focus:** Phase 7 — Code Search and Integration Validation
 
 ## Current Position
 
-Phase: 6 of 6 (Code Indexing) — COMPLETE
-Plan: 5 of 5 in phase 06 (plan 05 complete — server wiring, FTS index on code_chunks, Phase 6 DONE)
-Status: Plan 06-05 COMPLETE — index_codebase registered as tool 16, code_chunks FTS index added, 449 tests pass, all CODE-01 through CODE-10 done
-Last activity: 2026-02-28 — Plan 06-05 complete: Phase 6 fully complete, all requirements implemented
+Phase: 7 of 7 (Code Search and Integration Validation)
+Plan: 1 of 2 in phase 07 (plan 01 complete — search_code tool with semantic/fulltext/hybrid modes, 469 tests pass)
+Status: Plan 07-01 COMPLETE — search_code registered as tool 17, all three search modes implemented, CSRCH-01/02/03 done
+Last activity: 2026-03-01 — Plan 07-01 complete: search_code MCP tool implemented and registered
 
-Progress: [██████████] 100% (Phase 6: 5/5 plans complete — ALL PHASES DONE)
+Progress: [█████████░] 95% (Phase 7: 1/2 plans complete)
 
 ## Performance Metrics
 
@@ -58,6 +58,7 @@ Progress: [██████████] 100% (Phase 6: 5/5 plans complete —
 | Phase 06-code-indexing P03 | 4 | 2 tasks | 2 files |
 | Phase 06-code-indexing P04 | 4 | 2 tasks | 2 files |
 | Phase 06-code-indexing P05 | 5 | 2 tasks | 4 files |
+| Phase 07-code-search P01 | 3 | 2 tasks | 3 files |
 
 ## Accumulated Context
 
@@ -133,6 +134,10 @@ Recent decisions affecting current work:
 - [Phase 06-04]: project_meta.last_index_at update is non-critical: wrapped in try/catch so indexing never fails on metadata update error
 - [Phase 06-05]: Tree-sitter grammar Language type mismatch: grammar packages expose language:unknown vs tree-sitter core Language recursive type — bridged via asLang() cast function through unknown intermediate
 - [Phase 06-05]: exactOptionalPropertyTypes compliance in index-codebase.ts: build scanOpts conditionally instead of spreading Zod-parsed fields with T|undefined type (same pattern as 05-04)
+- [Phase 07-01]: Code search uses inline predicate builder (not buildSearchPredicate from search-utils) — code_chunks has no cross-table metadata join; language/symbol_type/file_path are direct columns
+- [Phase 07-01]: scope_chain stored as dot-notation string in DB, returned as string[] by splitting on '.' — no type label prefixes (Pitfall 1)
+- [Phase 07-01]: Default limit for search_code is 10 (vs 5 for document search tools) per CONTEXT.md
+- [Phase 07-01]: globToSqlLike: escape %, _ then convert ** to %, * to %, ? to _ for SQL LIKE predicates
 
 ### Pending Todos
 
@@ -144,6 +149,6 @@ Recent decisions affecting current work:
 
 ## Session Continuity
 
-Last session: 2026-02-28
-Stopped at: Completed 06-code-indexing/06-05-PLAN.md (server wiring, code_chunks FTS index, 449 tests pass, Phase 6 COMPLETE — all 20 plans done)
+Last session: 2026-03-01
+Stopped at: Completed 07-code-search-and-integration-validation/07-01-PLAN.md (search_code tool, 469 tests pass, CSRCH-01/02/03 done)
 Resume file: None

@@ -84,10 +84,10 @@ None.
 
 ### Blockers/Concerns
 
-- (Phase 12) Orchestrator integration tests require Claude API calls — mock/record/replay harness must be established first
-- (Phase 12) Claude Agent SDK compatibility with Bun needs verification at bootstrap time
+- (Phase 12) Three-layer test harness must be established first — all subsequent phases depend on it
+- (Phase 12) Architecture pivoted from Agent SDK to Claude Code framework — synapse-framework is a new separate repo
 - (Phase 13) Agent prompt engineering is iterative — research-phase required before building all 10 agent definitions
-- (Phase 14) Wave controller and SubagentStop completion detection have limited public examples — research-phase required
+- (Phase 14) Wave controller and Claude Code Task tool parallel execution patterns have limited public examples — research-phase required
 
 ## Session Continuity
 

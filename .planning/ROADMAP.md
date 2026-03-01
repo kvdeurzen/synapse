@@ -161,16 +161,16 @@ Plans:
 
 ### 🚧 v2.0 Agentic Framework (In Progress)
 
-**Milestone Goal:** Build a coordination layer on top of Synapse's data layer — 10 specialized agents orchestrated via the Claude Agent SDK, with decision precedent tracking, recursive task decomposition, and tiered authority enforcement.
+**Milestone Goal:** Build a coordination layer on top of Synapse's data layer — 10 specialized agents orchestrated as a Claude Code framework (agents, skills, hooks, workflows), with decision precedent tracking, progressive task decomposition, configurable trust tiers, and hook-based authority enforcement.
 
 **Phase Numbering (v2.0):**
 Starting at Phase 10. Dependency order is strict: 10 -> 11 -> 12 -> 13 -> 14.
 
 - [x] **Phase 10: Decision Tracking Tooling** - Add decisions table and three MCP tools (store_decision, query_decisions, check_precedent) to the Synapse server
 - [x] **Phase 11: Task Hierarchy Tooling** - Add tasks table and three MCP tools (create_task, update_task, get_task_tree) with cascade status propagation
-- [ ] **Phase 12: Orchestrator Bootstrap** - Create the orchestrator/ package, Orchestrator class, Synapse subprocess wiring, session lifecycle, and mock/record/replay test harness
-- [ ] **Phase 13: Agent Specialization, Skill Loading, and Trust** - Define 10 AgentDefinition factory functions, skill registry with token budgets, and Trust-Knowledge Matrix config
-- [ ] **Phase 14: Quality Gates and PEV Workflow** - Implement all four hook modules and the Plan-Execute-Validate loop with wave-based parallel execution
+- [ ] **Phase 12: Framework Bootstrap** - Create synapse-framework repo with agents/, skills/, hooks/, workflows/, commands/, config/ directories; TOML config; Synapse MCP wiring; session lifecycle; three-layer test harness
+- [ ] **Phase 13: Agent Specialization, Skill Loading, and Trust** - Define 10 agent markdown files with tool allowlists, skill registry with token budgets, and Trust-Knowledge Matrix TOML config
+- [ ] **Phase 14: Quality Gates and PEV Workflow** - Implement hook-based enforcement modules and the Plan-Execute-Validate workflow with wave-based parallel execution
 
 ## Phase Details
 
@@ -209,43 +209,48 @@ Plans:
 - [x] 11-02: update_task, get_task_tree tools with cascade status propagation and BFS retrieval
 - [x] 11-03: Gap closure — REQUIREMENTS.md updated (6 checkboxes, 6 traceability rows, TASK-04 wording corrected)
 
-### Phase 12: Orchestrator Bootstrap
-**Goal**: The orchestrator process exists as a separate package, spawns Synapse as an MCP subprocess, validates the connection on startup, manages session lifecycle, and has a mock/record/replay test harness that prevents live API calls in unit tests
+### Phase 12: Framework Bootstrap
+**Goal**: The synapse-framework repo exists with the full directory structure (agents/, skills/, hooks/, workflows/, commands/, config/), TOML-based configuration, Synapse MCP wiring via Claude Code settings, work stream session lifecycle (create/resume/parallel), and a three-layer test harness (unit/integration/behavioral) with auto-recording fixtures
 **Depends on**: Phase 11
-**Requirements**: ORCH-01, ORCH-02, ORCH-03, ORCH-04, ORCH-05, ORCH-06
-**Research flag**: Standard patterns — skip research-phase; mock harness must be established here (all subsequent phases depend on it)
+**Requirements**: ORCH-01, ORCH-02, ORCH-03, ORCH-04, ORCH-05, ORCH-06, ORCH-07, ORCH-08
+**Architecture**: Claude Code framework (not standalone Agent SDK process). Agents, skills, hooks, and workflows are files that Claude Code loads natively. Uses Claude Code subscription. Decouple to Agent SDK possible later — orchestration logic is portable.
+**Repo structure**: Three repos — synapse-server (this repo, data layer), synapse-framework (new, agent framework), synapse-example (new, demo project)
+**Research flag**: Standard patterns — skip research-phase; test harness must be established here (all subsequent phases depend on it)
 **Success Criteria** (what must be TRUE):
-  1. The orchestrator/ directory has its own package.json with @anthropic-ai/claude-agent-sdk as a dependency and starts via bun run (not bun build)
-  2. The orchestrator spawns Synapse as an MCP subprocess via mcpServers stdio config and throws a clear error if the Synapse connection status is not "connected" on the init message
-  3. The orchestrator can start a new session and resume an existing session by project_id
-  4. Zod-validated config loading rejects missing or malformed synapse path, project_id, model, or API key before spawning anything
-  5. The mock/record/replay test harness allows all orchestrator tests to run without live API calls — integration test proves the orchestrator can call project_overview via Synapse MCP and receive a valid response
+  1. The synapse-framework repo has agents/, skills/, hooks/, workflows/, commands/, config/ directories mirroring the .claude/ target layout
+  2. config/synapse.toml configures the Synapse MCP server connection (db path, Ollama URL) with Claude Code settings.json as fallback
+  3. Session startup auto-detects open work streams by calling get_task_tree and get_smart_context, presenting project status to the user
+  4. A user can create a new work stream (natural language goal or /synapse:new-goal command), and multiple parallel work streams are supported
+  5. TOML config files are validated on startup — missing or malformed config/synapse.toml, config/trust.toml, or config/secrets.toml produces a clear error
+  6. Three-layer test harness works: unit tests for hooks/config (mocked, no API), integration tests against real Synapse with temp LanceDB (no API), behavioral tests with auto-recorded JSON fixtures (no API after first recording)
+  7. Agent identity is passed on all Synapse tool calls — decisions and tasks track which agent performed each operation
+  8. Prompt scorecards in test/scorecards/ define expected agent behaviors and score recorded outputs for regression testing
 **Plans**: TBD
 
 ### Phase 13: Agent Specialization, Skill Loading, and Trust
-**Goal**: All 10 specialized agents are defined as AgentDefinition factory functions with explicit tool allowlists and tier assignments; the skill registry injects project-specific behavior at spawn time; and the Trust-Knowledge Matrix drives per-domain autonomy levels
+**Goal**: All 10 specialized agents are defined as markdown files in agents/ with system prompts, allowed_tools lists, and tier assignments; the skill registry injects project-specific behavior at spawn time; and the Trust-Knowledge Matrix TOML config drives per-domain autonomy levels with configurable approval tiers
 **Depends on**: Phase 12
-**Requirements**: ROLE-01, ROLE-02, ROLE-03, ROLE-04, ROLE-05, ROLE-06, ROLE-07, ROLE-08, ROLE-09, ROLE-10, ROLE-11, ROLE-12, ROLE-13, SKILL-01, SKILL-02, SKILL-03, SKILL-04, SKILL-05, SKILL-06, TRUST-01, TRUST-02, TRUST-03, TRUST-04, TRUST-05
-**Research flag**: Flag for research-phase — agent prompt engineering is iterative; Trust-Knowledge Matrix YAML schema has no reference implementation
+**Requirements**: ROLE-01, ROLE-02, ROLE-03, ROLE-04, ROLE-05, ROLE-06, ROLE-07, ROLE-08, ROLE-09, ROLE-10, ROLE-11, ROLE-12, ROLE-13, SKILL-01, SKILL-02, SKILL-03, SKILL-04, SKILL-05, SKILL-06, TRUST-01, TRUST-02, TRUST-03, TRUST-04, TRUST-05, TRUST-06
+**Research flag**: Flag for research-phase — agent prompt engineering is iterative; Trust-Knowledge Matrix TOML schema has no reference implementation
 **Success Criteria** (what must be TRUE):
-  1. All 10 agents (Product Strategist, Researcher, Architect, Decomposer, Plan Reviewer, Executor, Validator, Integration Checker, Debugger, Codebase Analyst) exist as AgentDefinition factory functions with explicit tools arrays — no agent includes Task in its tools array
-  2. Each agent's system prompt is loaded from a markdown template file at runtime, not hardcoded
-  3. The skill registry reads markdown skill files, maps project attributes to skill bundles, and injects skill content deterministically into agent system prompts — per-agent skill budget enforced (max 2K tokens per skill, max 3 skills for Executor)
+  1. All 10 agents (Product Strategist, Researcher, Architect, Decomposer, Plan Reviewer, Executor, Validator, Integration Checker, Debugger, Codebase Analyst) exist as markdown files in agents/ with system prompts and allowed_tools lists — loaded by Claude Code at spawn time
+  2. Each agent's system prompt IS the markdown file — no separate template loading needed; Claude Code reads agent files natively
+  3. The skill registry reads markdown skill files from skills/, maps project attributes to skill bundles via config/agents.toml, and injects skill content into agent context — per-agent skill budget enforced (max 2K tokens per skill, max 3 skills for Executor)
   4. Skill content hashes are validated before injection to prevent tampered skill files from executing
-  5. The Trust-Knowledge Matrix YAML config file defines per-domain autonomy levels (autopilot/co-pilot/advisory) and a decision tier authority map that correctly assigns permitted tiers per agent role
+  5. The Trust-Knowledge Matrix in config/trust.toml defines per-domain autonomy levels (autopilot/co-pilot/advisory), a decision tier authority map per agent role, and configurable approval tiers for decomposition levels
 **Plans**: TBD
 
 ### Phase 14: Quality Gates and PEV Workflow
-**Goal**: Hook-based enforcement prevents agents from exceeding their authority at the infrastructure level; the Plan-Execute-Validate loop orchestrates the full workflow with wave-based parallel execution; and the complete system can run a user prompt through task decomposition, execution, and validation end-to-end
+**Goal**: Hook-based enforcement in .claude/hooks/ prevents agents from exceeding their authority; the Plan-Execute-Validate workflow orchestrates progressive decomposition with wave-based parallel execution; and the complete system can run a user goal through task decomposition, execution, and validation end-to-end with full rollback support
 **Depends on**: Phase 13
-**Requirements**: GATE-01, GATE-02, GATE-03, GATE-04, GATE-05, GATE-06, GATE-07, WFLOW-01, WFLOW-02, WFLOW-03, WFLOW-04, WFLOW-05, WFLOW-06
-**Research flag**: Flag for research-phase — wave controller and SubagentStop completion detection have limited public implementation examples
+**Requirements**: GATE-01, GATE-02, GATE-03, GATE-04, GATE-05, GATE-06, GATE-07, WFLOW-01, WFLOW-02, WFLOW-03, WFLOW-04, WFLOW-05, WFLOW-06, WFLOW-07, WFLOW-08
+**Research flag**: Flag for research-phase — wave controller and Claude Code Task tool parallel execution patterns have limited public implementation examples
 **Success Criteria** (what must be TRUE):
-  1. A PreToolUse hook denies any store_decision call from an agent whose permitted tier is lower than the decision tier being stored — the denial happens at the infrastructure level before the tool executes
-  2. A PreToolUse hook denies any tool call not present in the calling agent's explicit tools array
-  3. A PostToolUse hook logs every tool call to file with timestamp, agent identity, tool name, and result summary — the hook is async and does not block the agent loop
+  1. A PreToolUse hook in hooks/ denies any store_decision call from an agent whose permitted tier is lower than the decision tier being stored — the denial happens before the tool executes
+  2. A PreToolUse hook denies any tool call not present in the calling agent's allowed_tools list from its agent definition
+  3. A PostToolUse hook logs every tool call to file with timestamp, agent identity, tool name, and result summary — the hook does not block the agent
   4. Every hook callback survives being called with null or malformed input without throwing an unhandled exception — hooks degrade gracefully under any input
-  5. A user can trigger the PEV loop with a goal, watch Decomposer break it into a task tree, Executors process independent tasks in parallel waves, Validators check each task, and iteration 3 failure escalates to the user rather than silently looping
+  5. A user can trigger the PEV workflow with a goal, watch Decomposer progressively decompose (Epic→Features validated, then Features→Tasks on demand), Executors process independent tasks in parallel waves via Claude Code Task tool, Validators check each task, and iteration 3 failure escalates to the user rather than silently looping
 **Plans**: TBD
 
 ## Progress
@@ -267,6 +272,6 @@ v2.0 in progress: 10 -> 11 -> 12 -> 13 -> 14
 | 9. Tech Debt Documentation Cleanup | v1.0 | 1/1 | Complete | 2026-03-01 |
 | 10. Decision Tracking Tooling | v2.0 | Complete    | 2026-03-01 | 2026-03-01 |
 | 11. Task Hierarchy Tooling | v2.0 | Complete    | 2026-03-01 | 2026-03-01 |
-| 12. Orchestrator Bootstrap | v2.0 | 0/TBD | Not started | - |
+| 12. Framework Bootstrap | v2.0 | 0/TBD | Not started | - |
 | 13. Agent Specialization, Skill Loading, and Trust | v2.0 | 0/TBD | Not started | - |
 | 14. Quality Gates and PEV Workflow | v2.0 | 0/TBD | Not started | - |

@@ -1,8 +1,8 @@
 # Requirements: Synapse
 
 **Defined:** 2026-02-27
-**Updated:** 2026-03-01 (v2.0 roadmap created — all 61 requirements mapped)
-**Core Value:** Agents get the right context for any task — from both project decisions and actual code — without wasting tokens on irrelevant content. The orchestrator ensures agents respect established decisions and decompose work to context-window-sized executable units.
+**Updated:** 2026-03-01 (v2.0 pivoted to Claude Code framework — 65 requirements mapped)
+**Core Value:** Agents get the right context for any task — from both project decisions and actual code — without wasting tokens on irrelevant content. The framework (built on Claude Code) ensures agents respect established decisions, decompose work progressively, and operate within configurable trust boundaries.
 
 ## v1.0 Requirements (Complete)
 
@@ -114,18 +114,20 @@ Requirements for the Agentic Framework milestone. Each maps to roadmap phases 10
 
 ### Orchestrator Foundation (ORCH)
 
-- [ ] **ORCH-01**: Orchestrator runs as a separate process in orchestrator/ with its own package.json
-- [ ] **ORCH-02**: Orchestrator spawns Synapse as MCP subprocess via Agent SDK mcpServers stdio config
-- [ ] **ORCH-03**: Orchestrator checks init-message MCP server status and throws if Synapse connection fails
-- [ ] **ORCH-04**: Orchestrator supports session lifecycle: start new session and resume existing session
-- [ ] **ORCH-05**: Orchestrator config is Zod-validated (synapse path, project_id, model, API key)
-- [ ] **ORCH-06**: Mock/record/replay test harness established for testing without API token cost
+- [ ] **ORCH-01**: Framework repo (synapse-framework) has agents/, skills/, hooks/, workflows/, commands/, config/ directories mirroring .claude/ target layout
+- [ ] **ORCH-02**: Synapse MCP server connection configured in config/synapse.toml with Claude Code settings.json as fallback
+- [ ] **ORCH-03**: Session startup auto-detects open work streams via Synapse get_task_tree and get_smart_context, presenting project status
+- [ ] **ORCH-04**: Work stream lifecycle: create new (natural language or /synapse:new-goal), resume existing, multiple parallel streams supported
+- [ ] **ORCH-05**: TOML config files validated on startup — missing or malformed config produces clear error
+- [ ] **ORCH-06**: Three-layer test harness: unit (hooks/config), integration (Synapse MCP with temp LanceDB), behavioral (auto-recorded JSON fixtures committed to git)
+- [ ] **ORCH-07**: Full attribution — agent identity passed on all Synapse tool calls (decisions, tasks, activity log)
+- [ ] **ORCH-08**: Prompt scorecards in test/scorecards/ define expected agent behaviors and score recorded outputs for regression testing
 
 ### Agent Specialization (ROLE)
 
-- [ ] **ROLE-01**: 10 agent roles defined as AgentDefinition factory functions with explicit tool allowlists
+- [ ] **ROLE-01**: 10 agent roles defined as markdown files in agents/ with system prompts and allowed_tools lists
 - [ ] **ROLE-02**: Product Strategist (opus) handles Tier 0 decisions with mandatory user approval
-- [ ] **ROLE-03**: Researcher (sonnet) is read-only — cannot modify state or create decisions
+- [ ] **ROLE-03**: Researcher (sonnet) is read-only — allowed_tools excludes state-modifying tools
 - [ ] **ROLE-04**: Architect (opus) handles Tier 1-2 decisions and creates epic-level task structure
 - [ ] **ROLE-05**: Decomposer (opus) breaks epics into executable leaf tasks within context window limits
 - [ ] **ROLE-06**: Plan Reviewer (opus) verifies task plans against decisions before execution begins
@@ -134,44 +136,47 @@ Requirements for the Agentic Framework milestone. Each maps to roadmap phases 10
 - [ ] **ROLE-09**: Integration Checker (sonnet) validates cross-task integration at feature/epic boundaries
 - [ ] **ROLE-10**: Debugger (sonnet) performs root-cause analysis on execution and validation failures
 - [ ] **ROLE-11**: Codebase Analyst (sonnet) maintains codebase analysis via index_codebase and store_document
-- [ ] **ROLE-12**: No agent includes Task in its tools array — flat two-level hierarchy enforced
-- [ ] **ROLE-13**: System prompts loaded from markdown template files at runtime
+- [ ] **ROLE-12**: Agent allowed_tools lists enforced via hooks — no agent can call tools outside its definition
+- [ ] **ROLE-13**: Agent markdown files ARE the system prompts — Claude Code loads them natively at spawn time
 
 ### Skill Loading (SKILL)
 
-- [ ] **SKILL-01**: Skill registry maps project attributes (tech stack, domain) to skill bundles
-- [ ] **SKILL-02**: Skills are markdown files containing domain knowledge, quality criteria, and vocabulary
-- [ ] **SKILL-03**: Skills are injected deterministically into agent system prompts at spawn time
-- [ ] **SKILL-04**: Progressive skill loading: skill names at init, full body loaded on demand
+- [ ] **SKILL-01**: Skill registry in config/agents.toml maps project attributes (tech stack, domain) to skill bundles
+- [ ] **SKILL-02**: Skills are markdown files in skills/ containing domain knowledge, quality criteria, and vocabulary
+- [ ] **SKILL-03**: Skills are injected into agent context at spawn time via Claude Code's agent loading mechanism
+- [ ] **SKILL-04**: Progressive skill loading: skill names in agent definition, full body loaded on demand
 - [ ] **SKILL-05**: Per-agent skill budget enforced (max 2K tokens per skill, max 3 skills for Executor)
 - [ ] **SKILL-06**: Skill content hash validated before injection to prevent tampering
 
 ### Trust & Authority (TRUST)
 
-- [ ] **TRUST-01**: Trust-Knowledge Matrix stored as YAML config file (not DB table)
+- [ ] **TRUST-01**: Trust-Knowledge Matrix stored as TOML config file (config/trust.toml)
 - [ ] **TRUST-02**: Per-domain autonomy levels: autopilot (agent decides), co-pilot (agent proposes, user approves), advisory (agent suggests, user decides)
 - [ ] **TRUST-03**: Tier 0 (Product Strategy) decisions always require user approval regardless of trust config
 - [ ] **TRUST-04**: Trust config drives hook decisions: autopilot -> allow, co-pilot -> ask, advisory -> ask with explanation
 - [ ] **TRUST-05**: Decision tier authority matrix maps each agent role to its permitted decision tiers
+- [ ] **TRUST-06**: Configurable approval tiers for decomposition levels (advisory: approve all levels, co-pilot: approve epics only, autopilot: fully autonomous)
 
 ### Quality Gates (GATE)
 
-- [ ] **GATE-01**: PreToolUse hook enforces tier authority — agents cannot store decisions above their permitted tier
-- [ ] **GATE-02**: PreToolUse hook enforces tool allowlists — agents can only call tools in their definition
+- [ ] **GATE-01**: PreToolUse hook in hooks/ enforces tier authority — agents cannot store decisions above their permitted tier
+- [ ] **GATE-02**: PreToolUse hook enforces tool allowlists — agents can only call tools in their agent definition's allowed_tools
 - [ ] **GATE-03**: PreToolUse precedent-gate injects "check precedent first" context before decision storage
 - [ ] **GATE-04**: PreToolUse user-approval hook returns "ask" for Tier 0 decisions
 - [ ] **GATE-05**: PostToolUse audit hook logs all tool calls to file with timestamp, agent, tool, and result summary
-- [ ] **GATE-06**: Every hook callback wrapped in top-level try/catch to prevent fatal orchestrator crashes
+- [ ] **GATE-06**: Every hook callback wrapped in top-level try/catch — hooks degrade gracefully under any input
 - [ ] **GATE-07**: Hook ordering is tested: deny takes priority over ask over allow
 
 ### PEV Workflow (WFLOW)
 
-- [ ] **WFLOW-01**: Plan-Execute-Validate loop orchestrates Decomposer -> Executor -> Validator sequence
+- [ ] **WFLOW-01**: Plan-Execute-Validate workflow in workflows/ orchestrates Decomposer -> Executor -> Validator sequence
 - [ ] **WFLOW-02**: PEV loop capped at 3 iterations; iteration 3 failure escalates to user
-- [ ] **WFLOW-03**: Wave-based parallel execution: independent leaf tasks in the same wave execute concurrently
+- [ ] **WFLOW-03**: Wave-based parallel execution: independent leaf tasks in the same wave execute concurrently via Claude Code Task tool
 - [ ] **WFLOW-04**: Wave N+1 starts only after all tasks in wave N are validated complete
 - [ ] **WFLOW-05**: Executor failures trigger Debugger agent for root-cause analysis before retry
 - [ ] **WFLOW-06**: Decomposer <-> Plan Reviewer verification loop (max 3 iterations) gates execution start
+- [ ] **WFLOW-07**: Progressive decomposition: Epic->Features validated for completeness before execution, Features->Tasks decomposed on demand when feature starts
+- [ ] **WFLOW-08**: Full rollback support: tasks can be reopened and associated code changes reverted via git
 
 ## Future Requirements
 
@@ -206,7 +211,7 @@ Deferred beyond v2.0. Tracked but not in current roadmap.
 | Cloud deployment / hosted service | Local-first; local Ollama + local LanceDB |
 | HTTP/SSE transport | Stdio is standard for Claude Code; adds auth complexity with zero benefit |
 | Multiple embedding providers | Mixing embedding spaces fractures vector search |
-| Slash commands / phase management CLI | Out of scope for v2.0; orchestrator manages workflow programmatically |
+| Standalone Agent SDK orchestrator | Claude Code framework chosen over standalone process; Agent SDK decouple is a future option |
 
 ## Traceability
 
@@ -295,6 +300,8 @@ Which phases cover which requirements. Updated during roadmap creation.
 | ORCH-04 | Phase 12 | Pending |
 | ORCH-05 | Phase 12 | Pending |
 | ORCH-06 | Phase 12 | Pending |
+| ORCH-07 | Phase 12 | Pending |
+| ORCH-08 | Phase 12 | Pending |
 | ROLE-01 | Phase 13 | Pending |
 | ROLE-02 | Phase 13 | Pending |
 | ROLE-03 | Phase 13 | Pending |
@@ -319,6 +326,7 @@ Which phases cover which requirements. Updated during roadmap creation.
 | TRUST-03 | Phase 13 | Pending |
 | TRUST-04 | Phase 13 | Pending |
 | TRUST-05 | Phase 13 | Pending |
+| TRUST-06 | Phase 13 | Pending |
 | GATE-01 | Phase 14 | Pending |
 | GATE-02 | Phase 14 | Pending |
 | GATE-03 | Phase 14 | Pending |
@@ -332,13 +340,15 @@ Which phases cover which requirements. Updated during roadmap creation.
 | WFLOW-04 | Phase 14 | Pending |
 | WFLOW-05 | Phase 14 | Pending |
 | WFLOW-06 | Phase 14 | Pending |
+| WFLOW-07 | Phase 14 | Pending |
+| WFLOW-08 | Phase 14 | Pending |
 
 **Coverage:**
 - v1.0 requirements: 50 total — 50 complete
-- v2.0 requirements: 61 total
-- Mapped to phases: 61 (100% coverage)
+- v2.0 requirements: 65 total (was 61, added ORCH-07, ORCH-08, TRUST-06, WFLOW-07, WFLOW-08)
+- Mapped to phases: 65 (100% coverage)
 - Unmapped: 0
 
 ---
 *Requirements defined: 2026-02-27*
-*Last updated: 2026-03-01 — v2.0 roadmap created, all 61 requirements mapped to Phases 10-14*
+*Last updated: 2026-03-01 — v2.0 pivoted to Claude Code framework, 65 requirements mapped to Phases 10-14*

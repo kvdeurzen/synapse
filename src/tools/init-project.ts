@@ -5,7 +5,7 @@ import { ulid } from "ulidx";
 import { z } from "zod";
 import { insertBatch } from "../db/batch.js";
 import { connectDb } from "../db/connection.js";
-import { DocumentRowSchema, TABLE_NAMES, TABLE_SCHEMAS } from "../db/schema.js";
+import { DocumentRowSchema, ProjectMetaRowSchema, TABLE_NAMES, TABLE_SCHEMAS } from "../db/schema.js";
 import { createToolLogger, logger } from "../logger.js";
 import type { SynapseConfig, ToolResult } from "../types.js";
 
@@ -129,6 +129,14 @@ Reusable technical decisions and coding conventions for this project.
 `,
   },
 };
+
+// ────────────────────────────────────────────────────────────────────────────
+// Helpers
+// ────────────────────────────────────────────────────────────────────────────
+
+function escapeSQL(val: string): string {
+  return val.replace(/'/g, "''");
+}
 
 // ────────────────────────────────────────────────────────────────────────────
 // Core logic (testable without MCP server)
@@ -262,6 +270,26 @@ export async function initProject(
       logger.info({ projectId, starters_seeded }, "Starter documents seeded");
     }
   }
+
+  // ── Seed project_meta row (always upsert for idempotency) ────────────────
+  const projectMetaTable = await db.openTable("project_meta");
+  await projectMetaTable.delete(`project_id = '${escapeSQL(projectId)}'`);
+  const metaNow = new Date().toISOString();
+  await insertBatch(
+    projectMetaTable,
+    [
+      {
+        project_id: projectId,
+        name: projectId,
+        created_at: metaNow,
+        updated_at: metaNow,
+        description: null,
+        last_index_at: null,
+        settings: null,
+      },
+    ],
+    ProjectMetaRowSchema,
+  );
 
   return {
     tables_created,

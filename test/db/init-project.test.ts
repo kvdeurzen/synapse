@@ -56,29 +56,9 @@ describe("initProject", () => {
   });
 
   test("does not overwrite data on re-init", async () => {
+    // With new seeding behavior, init_project itself seeds project_meta.
+    // The key invariant: re-init leaves exactly 1 project_meta row (not empty, not duplicated).
     await initProject(tmpDir, "proj");
-    const db = await lancedb.connect(tmpDir);
-    const table = await db.openTable("project_meta");
-
-    // Insert a row
-    const now = new Date().toISOString();
-    await insertBatch(
-      table,
-      [
-        {
-          project_id: "proj",
-          name: "Test Project",
-          created_at: now,
-          updated_at: now,
-          description: null,
-          last_index_at: null,
-          settings: null,
-        },
-      ],
-      ProjectMetaRowSchema,
-    );
-
-    // Re-init — should not delete the row
     await initProject(tmpDir, "proj");
 
     const db2 = await lancedb.connect(tmpDir);
@@ -247,5 +227,46 @@ describe("initProject — starter document seeding", () => {
 
     // Only the valid one should be seeded
     expect(result.starters_seeded).toBe(1);
+  });
+});
+
+// ── project_meta row seeding ──────────────────────────────────────────────────
+
+describe("initProject — project_meta seeding", () => {
+  test("seeds project_meta row on fresh init", async () => {
+    await initProject(tmpDir, "test-proj");
+
+    const db = await lancedb.connect(tmpDir);
+    const table = await db.openTable("project_meta");
+    const rows = await table.query().toArray();
+
+    expect(rows.length).toBe(1);
+    expect(rows[0].project_id).toBe("test-proj");
+    expect(rows[0].name).toBe("test-proj");
+    expect(rows[0].description).toBeNull();
+    expect(rows[0].settings).toBeNull();
+  });
+
+  test("project_meta row has last_index_at as null after init", async () => {
+    await initProject(tmpDir, "test-proj");
+
+    const db = await lancedb.connect(tmpDir);
+    const table = await db.openTable("project_meta");
+    const rows = await table.query().toArray();
+
+    expect(rows.length).toBe(1);
+    expect(rows[0].last_index_at).toBeNull();
+  });
+
+  test("re-init produces exactly 1 project_meta row (idempotent)", async () => {
+    await initProject(tmpDir, "test-proj");
+    await initProject(tmpDir, "test-proj");
+
+    const db = await lancedb.connect(tmpDir);
+    const table = await db.openTable("project_meta");
+    const rows = await table.query().toArray();
+
+    expect(rows.length).toBe(1);
+    expect(rows[0].project_id).toBe("test-proj");
   });
 });

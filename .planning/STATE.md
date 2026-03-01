@@ -2,13 +2,13 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: in_progress
-last_updated: "2026-03-01T05:10:44Z"
+status: complete
+last_updated: "2026-03-01T05:23:00Z"
 progress:
   total_phases: 7
-  completed_phases: 6
+  completed_phases: 7
   total_plans: 22
-  completed_plans: 21
+  completed_plans: 22
 ---
 
 # Project State
@@ -22,12 +22,12 @@ See: .planning/PROJECT.md (updated 2026-02-27)
 
 ## Current Position
 
-Phase: 7 of 7 (Code Search and Integration Validation)
-Plan: 1 of 2 in phase 07 (plan 01 complete — search_code tool with semantic/fulltext/hybrid modes, 469 tests pass)
-Status: Plan 07-01 COMPLETE — search_code registered as tool 17, all three search modes implemented, CSRCH-01/02/03 done
-Last activity: 2026-03-01 — Plan 07-01 complete: search_code MCP tool implemented and registered
+Phase: 7 of 7 (Code Search and Integration Validation) — COMPLETE
+Plan: 2 of 2 in phase 07 — ALL PLANS COMPLETE — v1.0 milestone achieved
+Status: Plan 07-02 COMPLETE — get_index_status + extended get_smart_context, 18 tools, 488 tests pass, CSRCH-04 done
+Last activity: 2026-03-01 — Plan 07-02 complete: get_index_status + unified cross-table get_smart_context
 
-Progress: [█████████░] 95% (Phase 7: 1/2 plans complete)
+Progress: [██████████] 100% (Phase 7: 2/2 plans complete — ALL PHASES DONE)
 
 ## Performance Metrics
 
@@ -59,6 +59,7 @@ Progress: [█████████░] 95% (Phase 7: 1/2 plans complete)
 | Phase 06-code-indexing P04 | 4 | 2 tasks | 2 files |
 | Phase 06-code-indexing P05 | 5 | 2 tasks | 4 files |
 | Phase 07-code-search P01 | 3 | 2 tasks | 3 files |
+| Phase 07-code-search P02 | 9 | 2 tasks | 6 files |
 
 ## Accumulated Context
 
@@ -138,6 +139,11 @@ Recent decisions affecting current work:
 - [Phase 07-01]: scope_chain stored as dot-notation string in DB, returned as string[] by splitting on '.' — no type label prefixes (Pitfall 1)
 - [Phase 07-01]: Default limit for search_code is 10 (vs 5 for document search tools) per CONTEXT.md
 - [Phase 07-01]: globToSqlLike: escape %, _ then convert ** to %, * to %, ? to _ for SQL LIKE predicates
+- [Phase 07-02]: stale_files returns null (not 0) when project_root not provided — null means unchecked, 0 means checked and fresh
+- [Phase 07-02]: source_types defaults to 'both' — get_smart_context queries both documents and code_chunks by default
+- [Phase 07-02]: bias parameter weights relevance before merging: doc_score = baseScore * (1+bias), code_score = baseScore * (1+(1-bias))
+- [Phase 07-02]: Unified ID list in detailed mode: try documents first, then code_chunks for unmatched IDs (Pitfall 5 pattern)
+- [Phase 07-02]: Tool count is now 18 after get_index_status registration
 
 ### Pending Todos
 
@@ -150,5 +156,5 @@ Recent decisions affecting current work:
 ## Session Continuity
 
 Last session: 2026-03-01
-Stopped at: Completed 07-code-search-and-integration-validation/07-01-PLAN.md (search_code tool, 469 tests pass, CSRCH-01/02/03 done)
+Stopped at: Completed 07-code-search-and-integration-validation/07-02-PLAN.md (get_index_status + unified get_smart_context, 488 tests pass, CSRCH-04 done, v1.0 COMPLETE)
 Resume file: None

@@ -19,6 +19,8 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] **Phase 5: Document Search** - Implement hybrid search (RRF), semantic search, FTS, and two-phase smart context assembly (1/5 plans complete) (completed 2026-02-28)
 - [x] **Phase 6: Code Indexing** - Build AST-aware tree-sitter indexing pipeline with incremental hashing and auto-relationship generation (completed 2026-02-28)
 - [x] **Phase 7: Code Search and Integration Validation** - Implement code search tools and validate cross-table unified search end-to-end (completed 2026-03-01)
+- [ ] **Phase 8: Fix project_meta Integration Wiring** - Seed project_meta row in init_project and fix upsert semantics in index_codebase (Gap Closure: INT-01, Flow 6)
+- [ ] **Phase 9: Tech Debt Documentation Cleanup** - Fix stale requirement descriptions, missing summary frontmatter, and tool description accuracy (Gap Closure: tech debt)
 
 ## Phase Details
 
@@ -109,11 +111,35 @@ Decimal phases appear between their surrounding integers in numeric order.
   - [ ] 07-01-PLAN.md — search_code tool with semantic, fulltext, hybrid modes and code-specific filters
   - [ ] 07-02-PLAN.md — get_index_status tool, get_smart_context cross-table extension
 
+### Phase 8: Fix project_meta Integration Wiring
+**Goal**: Seed project_meta row in init_project so last_index_at is tracked correctly, and fix index_codebase to use upsert semantics for project_meta updates
+**Depends on**: Phase 2, Phase 6, Phase 7
+**Requirements**: CSRCH-04 (re-verified), CODE-10 (re-verified)
+**Gap Closure**: Closes INT-01 (critical), Flow 6 (Incremental Re-index / Stale Detection)
+**Success Criteria** (what must be TRUE):
+  1. After init_project, project_meta table contains a row with last_index_at as null (not empty table)
+  2. After index_codebase, project_meta.last_index_at is set to current timestamp (upsert works regardless of existing row)
+  3. get_index_status returns non-null last_index_at after an init_project → index_codebase flow
+  4. Running index_codebase twice updates (not duplicates) the project_meta row
+**Plans**: TBD
+
+### Phase 9: Tech Debt Documentation Cleanup
+**Goal**: Fix stale requirement descriptions, missing summary frontmatter, and inaccurate tool descriptions identified by the v1 audit
+**Depends on**: Phase 8
+**Requirements**: Documentation accuracy (no requirement status changes)
+**Gap Closure**: Closes 5 tech debt items from audit
+**Success Criteria** (what must be TRUE):
+  1. 03-01-SUMMARY.md includes EMBED-01, EMBED-02, EMBED-06 in requirements-completed frontmatter
+  2. REQUIREMENTS.md DOC-01 description matches actual category count (12, not 17)
+  3. REQUIREMENTS.md FOUND-04 description matches locked decision ("Implementation Patterns")
+  4. delete_project tool description accurately reflects table count
+**Plans**: TBD
+
 ## Progress
 
 **Execution Order:**
-Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7
-Note: Phase 6 depends on Phase 3 (not Phase 5), so Phases 5 and 6 could run in parallel if desired — but sequential execution is the default.
+Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7 → 8 → 9
+Phases 8-9 are gap closure phases from the v1 audit.
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
@@ -124,3 +150,5 @@ Note: Phase 6 depends on Phase 3 (not Phase 5), so Phases 5 and 6 could run in p
 | 5. Document Search | 4/4 | Complete   | 2026-02-28 |
 | 6. Code Indexing | 5/5 | Complete   | 2026-02-28 |
 | 7. Code Search and Integration Validation | 2/2 | Complete   | 2026-03-01 |
+| 8. Fix project_meta Integration Wiring | 0/? | Planned | — |
+| 9. Tech Debt Documentation Cleanup | 0/? | Planned | — |

@@ -3,12 +3,12 @@ gsd_state_version: 1.0
 milestone: v2.0
 milestone_name: Agentic Framework
 status: unknown
-last_updated: "2026-03-01T21:15:00Z"
+last_updated: "2026-03-01T21:21:04Z"
 progress:
   total_phases: 5
-  completed_phases: 2
+  completed_phases: 3
   total_plans: 14
-  completed_plans: 6
+  completed_plans: 9
 ---
 
 # Project State
@@ -23,12 +23,12 @@ See: .planning/PROJECT.md (updated 2026-03-01)
 
 ## Current Position
 
-Phase: 12 of 14 (Orchestrator Bootstrap) — IN PROGRESS
-Plan: 01 complete — synapse-framework repo bootstrapped (1/3 plans)
-Status: Phase 12 Plan 01 complete — synapse-framework repo created with TOML config system, Zod validation, and directory structure
-Last activity: 2026-03-01 — Phase 12 Plan 01 executed (repo bootstrap, TOML config, 13 tests pass)
+Phase: 12 of 14 (Orchestrator Bootstrap) — COMPLETE (all 3 plans done)
+Phase: 13 of 14 (Agent Specialization) — NOT STARTED
+Status: Phase 12 complete — all 3 plans shipped (config system, hooks/agents/commands, test harness)
+Last activity: 2026-03-01 — Phase 12 Plan 03 executed (integration tests, behavioral fixtures, scorecard)
 
-Progress: [████░░░░░░] 43% (v2.0 milestone — Phase 12 Plan 01 complete)
+Progress: [██████░░░░] 60% (v2.0 milestone — Phase 12 complete, 3 phases done of 5)
 
 ## Performance Metrics
 
@@ -46,6 +46,7 @@ Progress: [████░░░░░░] 43% (v2.0 milestone — Phase 12 Plan
 | 11 | 02 | 13min | 2 | 7 |
 | 11 | 03 | 3min | 1 | 1 |
 | 12 | 01 | 3min | 2 | 15 |
+| 12 | 03 | 3min | 2 | 6 |
 
 ## Accumulated Context
 
@@ -72,6 +73,13 @@ Decisions are logged in PROJECT.md Key Decisions table.
 - Zod 4 z.string({ error: '...' }) syntax for custom missing-field messages (not z.string().min() which only fires on empty string)
 - loadSecretsConfig is optional — returns {} on missing file, not an error
 - Anti-drift test validates actual config/ files against Zod schemas in CI
+- Hooks use ESM imports (not CJS require()) — package.json type:module means .js files are ESM; require() fails in ESM context
+- Attribution enforced by prompt instructions in agent definition — Phase 14 GATE hooks enforce; Phase 12 establishes the convention
+- Startup hook injects instructions via additionalContext — cannot call Synapse MCP tools at SessionStart (MCP not yet available)
+- Audit hook appends to .synapse-audit.log in process.cwd() — gitignored, one JSON entry per line
+- MCP integration client uses background stdout reader + pending Map to avoid deadlock on sequential read/write
+- Behavioral fixtures committed to git for deterministic replay — delete to re-record on next run
+- Scorecard evaluation engine deferred to Phase 13 — Phase 12 establishes TOML format only
 
 **Phase 11 decisions (validated):**
 - Bool type used for is_blocked/is_cancelled in TASKS_SCHEMA (LanceDB supports Bool natively; not Int32)
@@ -91,13 +99,12 @@ None.
 
 ### Blockers/Concerns
 
-- (Phase 12) Three-layer test harness must be established first — all subsequent phases depend on it
-- (Phase 12) Architecture pivoted from Agent SDK to Claude Code framework — synapse-framework is a new separate repo
+- (Phase 13) Agent prompt engineering is iterative — research-phase required before building all 10 agent definitions (Phase 12 test harness complete)
 - (Phase 13) Agent prompt engineering is iterative — research-phase required before building all 10 agent definitions
 - (Phase 14) Wave controller and Claude Code Task tool parallel execution patterns have limited public examples — research-phase required
 
 ## Session Continuity
 
 Last session: 2026-03-01
-Stopped at: Completed 12-01-PLAN.md — synapse-framework repo bootstrapped, TOML config system with Zod validation, 13 tests pass
+Stopped at: Completed 12-03-PLAN.md — three-layer test harness complete (integration client, behavioral fixtures, prompt scorecard)
 Resume file: None

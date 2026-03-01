@@ -3,12 +3,12 @@ gsd_state_version: 1.0
 milestone: v2.0
 milestone_name: Agentic Framework
 status: in_progress
-last_updated: "2026-03-01T18:41:25Z"
+last_updated: "2026-03-01T16:31:28Z"
 progress:
   total_phases: 5
-  completed_phases: 0
+  completed_phases: 1
   total_plans: 2
-  completed_plans: 1
+  completed_plans: 2
 ---
 
 # Project State
@@ -23,12 +23,12 @@ See: .planning/PROJECT.md (updated 2026-03-01)
 
 ## Current Position
 
-Phase: 10 of 14 (Decision Tracking Tooling)
-Plan: 01 complete — ready for Plan 02
-Status: Phase 10, Plan 01 complete
-Last activity: 2026-03-01 — Phase 10 Plan 01 executed (decisions schema + store_decision tool)
+Phase: 10 of 14 (Decision Tracking Tooling) — COMPLETE
+Plan: 02 complete — Phase 10 done, ready for Phase 11
+Status: Phase 10 complete (2/2 plans)
+Last activity: 2026-03-01 — Phase 10 Plan 02 executed (query_decisions + check_precedent tools, 21 total tools)
 
-Progress: [█░░░░░░░░░] 10% (v2.0 milestone — 1/2 Phase 10 plans done)
+Progress: [██░░░░░░░░] 20% (v2.0 milestone — Phase 10 complete, 2/2 Phase 10 plans done)
 
 ## Performance Metrics
 
@@ -41,6 +41,7 @@ Progress: [█░░░░░░░░░] 10% (v2.0 milestone — 1/2 Phase 10 
 | Phase | Plan | Duration | Tasks | Files |
 |-------|------|----------|-------|-------|
 | 10 | 01 | 8min | 2 | 11 |
+| 10 | 02 | 7min | 2 | 7 |
 
 ## Accumulated Context
 
@@ -59,6 +60,8 @@ Decisions are logged in PROJECT.md Key Decisions table.
 - Vector field is nullable in DECISIONS_SCHEMA for defensive schema design; fail-fast enforcement is at store_decision level
 - Cosine distance threshold of 0.15 for has_precedent flag (approximately similarity >= 0.85)
 - Precedent check failure is non-fatal — has_precedent=false if vector search errors
+- query_decisions uses SQL WHERE for indexed fields + JS post-filter for subject/tags (LanceDB LIKE limitations)
+- check_precedent gracefully degrades on Ollama unreachable (read operation, unlike store_decision which fails fast)
 
 ### Pending Todos
 
@@ -74,5 +77,5 @@ None.
 ## Session Continuity
 
 Last session: 2026-03-01
-Stopped at: Completed 10-01-PLAN.md — decisions schema + store_decision tool (512 tests passing)
+Stopped at: Completed 10-02-PLAN.md — query_decisions + check_precedent tools, Phase 10 complete (536 tests passing)
 Resume file: None

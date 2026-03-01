@@ -166,7 +166,7 @@ Plans:
 **Phase Numbering (v2.0):**
 Starting at Phase 10. Dependency order is strict: 10 -> 11 -> 12 -> 13 -> 14.
 
-- [ ] **Phase 10: Decision Tracking Tooling** - Add decisions table and three MCP tools (store_decision, query_decisions, check_precedent) to the Synapse server
+- [x] **Phase 10: Decision Tracking Tooling** - Add decisions table and three MCP tools (store_decision, query_decisions, check_precedent) to the Synapse server
 - [ ] **Phase 11: Task Hierarchy Tooling** - Add tasks table and three MCP tools (create_task, update_task, get_task_tree) with cascade status propagation
 - [ ] **Phase 12: Orchestrator Bootstrap** - Create the orchestrator/ package, Orchestrator class, Synapse subprocess wiring, session lifecycle, and mock/record/replay test harness
 - [ ] **Phase 13: Agent Specialization, Skill Loading, and Trust** - Define 10 AgentDefinition factory functions, skill registry with token budgets, and Trust-Knowledge Matrix config
@@ -189,7 +189,7 @@ Starting at Phase 10. Dependency order is strict: 10 -> 11 -> 12 -> 13 -> 14.
 
 Plans:
 - [x] 10-01: Decision schema, types, constants, init_project extension, store_decision tool (TDD)
-- [ ] 10-02: query_decisions + check_precedent tools, server wiring (TDD)
+- [x] 10-02: query_decisions + check_precedent tools, server wiring (TDD)
 
 ### Phase 11: Task Hierarchy Tooling
 **Goal**: Agents can create and manage a recursive task tree (Epic/Feature/Component/Task) with cascade status propagation, dependency cycle detection, and BFS tree retrieval — three new MCP tools in the Synapse server
@@ -260,7 +260,7 @@ v2.0 in progress: 10 -> 11 -> 12 -> 13 -> 14
 | 7. Code Search and Integration Validation | v1.0 | 2/2 | Complete | 2026-03-01 |
 | 8. Fix project_meta Integration Wiring | v1.0 | 1/1 | Complete | 2026-03-01 |
 | 9. Tech Debt Documentation Cleanup | v1.0 | 1/1 | Complete | 2026-03-01 |
-| 10. Decision Tracking Tooling | v2.0 | 1/2 | In Progress | - |
+| 10. Decision Tracking Tooling | v2.0 | 2/2 | Complete | 2026-03-01 |
 | 11. Task Hierarchy Tooling | v2.0 | 0/TBD | Not started | - |
 | 12. Orchestrator Bootstrap | v2.0 | 0/TBD | Not started | - |
 | 13. Agent Specialization, Skill Loading, and Trust | v2.0 | 0/TBD | Not started | - |

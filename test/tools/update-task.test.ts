@@ -99,10 +99,10 @@ describe("updateTask", () => {
       depth: 0,
     }, config);
 
-    // Get the original vector
-    const db = await lancedb.connect(tmpDir);
-    const table = await db.openTable("tasks");
-    const rowsBefore = await table.query().where(`task_id = '${task.task_id}'`).toArray();
+    // Get the original vector (fresh connection)
+    const dbBefore = await lancedb.connect(tmpDir);
+    const tableBefore = await dbBefore.openTable("tasks");
+    const rowsBefore = await tableBefore.query().where(`task_id = '${task.task_id}'`).toArray();
     const vectorBefore = rowsBefore[0]?.vector as number[] | null;
 
     // Re-enable embed mock (with a different vector to verify change)
@@ -129,8 +129,10 @@ describe("updateTask", () => {
     expect(embedCalled).toBe(true);
     expect(result.changed_fields).toContain("title");
 
-    // Verify updated_at changed
-    const rowsAfter = await table.query().where(`task_id = '${task.task_id}'`).toArray();
+    // Verify updated state via fresh connection (LanceDB table handles are snapshot-based)
+    const dbAfter = await lancedb.connect(tmpDir);
+    const tableAfter = await dbAfter.openTable("tasks");
+    const rowsAfter = await tableAfter.query().where(`task_id = '${task.task_id}'`).toArray();
     expect(rowsAfter[0]?.updated_at).toBeDefined();
     expect(rowsAfter[0]?.title).toBe("New Title");
     // Vector should have been updated (different from original)
@@ -452,9 +454,9 @@ describe("updateTask", () => {
       depth: 0,
     }, config);
 
-    const db = await lancedb.connect(tmpDir);
-    const table = await db.openTable("tasks");
-    const rowsBefore = await table.query().where(`task_id = '${task.task_id}'`).toArray();
+    const dbBefore = await lancedb.connect(tmpDir);
+    const tableBefore = await dbBefore.openTable("tasks");
+    const rowsBefore = await tableBefore.query().where(`task_id = '${task.task_id}'`).toArray();
     const createdAt = rowsBefore[0]?.created_at as string;
 
     // Small delay to ensure updated_at > created_at
@@ -470,7 +472,10 @@ describe("updateTask", () => {
       priority: "high",
     }, config);
 
-    const rowsAfter = await table.query().where(`task_id = '${task.task_id}'`).toArray();
+    // Use fresh connection to read updated data (LanceDB table handles are snapshot-based)
+    const dbAfter = await lancedb.connect(tmpDir);
+    const tableAfter = await dbAfter.openTable("tasks");
+    const rowsAfter = await tableAfter.query().where(`task_id = '${task.task_id}'`).toArray();
     const updatedAt = rowsAfter[0]?.updated_at as string;
 
     expect(updatedAt).toBeDefined();

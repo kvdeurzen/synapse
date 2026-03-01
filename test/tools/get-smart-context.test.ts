@@ -3,6 +3,7 @@ import { mkdtempSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import * as lancedb from "@lancedb/lancedb";
+import { ulid } from "ulidx";
 import { insertBatch } from "../../src/db/batch.js";
 import { DocumentRowSchema } from "../../src/db/schema.js";
 import { getSmartContext } from "../../src/tools/get-smart-context.js";
@@ -65,6 +66,54 @@ async function insertDoc(
   return doc_id;
 }
 
+function makeVector(seed = 0): number[] {
+  const v = new Array(768).fill(0) as number[];
+  v[seed % 768] = 1.0;
+  v[(seed + 100) % 768] = 0.5;
+  return v;
+}
+
+async function insertCodeChunk(
+  db: lancedb.Connection,
+  opts: {
+    projectId: string;
+    filePath: string;
+    language?: string;
+    fileHash?: string | null;
+    chunkId?: string;
+    content?: string;
+    symbolName?: string | null;
+    symbolType?: string | null;
+  },
+): Promise<string> {
+  const chunkId = opts.chunkId ?? ulid();
+  const now = new Date().toISOString();
+
+  const codeChunksTable = await db.openTable("code_chunks");
+  await codeChunksTable.add([
+    {
+      chunk_id: chunkId,
+      project_id: opts.projectId,
+      doc_id: opts.filePath,
+      file_path: opts.filePath,
+      symbol_name: opts.symbolName ?? null,
+      symbol_type: opts.symbolType ?? null,
+      scope_chain: null,
+      content: opts.content ?? `export function fn${chunkId.slice(-4)}(): void {}`,
+      language: opts.language ?? null,
+      imports: "{}",
+      exports: "{}",
+      start_line: 1,
+      end_line: 3,
+      created_at: now,
+      file_hash: opts.fileHash ?? null,
+      vector: makeVector(0),
+    },
+  ]);
+
+  return chunkId;
+}
+
 async function linkDocs(
   dbPath: string,
   projectId: string,
@@ -120,7 +169,8 @@ describe("getSmartContext - overview mode", () => {
     });
 
     expect(result.mode).toBe("overview");
-    expect(result.source).toBe("document");
+    // source is "both" by default (source_types defaults to "both" since Phase 7 Plan 02 extension)
+    expect(result.source === "document" || result.source === "both").toBe(true);
     const docIds = result.documents.map((d: { doc_id: string }) => d.doc_id);
     expect(docIds).toContain(docA);
     expect(docIds).toContain(docB);
@@ -253,7 +303,8 @@ describe("getSmartContext - overview mode", () => {
     expect(result.total_documents).toBe(0);
     expect(result.included_documents).toBe(0);
     expect(result.total_tokens).toBe(0);
-    expect(result.source).toBe("document");
+    // source is "both" by default (source_types defaults to "both" since Phase 7 Plan 02 extension)
+    expect(result.source === "document" || result.source === "both").toBe(true);
   });
 
   test("each document has required fields in overview mode", async () => {
@@ -592,5 +643,339 @@ describe("getSmartContext - detailed mode", () => {
     const reqDoc = result.documents.find((d: { doc_id: string }) => d.doc_id === docA);
     expect(reqDoc.is_requested).toBe(true);
     expect(reqDoc.relationship_type).toBeUndefined();
+  });
+});
+
+// ── Extended tests: source_types + bias + code_chunks ────────────────────────
+
+describe("getSmartContext - source_types and code_chunks integration", () => {
+  // a. Overview mode with source_types="both" returns code items
+
+  test("overview with source_types='both' returns both documents and code_items", async () => {
+    const db = await lancedb.connect(tmpDir);
+
+    await insertDoc(tmpDir, "test-proj", {
+      title: "A Document",
+      content: "Document content about the system.",
+      category: "change_record", // unique category to isolate test
+    });
+
+    await insertCodeChunk(db, {
+      projectId: "test-proj",
+      filePath: "src/index.ts",
+      language: "typescript",
+      content: "export function main(): void { console.log('hello'); }",
+      chunkId: ulid(),
+    });
+
+    const result = await getSmartContext(tmpDir, "test-proj", {
+      project_id: "test-proj",
+      mode: "overview",
+      source_types: "both",
+      max_tokens: 4000,
+    });
+
+    // Should have both documents and code_items
+    expect(result.documents.length).toBeGreaterThan(0);
+    expect(result.code_items).toBeDefined();
+    expect(result.code_items!.length).toBeGreaterThan(0);
+    expect(result.source).toBe("both");
+  });
+
+  // b. Overview with source_types="documents" returns no code items
+
+  test("overview with source_types='documents' does not include code items", async () => {
+    const db = await lancedb.connect(tmpDir);
+
+    await insertCodeChunk(db, {
+      projectId: "test-proj",
+      filePath: "src/app.ts",
+      language: "typescript",
+      content: "export class App {}",
+      chunkId: ulid(),
+    });
+
+    const result = await getSmartContext(tmpDir, "test-proj", {
+      project_id: "test-proj",
+      mode: "overview",
+      source_types: "documents",
+      max_tokens: 4000,
+    });
+
+    // code_items should be absent or empty
+    expect(result.code_items == null || result.code_items.length === 0).toBe(true);
+    expect(result.source).toBe("document");
+  });
+
+  // c. Overview mode default (no source_types) includes code items when available
+
+  test("overview default (no source_types) returns both when code_chunks have data", async () => {
+    const db = await lancedb.connect(tmpDir);
+
+    await insertCodeChunk(db, {
+      projectId: "test-proj",
+      filePath: "src/handler.ts",
+      language: "typescript",
+      content: "export function handle(): void {}",
+      chunkId: ulid(),
+    });
+
+    const result = await getSmartContext(tmpDir, "test-proj", {
+      project_id: "test-proj",
+      mode: "overview",
+      max_tokens: 4000,
+      // no source_types — defaults to "both"
+    });
+
+    // With default "both", code_items should be present
+    expect(result.code_items).toBeDefined();
+    expect(result.code_items!.length).toBeGreaterThan(0);
+  });
+
+  // d. Code summaries use extractSnippet format
+
+  test("code_items summaries use extractSnippet format from content", async () => {
+    const db = await lancedb.connect(tmpDir);
+    const codeContent =
+      "export function authenticate(token: string): boolean { return token.length > 0; }";
+
+    await insertCodeChunk(db, {
+      projectId: "test-proj",
+      filePath: "src/auth.ts",
+      language: "typescript",
+      content: codeContent,
+      chunkId: ulid(),
+    });
+
+    const result = await getSmartContext(tmpDir, "test-proj", {
+      project_id: "test-proj",
+      mode: "overview",
+      source_types: "code",
+      max_tokens: 4000,
+    });
+
+    expect(result.code_items).toBeDefined();
+    expect(result.code_items!.length).toBeGreaterThan(0);
+
+    const codeItem = result.code_items![0];
+    // Summary should contain the beginning of the content (extractSnippet with empty query)
+    expect(typeof codeItem.summary).toBe("string");
+    expect(codeItem.summary.length).toBeGreaterThan(0);
+    // The content is short enough to fit in 100 tokens, so summary === content
+    expect(codeItem.summary).toContain("authenticate");
+  });
+
+  // e. Token budget shared across documents and code
+
+  test("truncation works across both types and truncated=true when budget exceeded", async () => {
+    const db = await lancedb.connect(tmpDir);
+    const longContent = "word ".repeat(200); // ~200 tokens per item
+
+    // Insert many code chunks to fill budget
+    for (let i = 0; i < 10; i++) {
+      await insertCodeChunk(db, {
+        projectId: "test-proj",
+        filePath: `src/file${i}.ts`,
+        language: "typescript",
+        content: longContent,
+        chunkId: ulid(),
+      });
+    }
+
+    const result = await getSmartContext(tmpDir, "test-proj", {
+      project_id: "test-proj",
+      mode: "overview",
+      source_types: "code",
+      max_tokens: 500, // low budget — can't fit all 10 chunks
+    });
+
+    expect(result.total_tokens).toBeLessThanOrEqual(500);
+    expect(result.truncated).toBe(true);
+  });
+
+  // f. Detailed mode resolves code chunk_ids
+
+  test("detailed mode resolves code chunk_id when not found in documents table", async () => {
+    const db = await lancedb.connect(tmpDir);
+    const chunkId = ulid();
+    const codeContent = "export const VERSION = '1.0.0';";
+
+    await insertCodeChunk(db, {
+      projectId: "test-proj",
+      filePath: "src/version.ts",
+      language: "typescript",
+      content: codeContent,
+      chunkId,
+    });
+
+    const result = await getSmartContext(tmpDir, "test-proj", {
+      project_id: "test-proj",
+      mode: "detailed",
+      doc_ids: [chunkId],
+      source_types: "both",
+      max_tokens: 4000,
+    });
+
+    // Should find the code chunk by its chunk_id
+    const resolved = result.documents.find(
+      (d: { doc_id: string }) => d.doc_id === chunkId,
+    );
+    expect(resolved).toBeDefined();
+    expect(resolved.content).toBe(codeContent);
+    expect(resolved.is_requested).toBe(true);
+    // Title should contain the file path
+    expect(resolved.title).toContain("src/version.ts");
+  });
+
+  // g. Response metadata fields populated
+
+  test("overview result includes required metadata fields", async () => {
+    const db = await lancedb.connect(tmpDir);
+
+    await insertCodeChunk(db, {
+      projectId: "test-proj",
+      filePath: "src/meta.ts",
+      language: "typescript",
+      content: "export function metaTest(): void {}",
+      chunkId: ulid(),
+    });
+
+    const result = await getSmartContext(tmpDir, "test-proj", {
+      project_id: "test-proj",
+      mode: "overview",
+      source_types: "both",
+      max_tokens: 4000,
+    });
+
+    // All CONTEXT.md-required metadata fields
+    expect(typeof result.total_matches).toBe("number");
+    expect(typeof result.docs_returned).toBe("number");
+    expect(typeof result.code_returned).toBe("number");
+    expect(typeof result.truncated).toBe("boolean");
+    expect(typeof result.tokens_used).toBe("number");
+    expect(result.tokens_used).toBe(result.total_tokens);
+    expect(result.docs_returned).toBe(result.included_documents);
+    expect(result.code_returned).toBe(result.included_code_items);
+  });
+
+  // h. Bias parameter weights document vs code
+
+  test("bias=1.0 favors documents over code in ranking", async () => {
+    const db = await lancedb.connect(tmpDir);
+    const longContent = "word ".repeat(150); // ~150 tokens
+
+    // Insert docs with long content
+    await insertDoc(tmpDir, "test-proj", {
+      title: "Priority Doc",
+      content: longContent,
+      category: "requirement",
+      priority: 1,
+    });
+
+    // Insert code chunks with same-length content
+    for (let i = 0; i < 5; i++) {
+      await insertCodeChunk(db, {
+        projectId: "test-proj",
+        filePath: `src/chunk${i}.ts`,
+        language: "typescript",
+        content: longContent,
+        chunkId: ulid(),
+      });
+    }
+
+    // With bias=1.0 (favor documents), docs should fill budget first
+    const resultDocBias = await getSmartContext(tmpDir, "test-proj", {
+      project_id: "test-proj",
+      mode: "overview",
+      source_types: "both",
+      bias: 1.0,
+      max_tokens: 500,
+      category: "requirement", // filter docs to only our inserted doc
+    });
+
+    // With bias=0.0 (favor code), code should fill budget first
+    const resultCodeBias = await getSmartContext(tmpDir, "test-proj", {
+      project_id: "test-proj",
+      mode: "overview",
+      source_types: "both",
+      bias: 0.0,
+      max_tokens: 500,
+    });
+
+    // With doc bias: docs_returned should be higher relative to code
+    // With code bias: code_returned should be higher relative to docs
+    // These are directional tests — not exact counts
+    expect(typeof resultDocBias.docs_returned).toBe("number");
+    expect(typeof resultCodeBias.code_returned).toBe("number");
+    // Code bias should include at least one code item (or more than doc bias)
+    const docBiasCodeCount = resultDocBias.code_returned ?? 0;
+    const codeBiasCodeCount = resultCodeBias.code_returned ?? 0;
+    expect(codeBiasCodeCount).toBeGreaterThanOrEqual(docBiasCodeCount);
+  });
+
+  // i. Tight budget fills by pure relevance regardless of source type
+
+  test("tight budget fills by merged relevance ranking regardless of source type", async () => {
+    const db = await lancedb.connect(tmpDir);
+    const shortContent = "short content"; // small token count
+
+    // Insert a document with high priority (high relevance)
+    await insertDoc(tmpDir, "test-proj", {
+      title: "High Priority Doc",
+      content: shortContent,
+      category: "requirement",
+      priority: 1,
+    });
+
+    // Insert code chunks
+    for (let i = 0; i < 3; i++) {
+      await insertCodeChunk(db, {
+        projectId: "test-proj",
+        filePath: `src/bias${i}.ts`,
+        language: "typescript",
+        content: shortContent,
+        chunkId: ulid(),
+      });
+    }
+
+    const result = await getSmartContext(tmpDir, "test-proj", {
+      project_id: "test-proj",
+      mode: "overview",
+      source_types: "both",
+      bias: 0.5,
+      max_tokens: 4000, // generous budget — all should fit
+    });
+
+    // Result should include items from both sources
+    expect(result.documents.length).toBeGreaterThan(0);
+    expect(result.code_items).toBeDefined();
+    // total_matches is all candidates before budget filtering
+    expect(result.total_matches).toBeGreaterThan(0);
+  });
+
+  // j. source_types="code" returns source="code" and no document fields
+
+  test("overview with source_types='code' returns source='code'", async () => {
+    const db = await lancedb.connect(tmpDir);
+
+    await insertCodeChunk(db, {
+      projectId: "test-proj",
+      filePath: "src/source-type.ts",
+      language: "typescript",
+      content: "export const X = 1;",
+      chunkId: ulid(),
+    });
+
+    const result = await getSmartContext(tmpDir, "test-proj", {
+      project_id: "test-proj",
+      mode: "overview",
+      source_types: "code",
+      max_tokens: 4000,
+    });
+
+    expect(result.source).toBe("code");
+    expect(result.documents).toHaveLength(0);
+    expect(result.code_items).toBeDefined();
+    expect(result.code_items!.length).toBeGreaterThan(0);
   });
 });

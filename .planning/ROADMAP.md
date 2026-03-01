@@ -266,7 +266,7 @@ v2.0 in progress: 10 -> 11 -> 12 -> 13 -> 14
 | 8. Fix project_meta Integration Wiring | v1.0 | 1/1 | Complete | 2026-03-01 |
 | 9. Tech Debt Documentation Cleanup | v1.0 | 1/1 | Complete | 2026-03-01 |
 | 10. Decision Tracking Tooling | v2.0 | Complete    | 2026-03-01 | 2026-03-01 |
-| 11. Task Hierarchy Tooling | v2.0 | 2/2 | Complete | 2026-03-01 |
+| 11. Task Hierarchy Tooling | v2.0 | Complete    | 2026-03-01 | 2026-03-01 |
 | 12. Orchestrator Bootstrap | v2.0 | 0/TBD | Not started | - |
 | 13. Agent Specialization, Skill Loading, and Trust | v2.0 | 0/TBD | Not started | - |
 | 14. Quality Gates and PEV Workflow | v2.0 | 0/TBD | Not started | - |

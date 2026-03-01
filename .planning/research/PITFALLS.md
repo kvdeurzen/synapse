@@ -1,258 +1,300 @@
 # Pitfalls Research
 
-**Domain:** Database-backed MCP server with vector search and code indexing (LanceDB + tree-sitter + Ollama + MCP SDK)
-**Researched:** 2026-02-27
-**Confidence:** MEDIUM-HIGH (majority verified against official docs, GitHub issues, and multiple sources)
+**Domain:** Adding an agentic coordination layer (Claude Agent SDK, multi-agent orchestration, decision tracking, task hierarchy) to an existing MCP server (Synapse v1.0)
+**Researched:** 2026-03-01
+**Confidence:** HIGH for Agent SDK patterns (verified against official docs); MEDIUM for LanceDB tree-hierarchy limits (DataFusion lineage confirmed, CTE specifics via GitHub issue); HIGH for integration pitfalls (verified via GitHub issues and official troubleshooting docs)
 
 ---
 
 ## Critical Pitfalls
 
-### Pitfall 1: stdout Contamination Silently Kills the MCP Transport
+### Pitfall 1: MCP Subprocess Shows "failed" Status Silently — Orchestrator Proceeds Anyway
 
 **What goes wrong:**
-Any output written to stdout — `console.log()`, a dependency that prints a startup banner, a debug statement — corrupts the JSON-RPC stream. The MCP client receives data that doesn't parse as valid JSON-RPC and silently drops the connection. The server process continues running; the client hangs or shows cryptic errors like "Server transport closed unexpectedly" or "serde error: data did not match any variant of untagged enum JsonRpcMessage". This is the single most common MCP implementation failure.
+The Claude Agent SDK's `query()` call spawns Synapse as a stdio subprocess via `mcpServers` config. If the subprocess fails to start (wrong command, missing env vars, Bun not in PATH, wrong working directory), the Agent SDK emits a `system/init` message with the Synapse server's status set to `"failed"`. Critically, the SDK does **not** abort — the agent continues executing and simply has no MCP tools available. The orchestrator may hallucinate tool calls, produce nonsensical output, or silently do nothing, with no exception thrown.
 
 **Why it happens:**
-The stdio transport uses stdout exclusively for JSON-RPC messages (newline-delimited JSON). Developers habitually reach for `console.log()` for debugging. Third-party libraries (tree-sitter grammar loaders, LanceDB startup messages, node-gyp binding loaders) may also write to stdout. Any single stray character breaks the framing.
+The SDK's MCP connection error handling is designed to be non-fatal. It reports failures in the init message and continues, on the assumption the agent may have other tools. This is correct design for general use but wrong for Synapse's two-process architecture where the orchestrator is entirely dependent on Synapse tools. Developers assume a failed subprocess = exception; it doesn't.
 
 **How to avoid:**
-- Redirect ALL logging to stderr from day one. Never use `console.log()` anywhere in the server code path.
-- Use a logger configured to write to stderr: `new Console({ stdout: process.stderr, stderr: process.stderr })` or a library like `pino` with `destination: 2`.
-- Audit every dependency for stdout writes on require/import.
-- In tests, intercept stdout and assert it contains only valid JSON-RPC messages.
-- Set `NODE_DEBUG=''` to suppress Node.js internal debug output if it leaks.
+- Always check the `system/init` message at the start of every `query()` call. Parse `message.mcp_servers` and abort if any server has `status !== "connected"`:
+  ```typescript
+  for await (const message of query({ prompt, options })) {
+    if (message.type === "system" && message.subtype === "init") {
+      const failed = message.mcp_servers.filter(s => s.status !== "connected");
+      if (failed.length > 0) throw new Error(`MCP server failed: ${JSON.stringify(failed)}`);
+    }
+    // ... rest of message handling
+  }
+  ```
+- Validate the Synapse startup command (`bun run src/index.ts`) resolves correctly from the orchestrator's cwd before passing it to `mcpServers`.
+- In tests, assert that the init message shows `"connected"` status before asserting agent behavior.
 
 **Warning signs:**
-- Client shows "connection closed" immediately after connecting, despite the server process staying alive.
-- Error messages containing "JSON parse" or "untagged enum" on the client side.
-- Works when tested with MCP Inspector (which may be more tolerant) but fails in Claude Code.
-- Startup log messages are missing from stderr but also not visible — they went to stdout.
+- Orchestrator produces output without making any `mcp__synapse__*` tool calls.
+- Agent SDK does not throw — output looks plausible but Synapse data is not queried.
+- MCP server list in `system/init` shows `status: "failed"` or `status: "timeout"`.
 
-**Phase to address:** Phase 1 (MCP server scaffold). Establish the logging discipline before any other code is written. The pattern must be in place before any dependency is installed.
+**Phase to address:** Orchestrator bootstrap phase. The init-check guard must be the very first piece of orchestrator infrastructure built.
 
 ---
 
-### Pitfall 2: Embedding Dimension Mismatch Corrupts the Vector Space Permanently
+### Pitfall 2: stdio Buffer Deadlock — Orchestrator Hangs After Long MCP Tool Responses
 
 **What goes wrong:**
-Once a LanceDB table is created with a `float32[768]` vector column, the dimension is fixed. If any rows are inserted with a different dimension — due to a model swap, a misconfiguration of Ollama's `num_ctx`, or a different model being substituted — LanceDB raises a FixedSizeList validation error or, worse, silently accepts the wrong-dimension vector (schema mismatch with nullable vs non-nullable vectors). Subsequent vector searches return wrong results or crash with confusing errors about dimension mismatch.
+When Synapse returns a large MCP tool response (e.g., `get_smart_context` with 50 chunks, `search_code` returning many results), the JSON-RPC response payload can exceed the OS stdio pipe buffer (~64KB on Linux). If the orchestrator's Agent SDK does not drain the pipe fast enough, the subprocess's write blocks, the orchestrator's read also blocks waiting for the subprocess to send `EOF`, and both sides deadlock. The SDK hangs indefinitely with no timeout.
 
 **Why it happens:**
-Ollama's `nomic-embed-text` outputs 768 dimensions, but there are documented cases where Ollama launches with `num_ctx=8192` even though the model only supports 2048, causing crashes. The error message when you query with the wrong dimension is "very confusing" per the LanceDB issue tracker. Once bad vectors are inserted, they cannot be updated — LanceDB is append-only. The entire table must be dropped and rebuilt.
+This is a classic subprocess communication deadlock. The Agent SDK spawns Synapse via `anyio.open_process()` (Python) or Node.js `child_process.spawn()`. Stdio pipes have finite OS buffers. When the MCP response is large and the consumer is slow, the producer blocks. This has been confirmed in `claude-agent-sdk-python` issue #145 as a real hang scenario for long-running tool responses.
 
 **How to avoid:**
-- Assert embedding dimension on every batch before inserting into LanceDB. If the returned vector length != 768, throw and abort — never insert.
-- The embedding service's `embed()` method must validate: `if (vector.length !== EXPECTED_DIM) throw new Error(...)`.
-- Store `EXPECTED_DIM = 768` as a named constant imported by both the embedding service and the schema definition.
-- On `init_project`, embed a known test string, verify the dimension, and fail fast with a clear message if wrong.
-- Never allow changing `EMBED_MODEL` on an existing database without a full wipe + reindex.
+- Keep Synapse MCP tool responses under 32KB where possible. For `get_smart_context`, enforce `max_tokens` limits on the returned bundle; for `query_decisions`, paginate rather than returning all records.
+- Add a per-tool `limit` parameter to all Synapse tools that return variable-length result sets. Default limits: `query_decisions` max 20, `get_task_tree` max depth 4.
+- The orchestrator should set a `max_turns` limit and a wall-clock timeout per `query()` call to prevent indefinite hangs.
+- For the SDK: use the TypeScript SDK's async generator pattern — iterate the generator as soon as messages arrive rather than buffering all messages before processing.
 
 **Warning signs:**
-- LanceDB error: "Values length N is less than the length (768) multiplied by the value size..."
-- Vector search returns completely irrelevant results despite correct text.
-- Error: "TypeError: Table and inner RecordBatch schemas must be equivalent" on insert.
-- The Ollama `/api/embed` response has an unexpected `embedding` array length.
+- `query()` hangs indefinitely after a large MCP result.
+- No new messages arrive from the generator for > 30 seconds with no error.
+- The Synapse process shows high CPU (blocked write syscall) in `ps` output while the orchestrator shows low CPU (blocked read).
 
-**Phase to address:** Phase 2 (schema definition) and Phase 3 (embedding service). The dimension assertion must be in the embedding service before the first insert is possible.
+**Phase to address:** Orchestrator bootstrap + MCP tool design phase. Set response size limits on all Synapse tools before integration testing.
 
 ---
 
-### Pitfall 3: tree-sitter Native Bindings Fail Silently on Node.js Version Mismatch
+### Pitfall 3: LanceDB Has No Recursive CTE — Task Tree Traversal Requires Application-Level Recursion
 
 **What goes wrong:**
-The `tree-sitter` npm package is a native Node.js addon compiled against a specific `NODE_MODULE_VERSION`. If the Node.js version that runs the server differs from the version that compiled the prebuilt binary, the module fails to load with "The module was compiled against a different Node.js version using NODE_MODULE_VERSION 116. This version of Node.js requires NODE_MODULE_VERSION 108." The grammar packages (`tree-sitter-typescript`, `tree-sitter-python`, `tree-sitter-rust`) each have their own compiled `.node` files and can independently fail. In the worst case, the error is thrown at parse time (not at require time), so the MCP server starts successfully but crashes when `index_codebase` is called.
+The task hierarchy (Epic → Feature → Component → Task) requires querying all descendants of a given parent, which is naturally expressed as a recursive CTE (`WITH RECURSIVE`). LanceDB uses Apache DataFusion as its SQL engine. DataFusion added experimental recursive CTE support (enabled via `execution.enable_recursive_ctes`), but LanceDB's Node.js client does not expose the `execution` config option, and recursive CTEs are not enabled in LanceDB's default configuration. Attempting `WITH RECURSIVE` in a LanceDB filter will fail with a parse error.
 
 **Why it happens:**
-tree-sitter ships prebuilt binaries for common Node.js versions. If the user's Node.js version doesn't match, `node-gyp rebuild` is required at install time, which requires a C++ build toolchain. In production/CI environments without build tools, this silently fails or produces an incompatible binary. Additionally, grammar packages (e.g., `tree-sitter-typescript` vs `@tree-sitter-grammars/tree-sitter-typescript`) sometimes have mismatched versions with the core `tree-sitter` package.
+LanceDB's SQL filtering is a subset of DataFusion SQL. DataFusion's recursive CTEs are opt-in and considered experimental (they can buffer unbounded data). LanceDB does not expose the config toggle. This means tree traversal must be done in application code via iterative queries.
 
 **How to avoid:**
-- Lock Node.js version in `.nvmrc` and `package.json` `engines` field.
-- Test `index_codebase` in CI on the target Node.js version, not just locally.
-- Verify all grammar packages load on server startup (before accepting MCP connections): attempt to parse a trivial 1-line TypeScript, Python, and Rust snippet and throw if any grammar fails to load.
-- Pin `tree-sitter` and all grammar package versions together; don't bump them independently.
-- For grammar version alignment: `tree-sitter-typescript`, `tree-sitter-python`, `tree-sitter-rust` must all be compatible with the core `tree-sitter` package version.
-- If build toolchain cannot be assumed, evaluate `web-tree-sitter` (WASM) as a fallback — but note WASM ABI compatibility issues between `web-tree-sitter` 0.26.x and WASM files built by `tree-sitter-cli` 0.20.x.
+- Implement `getTaskTree(rootId, maxDepth)` as an iterative BFS in TypeScript: query `parent_id = rootId` at depth 1, collect task IDs, query `parent_id IN (...)` for depth 2, etc. Limit to `maxDepth` (default: 5) to prevent runaway iteration.
+- Store a `depth` field (already planned in schema foundations) to enable depth-scoped queries without recursion: `WHERE depth <= :maxDepth AND root_id = :epicId`.
+- Store a `root_id` field on every task (denormalized reference to the Epic ancestor). This enables a single flat query for all descendants: `WHERE root_id = :epicId`. Update `root_id` whenever a task is reparented.
+- The `get_task_tree` MCP tool should cap at 200 tasks returned and warn if truncated. Log if BFS reaches `maxDepth` without exhausting the tree.
 
 **Warning signs:**
-- `npm install` completes without errors but `require('tree-sitter')` throws at runtime.
-- Error message mentions `NODE_MODULE_VERSION`.
-- `index_codebase` returns zero chunks for TypeScript files with no error message.
-- Grammar loads successfully for one language but fails for another (version mismatch between individual grammar packages).
+- `WITH RECURSIVE` SQL error in LanceDB filter expressions.
+- `get_task_tree` stalls on deep task hierarchies (unbounded BFS).
+- Task trees with depth > 5 cause N+1 query patterns (one DB round-trip per level).
 
-**Phase to address:** Phase 5 (code indexing). The grammar-load health check must run before the server accepts connections.
+**Phase to address:** Task hierarchy schema phase. The `root_id` denormalized field and `depth` field must be in the schema from day one, before any task data is written.
 
 ---
 
-### Pitfall 4: LanceDB Fragment Accumulation Degrades Query Performance Over Time
+### Pitfall 4: Subagents Cannot Spawn Subagents — 10-Agent Design Must Be Flat
 
 **What goes wrong:**
-LanceDB stores data in fragments. Each `add()` call (especially single-row inserts) creates a new fragment on disk. Parts of the query pipeline have O(N fragments) complexity. With Synapse's document chunking strategy — each `store_document` call creating multiple separate insert operations per chunk — the fragment count grows rapidly. After hundreds of documents, vector search latency climbs from milliseconds to seconds. LanceDB themselves document: "try to limit your dataset to 100 or so fragments."
+The Claude Agent SDK explicitly prohibits subagents from spawning their own subagents. The `Task` tool must not be included in a subagent's `tools` array. If included (or inherited via omitting the `tools` field), the SDK silently ignores subagent-spawning attempts or throws. This means the orchestrator's architecture must be a single-level star: Orchestrator (main agent) → 10 leaf agents. Any design requiring Agent A to spawn Agent B fails.
 
 **Why it happens:**
-The natural implementation of `store_document` inserts chunks one-by-one (or calls `add()` per chunk). Each `add()` creates a new fragment. The incremental code indexer also creates new fragments per changed file. Without periodic compaction, the table becomes pathologically fragmented.
+The SDK enforces a two-level hierarchy by design. The SDK docs state: "Subagents cannot spawn their own subagents. Don't include `Task` in a subagent's `tools` array."
 
 **How to avoid:**
-- Always batch inserts: collect all chunks for a document into an array and call `table.add(allChunks)` once per document, not once per chunk.
-- For `index_codebase`, batch all changed files' chunks into a single `add()` call per table.
-- Schedule periodic compaction: call `table.optimize()` (which includes `compactFiles()`) after every N documents (e.g., every 50 `store_document` calls), or on server startup.
-- Track fragment count via LanceDB table stats and log a warning when it exceeds 100.
-- Never call `add()` in a loop for individual rows.
+- All 10 agents are invoked directly from the Orchestrator (main agent). No agent-to-agent invocation.
+- The Orchestrator is the sole task router. It decides which agent handles what and sequences calls.
+- Wave-based parallelism is implemented by the Orchestrator spawning multiple agents for the same turn (the SDK supports concurrent subagent execution within a single orchestrator turn).
+- Subagent `tools` fields must be explicitly set. Never omit them — the default inherits all tools including `Task`.
 
 **Warning signs:**
-- `semantic_search` or `search_code` latency increases from ~10ms to >1s on a small dataset.
-- LanceDB table directory contains hundreds of `.lance` files.
-- `index_codebase` for incremental changes is slower each time even though fewer files changed.
+- A subagent's prompt mentions delegating to another agent.
+- A subagent's `tools` array is omitted (will inherit `Task` if parent has it, causing undefined behavior).
+- Architecture diagram shows agent chains deeper than Orchestrator → Agent.
 
-**Phase to address:** Phase 2 (database layer) and Phase 5 (code indexer). Batching pattern must be established in the persistence layer from the start.
+**Phase to address:** Agent architecture phase. The flat hierarchy constraint must be documented and enforced in agent definitions from the first agent built.
 
 ---
 
-### Pitfall 5: FTS Index Not Ready When Hybrid Search Is Called
+### Pitfall 5: Hook Errors Terminate the Agent — Unhandled Exceptions in Hooks Are Fatal
 
 **What goes wrong:**
-LanceDB's `create_fts_index()` (or the equivalent in the Node.js client) returns immediately but builds the index asynchronously in the background. If `search_code` or `semantic_search` is called with `search_mode: "hybrid"` before the FTS index finishes building, the FTS component returns no results or errors, causing the RRF merge to produce biased rankings (only the vector side contributes). This is silent — no error is thrown; the search just returns fewer or different results.
+Any unhandled exception thrown inside a hook callback causes the agent's `query()` generator to throw. This is unlike MCP tool failures (which the agent can recover from). A bug in a tier-enforcement hook (e.g., a null pointer when accessing `tool_input.decision_tier`) crashes the entire orchestrator run. All work done in that turn is lost with no graceful degradation.
 
 **Why it happens:**
-The async nature of index creation is documented but easy to miss. `init_project` creates the tables and then immediately tries to use them. Developers test with empty tables (no problem), then index a large codebase and immediately search — the FTS index isn't ready.
+SDK hooks run synchronously in the agent loop. Unlike async tool execution (which has error isolation), hook exceptions propagate directly. The SDK documentation shows that hooks returning `{}` are safe, but does not warn that thrown exceptions are fatal.
 
 **How to avoid:**
-- After calling `create_fts_index()`, poll until the index status shows it is ready (LanceDB provides an `index_stats()` method; check `unindexed_rows` reaches zero).
-- Implement a `waitForIndex(table, indexName, timeoutMs)` utility that polls every 500ms with a configurable timeout.
-- In `get_index_status`, report FTS index build status separately so agents know whether hybrid search results are reliable.
-- During `index_codebase`, create FTS index before returning success to the caller.
+- Wrap every hook callback body in a top-level `try/catch`. In the catch block, log the error to stderr and return `{}` (allow the operation) or `{ hookSpecificOutput: { permissionDecision: "deny" } }` (deny defensively).
+- Add a hook test harness that calls each hook with malformed/null inputs and asserts it never throws.
+- For tier-enforcement hooks: fail **open** (allow) on hook errors during development; fail **closed** (deny with reason) in production where security matters more than availability.
+- Use `async: true` with `asyncTimeout` for side-effect-only hooks (logging, telemetry) so a slow logging call doesn't block the agent.
 
 **Warning signs:**
-- Hybrid search returns the same results as pure vector search (FTS component contributing nothing).
-- `get_index_status` shows `indexing_in_progress: true` but search calls proceed anyway.
-- Freshly indexed codebase returns zero FTS hits for obvious keyword matches.
+- Orchestrator `query()` throws unexpectedly mid-run.
+- Stack trace points to hook callback code, not Synapse tool code.
+- An exception in a hook callback causes the entire task to be aborted rather than just that tool call.
 
-**Phase to address:** Phase 5 (code indexing) and Phase 4 (core document tools). Index creation must include a wait step.
+**Phase to address:** Hook implementation phase. The try/catch wrapper pattern must be established before any hooks are written.
+
+---
+
+### Pitfall 6: Semantic Drift in Precedent Matching — check_precedent Returns False Positives
+
+**What goes wrong:**
+The `check_precedent` tool searches for decisions semantically similar to a proposed action. If the similarity threshold is too low, it returns decisions that are superficially related but not actually applicable (e.g., a decision about "database schema versioning" matching a query about "agent tool versioning"). Agents may incorrectly treat these as binding constraints, refusing to take actions that are actually permitted — or worse, claiming precedent support for something that is not actually covered.
+
+**Why it happens:**
+Short rationale text (50-200 tokens) produces low-quality embeddings with nomic-embed-text. Vector similarity in this dimension range is noisy — 0.75 cosine similarity between two 768-dim vectors for short text may not mean what it means for document-length text. The boundary between "same domain" and "semantically related" is ambiguous in embedding space.
+
+**How to avoid:**
+- Use a higher similarity threshold for precedent queries: 0.85+ minimum, not the 0.70 default used for document search.
+- Store decision `decision_type` (architectural, security, process, etc.) as a structured field and always pre-filter by type before vector search. Semantic search within a type-scoped result set is far more precise.
+- Require `check_precedent` to return a structured result with: `matches`, `confidence`, and `requires_review_if_above` threshold. Agents must never treat LOW confidence matches as binding.
+- Include a mandatory `scope` field in decisions (e.g., `scope: "embedding-pipeline"`) and require exact scope match before applying precedent.
+- Add integration tests: store 5 decisions with distinct domains, query with a string from a different domain, assert zero matches above 0.85 threshold.
+
+**Warning signs:**
+- `check_precedent` returns matches for clearly unrelated queries.
+- Agents reject actions citing decisions from a different subsystem.
+- High false-positive rate in integration tests of precedent matching with cross-domain queries.
+
+**Phase to address:** Decision tracking phase. Threshold calibration and `decision_type` pre-filtering must be designed before the first decision is stored.
+
+---
+
+### Pitfall 7: Skill Injection Inflates Every Prompt — Context Budget Exhausted Before Work Begins
+
+**What goes wrong:**
+The skill loading system injects project-specific prompt content into agent system prompts at runtime. If 10 agents each load 5 skills averaging 2,000 tokens each, that's 100,000 tokens of system prompt overhead before any task context or user prompt. With a 200K context window, this leaves ~100K tokens for actual work — adequate for some tasks but catastrophic for agents that need to load detailed Synapse search results. In practice: Executor agent + 5 skills + task context + Synapse results = context window exhausted mid-task.
+
+**Why it happens:**
+Developers add skills incrementally without tracking cumulative token cost. Each skill seems reasonable in isolation. The 2025 research on skill injection confirms that "10 skills at 2,000 tokens each = 20,000 tokens per request" and this "reduces the effective context window available for actual reasoning." The problem multiplies across 10 agents running in parallel.
+
+**How to avoid:**
+- Implement a three-stage progressive loading pattern (matching official Agent SDK skills design):
+  1. Stage 1: Inject only skill names and 1-line descriptions (~50 tokens per skill) into all agent system prompts.
+  2. Stage 2: Inject full skill body only when the agent explicitly requests it via a `load_skill(name)` tool call.
+  3. Stage 3: Supplementary files only on demand.
+- Hard cap: each skill body must be under 2,000 tokens. Skills exceeding this are split or summarized.
+- The skill registry tool must track token usage per skill load and warn when cumulative prompt length exceeds 30% of the model's context window.
+- Per-agent skill budget: each agent has a maximum skill load (e.g., Executor: 3 skills max, Architect: 5 skills max).
+
+**Warning signs:**
+- Agent errors mentioning context window exceeded appear before the agent has done substantial work.
+- Skill loading causes `query()` token usage to exceed 100K tokens on the first turn.
+- An agent pauses to request compaction immediately after receiving its system prompt.
+
+**Phase to address:** Skill loading phase. Token budgeting must be built into the skill registry before the first skill is loaded into production agents.
+
+---
+
+### Pitfall 8: Skill Files Are a Prompt Injection Attack Surface
+
+**What goes wrong:**
+Skills loaded from the file system or a registry into agent system prompts are a known injection vector. Research (arXiv 2510.26328, 2601.17548) confirms that malicious content in skill markdown files can steer agents away from their stated intent, bypass guardrails ("the 'Don't ask again' approval can carry over to related harmful actions"), and exfiltrate data from files the agent has read. In Synapse's context, a poisoned skill could instruct the Executor agent to write malicious code or escalate its tier authority.
+
+**Why it happens:**
+Skills are markdown files trusted implicitly because they live on the file system. But skill files can be modified by any process with write access to the skills directory. The LLM cannot distinguish skill content from adversarial instructions embedded in that content — it is all system prompt.
+
+**How to avoid:**
+- Skill files must be version-controlled and their content hash stored in the skill registry alongside the skill. Before loading, verify content hash matches the registered hash.
+- The skill registry should be read-only after initialization. Skills cannot be added or modified at runtime without an explicit admin operation.
+- Add a skill content policy: skills may not contain instructions to modify tier authority, bypass quality gates, or access files outside the project scope. Validate this via a simple linter that scans for banned phrases.
+- Orchestrator hooks (`PreToolUse`) must enforce tier authority regardless of what skills say. Skill content cannot override hook-level constraints.
+
+**Warning signs:**
+- A skill file references external URLs or instructs agents to fetch content from the web.
+- Skill content includes phrases like "ignore previous instructions" or escalates authority.
+- An agent calls tools outside its defined authority after loading a new skill.
+
+**Phase to address:** Skill loading + hook implementation phases. Content validation must precede first skill load in the orchestrator.
 
 ---
 
 ## Moderate Pitfalls
 
-### Pitfall 6: Ollama Model Unloaded Between Embedding Calls
+### Pitfall 9: Orphaned Tasks After Partial Failure — Status Never Propagates Up
 
 **What goes wrong:**
-Ollama defaults to unloading models from memory after 5 minutes of inactivity. For a local MCP server used intermittently (like during a coding session), the model is frequently cold on first use. Each cold start adds 3-10 seconds of delay before the first embedding completes. Worse, during `index_codebase` on a large codebase, if the operation takes longer than the keep-alive window (e.g., a pause while tree-sitter parses files), Ollama may unload and reload mid-indexing.
-
-**How to avoid:**
-- Set `OLLAMA_KEEP_ALIVE` environment variable to a long value (`24h` or `-1` for infinite) in the MCP server's environment configuration (`.mcp.json`).
-- Alternatively, send `keep_alive: -1` in the `/api/embed` request body.
-- Document this in the server's README so users know to configure their Ollama instance for persistent model loading.
-- The non-blocking health check on startup should also warm up the model: send a dummy embed request to trigger loading before the first real tool call.
-
-**Warning signs:**
-- First `store_document` call after the server has been idle takes 10+ seconds.
-- Ollama logs show "loading model" messages repeatedly throughout an indexing run.
-- `index_codebase` reports success but total wall time is 5-10x longer than expected.
-
-**Phase to address:** Phase 3 (embedding service). The startup health check should warm the model, and the `keep_alive` parameter should be included in all embed requests.
-
----
-
-### Pitfall 7: Ollama Batch Size Causes OOM Crashes or Timeouts
-
-**What goes wrong:**
-Sending too many texts in a single Ollama `/api/embed` request causes the server to crash (OOM panic) or the HTTP client to time out and close the connection mid-request. Ollama then logs "aborting embedding request due to client closing the connection." Users have reported crashes with batch sizes of 32+ items with 2000-character inputs. A December 2025 Ollama panic: "caching disabled but unable to fit entire input in a batch" confirms batch size constraints were tightened.
-
-**How to avoid:**
-- Cap batch size at 16 texts per request. The embedding service must chunk large arrays into batches.
-- Set HTTP client timeout generously (e.g., 120 seconds) but not infinite; abort and retry on timeout.
-- Implement exponential backoff retry (3 attempts) for transient Ollama connection failures.
-- Monitor total token count per batch, not just item count. A batch of 16 long documents may exceed `nomic-embed-text`'s 2048-token context limit per item.
-
-**Warning signs:**
-- `index_codebase` fails partway through with "connection reset by peer" or ECONNRESET.
-- Ollama process memory grows unboundedly during a large indexing run.
-- Embedding succeeds for small files but fails for files > 2000 characters.
-
-**Phase to address:** Phase 3 (embedding service). Batching and retry logic must be built in from the start, not added as a hotfix.
-
----
-
-### Pitfall 8: LanceDB Schema Frozen After First Write — Forward-Compatibility Trap
-
-**What goes wrong:**
-Once a LanceDB table is created with a specific Arrow schema and the first row is inserted, changing the schema is painful. Adding columns works but only populates new rows (existing rows get NULL). Changing a column's data type requires rewriting the entire column, which is resource-intensive. Dropping columns cannot be undone without a backup. For Synapse, the `parent_id`, `depth`, and `decision_type` v2 fields need to be in the schema from day one — if they're added later, all existing documents will have NULL values in those fields.
-
-**How to avoid:**
-- Define the complete schema — including v2 forward-compatibility fields — before writing any data. This is already stated in the project spec but bears emphasis: treat schema as immutable after first use.
-- Mark v2 fields as nullable with sensible defaults (empty string for `parent_id`, 0 for `depth`).
-- Maintain schema migrations as a versioned list if evolution is needed post-v1.
-- Do not rely on LanceDB's schema inference from JavaScript objects — always define explicit Arrow schemas.
-
-**Warning signs:**
-- "TypeError: Table and inner RecordBatch schemas must be equivalent" when a code change alters the schema of inserted objects.
-- NULL values in columns that should always have values, caused by schema evolution mid-stream.
-- Inconsistent behavior between newly inserted and old documents in searches.
-
-**Phase to address:** Phase 2 (schema definition). Get the schema right before any data is written.
-
----
-
-### Pitfall 9: MCP Error Responses vs. Tool Exceptions — Silent Failure Mode
-
-**What goes wrong:**
-The MCP SDK does not automatically convert unhandled JavaScript exceptions into proper JSON-RPC error responses. In some versions of the Python SDK (and reportedly the TypeScript SDK has analogous behavior), an exception thrown inside a tool handler is swallowed and the client receives a "successful" response with the exception message in the content field — not a JSON-RPC error. Agents treat this as a successful tool call with unexpected content, leading to silent incorrect behavior rather than a visible error the agent can react to.
-
-**How to avoid:**
-- Wrap every tool handler body in a try/catch. In the catch block, return a structured error response (e.g., `{ success: false, error: "..." }`) rather than throwing.
-- Reserve actual exceptions only for scenarios where the server itself should crash (unrecoverable state).
-- For expected error conditions (Ollama unreachable, document not found, invalid input), return structured error objects through the normal response channel.
-- Add integration tests that call tools with bad inputs and assert the response structure, not just that the call didn't throw.
-
-**Warning signs:**
-- Agent reports "success" for `store_document` but no document appears in the database.
-- `semantic_search` returns an object containing "Error:" in the result content but with a 200 status.
-- Error is only visible when manually inspecting MCP logs, not in the agent's reasoning.
-
-**Phase to address:** Phase 4 (core MCP tools). Every tool handler must have a standard error wrapping pattern established before tools are built.
-
----
-
-### Pitfall 10: tree-sitter Memory Leak in Long-Running Indexing Sessions
-
-**What goes wrong:**
-A known memory leak exists in tree-sitter's Node.js bindings (`src/parser.cc` `CallbackInput` class). The `input` callback captures the input string in a closure that is retained indefinitely by the C bindings, preventing garbage collection. During `index_codebase` on a large codebase (thousands of files), heap memory grows linearly with the total bytes parsed. The Node.js process can exhaust memory and crash mid-indexing.
+In the Epic → Feature → Component → Task hierarchy, if a task fails and the orchestrator crashes (or the agent's turn exceeds `max_turns`), the task remains in `"in_progress"` status permanently. Its parent Feature does not know it failed. On the next orchestrator run, the Feature's status remains `"in_progress"` even though it cannot complete, because one child task is stuck. Cascading stale status percolates all the way to the Epic, making the entire hierarchy unreliable.
 
 **Why it happens:**
-The C++ destructor for `CallbackInput` did not reset the `callback` and `partial_string` members, leaving references alive. This was found and fixed in the tree-sitter C++ source, but it depends on whether the installed version has the fix. Versions predating the fix will leak.
+Hierarchical status propagation requires parent tasks to poll or subscribe to child status changes. LanceDB has no triggers or reactive queries. The orchestrator must proactively walk the tree after any task status change and propagate. If the orchestrator crashes mid-propagation, the tree is left inconsistent.
 
 **How to avoid:**
-- Verify the installed `tree-sitter` version includes the `CallbackInput` destructor fix (check the tree-sitter changelog or test by monitoring heap usage during a full indexing run with `--max-old-space-size` set low).
-- Process files in bounded batches (e.g., 100 files) and allow GC between batches (`await new Promise(r => setImmediate(r))` yields to the event loop and enables GC).
-- Monitor heap usage during `index_codebase`: if heap grows > 512MB, log a warning.
-- Explicitly release the tree-sitter parser instance after parsing each file (set `parser = null` and allow GC).
+- `update_task` must accept a `cascade_to_parent` option (default true) that walks up the hierarchy and recalculates parent status based on all children: if any child is `"failed"`, parent becomes `"blocked"`; if all children are `"done"`, parent becomes `"done"`.
+- Implement a `reconcile_task_tree(epic_id)` tool that does a full tree-walk and repairs inconsistent statuses. Run it at orchestrator startup as a health check.
+- Store `last_updated_at` on every task. A task in `"in_progress"` for > 2 hours without update is treated as `"stalled"` by the reconciler.
+- Task status changes must be atomic with their log entries: write to `activity_log` and update the task row in the same logical operation. If either fails, the orchestrator retries the update before continuing.
 
 **Warning signs:**
-- Node.js process OOM crash during `index_codebase` on codebases > 500 files.
-- Heap memory never stabilizes during indexing — grows monotonically.
-- Incremental reindex of a handful of changed files consumes as much memory as a full reindex.
+- Task statuses diverge from actual work completed after an orchestrator restart.
+- Parent task shows `"in_progress"` when all children show `"done"` or `"failed"`.
+- Orchestrator repeatedly picks up the same task because it cannot determine if it is truly complete.
 
-**Phase to address:** Phase 5 (code indexer). Build the indexer with explicit GC yield points between file batches.
+**Phase to address:** Task hierarchy phase. The cascade propagation logic must be built into `update_task` from the start, not retrofitted.
 
 ---
 
-### Pitfall 11: RRF k Parameter Not Tuned for Code Search Context
+### Pitfall 10: Context Window Accumulation in Long Orchestrator Sessions — Automatic Compaction Loses Decision History
 
 **What goes wrong:**
-RRF uses the formula `score = 1/(k + rank)` where `k=60` is the standard default. Research shows that k=60 works well for general-purpose retrieval but that optimal k varies by domain. For code search where exact symbol name matches (FTS) should strongly outrank fuzzy semantic matches, a lower k (e.g., k=20) gives more weight to top-ranked FTS results. With k=60, a function named `authenticate` that appears at rank 1 in FTS and rank 15 in semantic search gets nearly the same score as a function with the opposite pattern. The result is that hybrid search degrades to "average" rather than "best of both."
+The Claude Agent SDK includes automatic context compaction: when the context window approaches its limit, the SDK summarizes older messages. For the orchestrator, this means the full history of MCP tool calls (which decisions were checked, which tasks were created, what code was analyzed) gets summarized into a compressed narrative. The summary is lossy — specific task IDs, decision IDs, and Synapse query results are not preserved verbatim. After compaction, the orchestrator may re-check the same decisions, re-create already-existing tasks, or lose track of where in the PEV workflow it was.
+
+**Why it happens:**
+The orchestrator's context grows because each MCP tool call adds both the tool input and the full tool response to the conversation. A `get_smart_context` response can be 10K+ tokens. 20 tool calls = 200K+ tokens. Compaction is automatic and lossy.
 
 **How to avoid:**
-- Make k configurable rather than hardcoded. Default to k=60 for document search and k=20 for code search.
-- Test with realistic queries: function name lookups, semantic descriptions ("error handling middleware"), and mixed queries.
-- Measure: if FTS-rank-1 results aren't in the top 3 of hybrid results for exact-name queries, reduce k.
-- Consider using separate RRF instances for `documents` and `code_chunks` searches.
+- Use the `PreCompact` hook to archive the full transcript before compaction: write the transcript to a Synapse document (`store_document` with category `"orchestration_log"`). After compaction, the orchestrator can reference this log via `query_documents`.
+- Register a `PreCompact` hook that explicitly extracts: active task IDs, decisions applied in this session, current workflow stage (Plan/Execute/Validate). Store these as structured state in `project_meta` before compaction occurs.
+- The orchestrator's system prompt must include: "At the start of each turn, check `project_meta` for the current session state before taking any action."
+- Use subagents for bounded subtasks: a subagent's context is isolated and compacted independently from the orchestrator's context. Use them for token-intensive research tasks.
 
 **Warning signs:**
-- Searching for a function by exact name returns it at rank 5+ in hybrid search even though FTS ranks it #1.
-- Users report hybrid search is "no better than semantic only."
-- FTS-only search finds what users want but hybrid blurs it with less relevant semantic matches.
+- Orchestrator creates duplicate tasks after a long session.
+- Orchestrator re-queries decisions already applied earlier in the same session.
+- `query()` usage shows sudden token count reset (compaction occurred) followed by repetitive behavior.
 
-**Phase to address:** Phase 6 (hybrid search). Set up test cases measuring hybrid search quality before shipping.
+**Phase to address:** Orchestrator architecture phase. Session state persistence via `project_meta` and the `PreCompact` hook must be wired before multi-turn orchestration is tested.
+
+---
+
+### Pitfall 11: LanceDB Concurrent Write Corruption From Parallel Agents
+
+**What goes wrong:**
+Multiple subagents run in parallel in wave-based execution. If two agents call Synapse tools that write to the same LanceDB table simultaneously (e.g., two Executor agents writing `activity_log` entries, or Decomposer and Executor both writing `tasks`), LanceDB's embedded embedded mode has limited concurrent write isolation. On the local filesystem (non-S3), LanceDB uses file-level locking, but concurrent `add()` operations can leave the table in a partially written state if the process is killed mid-write, and the Node.js side does not expose retry logic.
+
+**Why it happens:**
+LanceDB's Lance format is append-optimized but not MVCC-safe for concurrent writes from multiple OS processes. Synapse is a single process — but if the orchestrator spawns Synapse once and multiple agents call it rapidly in parallel (all channeled through the single stdio MCP connection), write ordering is serialized through the MCP layer. The actual risk is the orchestrator having multiple `query()` calls open simultaneously that each talk to the same Synapse subprocess — which is not supported; one subprocess cannot handle two simultaneous MCP connections.
+
+**How to avoid:**
+- Enforce a single Synapse MCP connection for the orchestrator. Do not spawn multiple Synapse processes. All agent tool calls route through the single `mcpServers` connection, which MCP serializes at the stdio level.
+- Write operations in Synapse tools must be wrapped in a write queue (in-process mutex in Synapse's server.ts) to serialize concurrent writes even if multiple MCP requests arrive quickly.
+- `activity_log` writes are the highest-frequency write; use batched inserts: collect multiple log entries and flush every 500ms rather than inserting one row per event.
+- Never call `query()` concurrently on the same orchestrator session for different agents. Use one `query()` call with subagents defined in `agents` — the SDK handles parallelism internally and routes through the same connection.
+
+**Warning signs:**
+- LanceDB table corruption errors (`cannot open file for writing`) on high-frequency write workloads.
+- Multiple orchestrator processes launched accidentally, each trying to write to the same `.synapse/` directory.
+- Activity log has missing entries after a parallel wave execution.
+
+**Phase to address:** Orchestrator architecture + task execution phase. Single-connection enforcement must be an architectural invariant, not a runtime assumption.
+
+---
+
+### Pitfall 12: Stale Decision Cache — Agent Uses Outdated Precedent After Schema or Policy Change
+
+**What goes wrong:**
+The decision tracking system embeds decision rationale for semantic search. If the project schema changes significantly (new tables, new tool names, new tier definitions), existing decisions may still be returned by `check_precedent` as applicable even though they reference an obsolete context. An agent following a stale decision may make incorrect architectural choices or reject valid actions based on superseded policy.
+
+**Why it happens:**
+Decisions are stored as append-only rows with no invalidation mechanism. Unlike document versioning (which supports `status: "superseded"`), decisions don't automatically expire. A decision written in Phase 1 ("always embed before inserting") remains fully valid to the precedent search in Phase 10 even if the rule has been modified.
+
+**How to avoid:**
+- Apply the same versioning model to decisions as to documents: decisions support `status` field with values `"active"`, `"superseded"`, `"archived"`. All `check_precedent` queries must filter `status = "active"`.
+- When a decision is updated, the old decision row gets `status = "superseded"` and a new row is inserted — preserving history but removing the old decision from precedent search.
+- Store `applies_to_phase` or `scope` on decisions. Precedent queries can optionally scope by phase.
+- Implement a `supersede_decision(old_id, new_rationale)` tool that atomically marks old as superseded and creates the replacement.
+
+**Warning signs:**
+- `check_precedent` returns decisions that reference tools or schema that no longer exist.
+- Agents cite superseded policies as justification for blocking valid actions.
+- The decision table has no `superseded` status rows after multiple milestone iterations.
+
+**Phase to address:** Decision tracking phase. Status field and supersede operation must be designed alongside `store_decision`.
 
 ---
 
@@ -260,13 +302,14 @@ RRF uses the formula `score = 1/(k + rank)` where `k=60` is the standard default
 
 | Shortcut | Immediate Benefit | Long-term Cost | When Acceptable |
 |----------|-------------------|----------------|-----------------|
-| Single-row LanceDB inserts per chunk | Simpler code path | Fragment accumulation, O(N) performance degradation | Never — always batch per document |
-| Hardcoded k=60 for all RRF | Fewer config knobs | Suboptimal search quality for code queries | Acceptable in MVP; tune in Phase 6 |
-| No compaction scheduler | Simpler operations | Table performance degrades after ~100 documents | MVP if compaction is called on startup |
-| Skip FTS index wait | Faster `init_project` response | Hybrid search silently returns biased results | Never — always wait for index ready |
-| `console.log()` for debug output | Faster development | Corrupts MCP stdio transport, breaks client connection | Never in production code path |
-| No batch size cap in embedding service | Simpler embedding loop | OOM crashes on large codebases | Never — cap at 16 items from day one |
-| Store embedding model name only in env, not in DB | Simpler config | Cannot detect model mismatch on reconnect | Never — store in project_meta table |
+| No init-message MCP status check | Faster orchestrator startup code | Orchestrator silently does nothing when Synapse fails to start | Never — always check init message |
+| Omitting `tools` field on subagents | Fewer lines of code | Subagents inherit `Task` tool, enabling accidental recursive spawning | Never — always specify tools explicitly |
+| No `root_id` denormalized field on tasks | Simpler schema | Every tree query requires N BFS iterations; no single-query ancestry lookup | Acceptable only if max hierarchy depth is 2 |
+| Skill injection without token budget | Simpler skill loader | Context exhaustion mid-task; expensive compaction on every agent turn | Never — track tokens per skill from day one |
+| No `PreCompact` hook for session state | Fewer hooks to implement | Orchestrator loses task/decision context after compaction | Never for production sessions |
+| Single hardcoded precedent threshold (0.75) | Simple implementation | False positives in cross-domain precedent matching | Never — parameterize per decision_type |
+| Hook without try/catch | Faster prototyping | A null pointer in hook code crashes the entire orchestrator run | Never in production code path |
+| Large get_smart_context response with no token cap | More information per call | stdio buffer deadlock risk; context window consumed in one tool call | Never — always cap at 8K tokens per response |
 
 ---
 
@@ -274,13 +317,15 @@ RRF uses the formula `score = 1/(k + rank)` where `k=60` is the standard default
 
 | Integration | Common Mistake | Correct Approach |
 |-------------|----------------|------------------|
-| Ollama `/api/embed` | Using `/api/embeddings` (old endpoint) | Use `/api/embed` (current endpoint); both work but `/api/embed` supports batching properly |
-| Ollama | Not setting `keep_alive` parameter | Pass `keep_alive: -1` in every `/api/embed` request body to prevent mid-session unloads |
-| LanceDB `create_fts_index()` | Treating it as synchronous | Call `waitForIndex()` after; the API returns immediately, index builds async |
-| LanceDB `table.add()` | Inserting rows with a vector field set to `null` | Validate vector is a non-null `Float32Array` of correct length before every insert |
-| tree-sitter grammars | Importing `tree-sitter-typescript` which exports both TypeScript and TSX parsers | Must access the correct sub-export: `require('tree-sitter-typescript').typescript` not the root export |
-| MCP SDK `StdioServerTransport` | Calling `server.connect(transport)` before all tools are registered | Register all tools synchronously before connecting the transport |
-| MCP tool schemas | Using Zod `.optional()` for fields and assuming undefined means not provided | MCP passes missing fields as `undefined`; use `.optional().default(value)` or explicit undefined checks |
+| Agent SDK `mcpServers` | Passing `command: "bun"` without validating Bun is in PATH | Verify Bun is accessible from orchestrator's process environment; use absolute path if needed |
+| Agent SDK `allowedTools` | Omitting `mcp__synapse__*` wildcard | Every Synapse tool must be explicitly whitelisted or use wildcard; SDK blocks tool calls by default |
+| Agent SDK `agents` field | Including `Task` in a subagent's `tools` | Subagents cannot spawn subagents; `Task` must be absent from all 10 agent tool lists |
+| Hook `hookSpecificOutput` | Returning `permissionDecision: "allow"` without `hookEventName` | `hookEventName` is required in `hookSpecificOutput` for `PreToolUse` hooks; omitting it is silently ignored |
+| Hook input modification | Mutating `tool_input` in place | Always return a new object in `updatedInput`; also requires `permissionDecision: "allow"` to take effect |
+| LanceDB task queries | Using `WITH RECURSIVE` SQL | Use application-level BFS with `parent_id IN (...)` queries; DataFusion recursive CTEs not enabled in LanceDB |
+| Skill loading | Loading full skill body for all agents at startup | Use progressive disclosure: names only at init, full body only when agent requests it via `load_skill` tool |
+| Decision embedding | Using the same similarity threshold as document search (0.70) | Decisions need 0.85+ threshold; short rationale text produces noisier embeddings than full documents |
+| MCP `mcp__synapse__*` tool naming | Hard-coding tool names without the `mcp__<server-name>__` prefix | Tool names in hooks and `allowedTools` must match `mcp__synapse__store_decision`, not `store_decision` |
 
 ---
 
@@ -288,11 +333,12 @@ RRF uses the formula `score = 1/(k + rank)` where `k=60` is the standard default
 
 | Trap | Symptoms | Prevention | When It Breaks |
 |------|----------|------------|----------------|
-| Per-chunk inserts into LanceDB | Search latency grows from 10ms to 1s+ over time | Batch all chunks per document in one `add()` call | ~50 documents with multi-chunk content |
-| Synchronous file reading in `file-scanner.ts` | `index_codebase` blocks the event loop, MCP client times out | Use async file I/O (`fs.promises.readFile`) throughout | Codebases with > 100 files |
-| No timeout on Ollama HTTP requests | `store_document` hangs indefinitely if Ollama crashes mid-request | Set a 120s timeout on every HTTP call to Ollama | Immediately if Ollama becomes unresponsive |
-| Fetching all chunks for a document during `update_document` | Scales linearly with chunk count for metadata-only updates | LanceDB update-by-filter directly: `table.update({ where: "doc_id = '...'" }, { status: 'active' })` | Documents with > 20 chunks |
-| Loading all code chunks into memory for relationship generation | OOM on large codebases | Process import analysis in streaming fashion, write relationships incrementally | Codebases with > 10k files |
+| BFS task tree traversal without depth limit | `get_task_tree` hangs on malformed hierarchy with cycles | Always cap BFS at `maxDepth=5` and check for visited IDs | Trees with depth > 5 or cycles |
+| Embedding short decision rationale (< 20 tokens) | `check_precedent` returns high-similarity matches for unrelated queries | Enforce minimum rationale length of 50 tokens; block store_decision with shorter rationale | From the first decision stored |
+| Parallel subagents all calling `store_document` or `create_task` | LanceDB fragment accumulation from N rapid sequential inserts | Synapse write queue: batch rapid writes; the MCP stdio layer serializes calls but batching reduces fragment count | > 5 parallel agents writing simultaneously |
+| Skill loading full skill bodies at agent init | 20K+ tokens consumed before first task | Progressive loading; skill bodies only loaded on demand | > 3 skills with > 2K token bodies each |
+| No response size cap on MCP tool results | stdio pipe buffer fills; orchestrator hangs | Enforce per-tool token limits on all Synapse tool responses | Response bodies > 64KB |
+| Re-checking `check_precedent` on every tool call | Redundant semantic searches; 10x embedding cost | Cache precedent results within a single agent turn; only re-check when decision domain changes | Agents with > 20 tool calls per turn |
 
 ---
 
@@ -300,25 +346,69 @@ RRF uses the formula `score = 1/(k + rank)` where `k=60` is the standard default
 
 | Mistake | Risk | Prevention |
 |---------|------|------------|
-| Resolving `root_path` for `index_codebase` without normalization | Path traversal — agent could index `/etc/passwd` by passing `../../..` | Resolve to absolute path and validate it's within allowed roots; reject paths outside the working directory |
-| Storing arbitrary content from `store_document` without size limits | Malicious agent could store gigabytes of data, filling disk | Enforce per-document content size limit (e.g., 1MB); return error if exceeded |
-| Logging full document content to stderr | Sensitive data leaks into server logs visible to process-level observers | Log only IDs, chunk counts, and categories to stderr — never content |
-| Using user-controlled `project_id` as a SQL filter without validation | SQL injection in LanceDB filter expressions | Validate `project_id` is alphanumeric/slug before using in any query filter |
+| Skill files without content hash validation | Poisoned skills redirect agents, bypass guardrails, or exfiltrate data | Store content hash in skill registry; verify hash before loading skill into prompt |
+| `permissionMode: "bypassPermissions"` in production | Bypasses all safety prompts including for destructive operations; propagates to subagents | Use `"acceptEdits"` for production; `"bypassPermissions"` only in sandboxed test environments |
+| Tier authority enforcement only in agent prompts | A skilled LLM can be persuaded to exceed its tier by adversarial task content | Enforce tier authority in `PreToolUse` hooks, not just system prompts; hooks cannot be overridden by prompt content |
+| Storing full decision rationale with project-confidential information | Decision rationale is stored as searchable text; `query_decisions` with no auth | Synapse is local-only; document that decisions are not encrypted; do not store passwords or secrets in rationale |
+| Agent SDK `systemMessage` in hook output visible to model | Hook-injected context can be observed by malicious skill content and used to craft better injection | Avoid injecting sensitive operational data (API keys, internal file paths) via `systemMessage`; log to stderr instead |
+
+---
+
+## Testing Pitfalls — Orchestrator-Specific
+
+### Pitfall T1: No Mocking Strategy = Every Test Burns API Tokens
+
+**What goes wrong:**
+Developers write integration tests that call `query()` directly. Each test turn costs real API tokens. Running the full orchestrator test suite (10 agents × multiple turns × multiple test cases) becomes prohibitively expensive and slow. Tests become brittle because they depend on LLM non-determinism.
+
+**How to avoid:**
+- **Layer 1 — Pure unit tests (no API cost):** Test hook callback functions, skill loading logic, task tree BFS, status propagation, and precedent threshold logic independently. These are pure TypeScript functions that don't need the SDK.
+- **Layer 2 — MCP tool tests (no orchestrator cost):** Use the existing Synapse test harness to test `store_decision`, `create_task`, `check_precedent` etc. These already exist and run without API calls.
+- **Layer 3 — Mock orchestrator (minimal API cost):** For orchestrator integration tests, mock the `query()` function to return pre-recorded message sequences. Record a golden test session once, then replay it. This is standard practice for agentic system testing.
+- **Layer 4 — Live smoke tests (real API cost):** Run against real API only in CI on merge to main. One smoke test per milestone phase, not per test case.
+- Use a `.env.test` flag to switch between mock and live orchestrator. Default to mock.
+
+**Warning signs:**
+- Orchestrator test suite costs > $5 per run.
+- Tests pass non-deterministically (sometimes pass, sometimes fail based on LLM output).
+- Developers avoid running tests because they're too expensive.
+
+**Phase to address:** Orchestrator architecture phase. The mock/record/replay harness must be built before the first orchestrator integration test is written.
+
+---
+
+### Pitfall T2: Testing Hooks in Isolation Misses Ordering Bugs
+
+**What goes wrong:**
+Hook unit tests call individual hook callbacks with hand-crafted inputs and assert the return value. This misses bugs caused by hook ordering: multiple `PreToolUse` hooks chained together, where Hook A's `systemMessage` output interacts unexpectedly with Hook B's `permissionDecision`. The first hook to return `deny` wins (SDK precedence rule), so a hook ordering bug can silently allow operations that should be denied (wrong hook runs first) or deny ones that should be allowed (a broad hook catches a specific case before a narrow hook can allow it).
+
+**How to avoid:**
+- Write hook chain integration tests that simulate the full hook execution sequence using the SDK's actual hook runner. The Agent SDK processes hooks in the order they appear in the array — test with at least three hooks chained.
+- The tier enforcement hook must always be the **first** hook in `PreToolUse` (fastest deny path). Quality gate hooks run after. Logging hooks run last.
+- Test hook ordering explicitly: register a deny hook for `mcp__synapse__store_decision`, then an allow hook — verify deny wins. Register the same in reverse — verify allow wins (because no deny is present in this ordering).
+
+**Warning signs:**
+- A Tier 0 agent successfully calls a Tier 3 tool that should be blocked.
+- Audit log hook fires for denied operations (should not log what wasn't executed).
+- Hook ordering is implicit (array position) but not documented or tested.
+
+**Phase to address:** Hook implementation phase. Ordering tests must exist alongside each hook.
 
 ---
 
 ## "Looks Done But Isn't" Checklist
 
-- [ ] **LanceDB tables created:** Verify the `.synapse/` directory contains all 5 tables with correct Arrow schemas — not just the directory itself. Check with `table.schema()` after creation.
-- [ ] **FTS index ready:** Creating the FTS index and then immediately searching returns hybrid results, not just vector results. Verify by running a keyword-only FTS search and checking it returns hits.
-- [ ] **Embedding dimension validated:** The embedding service `embed()` method actively asserts returned vector length == 768. Without this assertion, a model swap silently corrupts the vector space.
-- [ ] **Ollama fail-fast works:** When Ollama is not running, `store_document` returns a clear error; `semantic_search` on existing data still works. Both cases must be tested.
-- [ ] **stdout is clean:** Start the MCP server and pipe stdout through `cat -A`. No non-JSON content should appear during startup, tool calls, or errors. All logs must appear on stderr.
-- [ ] **tree-sitter grammars load for all 3 languages:** The startup health check must parse a trivial snippet in TypeScript, Python, AND Rust. One grammar can silently fail while others succeed.
-- [ ] **Incremental indexing actually skips unchanged files:** After a full index, modify one file, reindex, and verify `skipped_unchanged` equals (total files - 1). Without this, every reindex is a full reindex.
-- [ ] **Auto-relationships replace (not append) on reindex:** After reindexing a file, the old `ast_import` relationships for that file are removed and regenerated — not duplicated. Verify by counting relationships before and after for a file.
-- [ ] **Versioning preserves old document as superseded:** After `store_document` with an existing `doc_id`, the old chunk rows have `status: 'superseded'` and the new rows have `version: 2`. Both must be present, not just the new ones.
-- [ ] **MCP tool errors surface correctly:** Call a tool with invalid input (e.g., `store_document` without Ollama running). The MCP client must receive an error response, not a success response with error text in the content.
+- [ ] **MCP init status checked:** The first message from `query()` is parsed for server connection status. If Synapse shows `status !== "connected"`, the orchestrator throws before attempting any agent work.
+- [ ] **Subagent `tools` arrays are explicit:** Every agent definition has an explicit `tools` array. None rely on inheritance. `Task` is absent from all 10 subagent definitions.
+- [ ] **Hook callbacks never throw:** Each hook has a top-level try/catch. Call each hook with `null` and `undefined` inputs; assert it returns `{}` not an exception.
+- [ ] **`root_id` field populates on task creation:** Create a 3-level task hierarchy (Epic → Feature → Task). Verify all three rows have the same `root_id` equal to the Epic's task_id.
+- [ ] **`get_task_tree` depth is capped:** Create a 10-level chain of tasks. Call `get_task_tree`; verify it returns no more than 5 levels and includes a `truncated: true` indicator.
+- [ ] **Precedent threshold calibrated:** Store 5 decisions across 5 distinct domains. Query each domain with a string from a different domain. Verify zero results with similarity > 0.85.
+- [ ] **`PreCompact` hook archives session state:** Run an orchestrator session to 80% of context limit. Verify `project_meta` contains current task IDs and workflow stage before compaction fires.
+- [ ] **Skill token budget enforced:** Load 10 skills simultaneously for one agent. Verify combined system prompt token count remains under 30% of context window. Verify stage-2 bodies load only on demand.
+- [ ] **Skill content hash validated:** Modify a skill file after the registry is initialized. Verify `load_skill` rejects the modified file with a hash mismatch error.
+- [ ] **Stale status reconciler runs at startup:** Kill the orchestrator mid-execution (leaving tasks in `"in_progress"`). Restart. Verify `reconcile_task_tree` runs automatically and marks stalled tasks appropriately.
+- [ ] **Decision `status = "active"` filter enforced:** Supersede a decision. Call `check_precedent` with a query that matches it. Verify zero results (superseded decision not returned).
 
 ---
 
@@ -326,13 +416,14 @@ RRF uses the formula `score = 1/(k + rank)` where `k=60` is the standard default
 
 | Pitfall | Recovery Cost | Recovery Steps |
 |---------|---------------|----------------|
-| Dimension mismatch — bad vectors inserted | HIGH | Drop and recreate the affected table; rerun `init_project` with `force: true`; reindex all documents and code |
-| Fragment accumulation — severe performance degradation | LOW | Call `table.optimize()` on all tables; this is non-destructive and can be done live |
-| FTS index missing or stale | LOW | Drop FTS index and recreate: `table.create_fts_index(['content'], { replace: true })` then wait for completion |
-| stdout corruption — MCP transport broken | LOW | Identify the offending `console.log()` via binary search; fix and restart server |
-| Ollama model mismatch — schema locked to wrong dimension | HIGH | Must wipe `.synapse/` directory and rebuild from scratch; no in-place migration possible |
-| tree-sitter OOM crash mid-index | MEDIUM | Add `--max-old-space-size=4096` to Node.js flags; re-run `index_codebase`; may need to run in smaller batches via `include_patterns` |
-| Duplicate auto-relationships after reindex | LOW | Run a deduplification query on the relationships table filtering `source = 'ast_import'`; re-run indexing with relationship cleanup fixed |
+| Synapse MCP subprocess fails to connect | LOW | Check Bun PATH, verify stdio transport config, check `.mcp.json` server name matches `allowedTools` prefix |
+| stdio deadlock — orchestrator hung | LOW | Kill orchestrator; reduce response size limits on offending Synapse tool; restart |
+| Task tree inconsistent after orchestrator crash | LOW | Run `reconcile_task_tree(epic_id)`; script marks stalled tasks; orchestrator picks up from last known good state |
+| Skill causes unexpected agent behavior | MEDIUM | Remove/quarantine skill file; verify skill content hash in registry; re-run with skills disabled to confirm normal behavior |
+| Precedent false positives blocking valid actions | MEDIUM | Raise similarity threshold; add `decision_type` filter; manually supersede incorrectly matched decisions |
+| Context compaction loses task state | MEDIUM | Retrieve archived session log from Synapse documents; resume from `project_meta` session state snapshot |
+| Hook exception crashes orchestrator | LOW | Identify offending hook from stack trace; add try/catch; re-run — the hook now returns `{}` on error |
+| LanceDB `tasks` or `decisions` table has orphaned records | MEDIUM | Run reconciler; manually update status via a one-off Synapse tool call; no table rebuild needed |
 
 ---
 
@@ -340,45 +431,43 @@ RRF uses the formula `score = 1/(k + rank)` where `k=60` is the standard default
 
 | Pitfall | Prevention Phase | Verification |
 |---------|------------------|--------------|
-| stdout corruption kills MCP transport | Phase 1: Project scaffold | Start server, pipe stdout through JSON parser — no non-JSON output during startup or any tool call |
-| Embedding dimension mismatch | Phase 2: Schema + Phase 3: Embedding service | Call `embed()`, assert `vector.length === 768`; attempt insert with wrong dimension, verify rejection |
-| tree-sitter native binding failure | Phase 5: Code indexer | Parse TS/Python/Rust snippets in startup health check; run on target Node.js version in CI |
-| LanceDB fragment accumulation | Phase 2: Database layer | Count `.lance` files after 100 `store_document` calls; latency must remain under 100ms |
-| FTS index not ready for hybrid search | Phase 4: Document tools + Phase 5: Code indexer | Create index, immediately search, verify FTS hits are present |
-| Ollama model unloaded mid-session | Phase 3: Embedding service | Idle 6 minutes, then call `store_document`; total latency must be < 2s (model pre-warmed) |
-| Ollama batch size OOM | Phase 3: Embedding service | Index a file > 10,000 characters; verify no crash; check batch size cap is enforced |
-| Schema frozen after first write | Phase 2: Schema definition | Compare schema with PROJECT.md v2 fields; all forward-compat columns present before any data written |
-| MCP exception swallowed as success | Phase 4: MCP tools | Call `store_document` with Ollama off; verify client receives error response, not success with error text |
-| tree-sitter memory leak | Phase 5: Code indexer | Run `index_codebase` on 1000+ file codebase; heap must not grow unboundedly |
-| RRF k value suboptimal for code search | Phase 6: Hybrid search | Search by exact function name; verify it ranks #1 in hybrid results |
+| Synapse MCP silent failure | Orchestrator bootstrap | Init message parsed; status check throws if not `"connected"` |
+| stdio buffer deadlock | MCP tool design + orchestrator bootstrap | Load test with `get_smart_context` returning max token response; no hang |
+| No recursive CTE for task hierarchy | Task hierarchy schema | `get_task_tree` returns correct tree via BFS; `WITH RECURSIVE` never used in Synapse code |
+| Subagents spawning subagents | Agent architecture | All 10 agent definitions have explicit `tools` arrays; `Task` absent from all |
+| Hook exception terminates orchestrator | Hook implementation | Each hook called with null inputs; assert no throw |
+| Semantic drift in precedent matching | Decision tracking | Cross-domain query returns 0 matches at 0.85 threshold |
+| Skill token budget exhaustion | Skill loading | 10 skills loaded; combined system prompt < 30% of context window |
+| Skill injection attack surface | Skill loading | Tampered skill rejected by hash check |
+| Orphaned tasks after crash | Task hierarchy | Kill orchestrator mid-run; reconciler repairs tree on restart |
+| Context compaction loses session state | Orchestrator architecture | `PreCompact` hook verified; session state in `project_meta` after compaction |
+| Parallel agent write conflicts | Orchestrator architecture | No second Synapse process spawned; in-process write queue serializes rapid writes |
+| Stale decisions | Decision tracking | `status = "active"` filter on all precedent queries; `supersede_decision` tested |
+| No mock strategy for agent tests | Orchestrator architecture | Test suite runs offline (mock mode); zero API tokens consumed in unit tests |
+| Hook ordering bugs | Hook implementation | Ordering integration tests exist; deny-before-allow chain verified |
 
 ---
 
 ## Sources
 
-- [LanceDB Schema Evolution docs](https://docs.lancedb.com/tables/schema) — HIGH confidence (official docs)
-- [LanceDB concurrent writes issue #213](https://github.com/lancedb/lancedb/issues/213) — HIGH confidence (official issue tracker)
-- [LanceDB concurrent writes issue #1077 (S3)](https://github.com/lancedb/lancedb/issues/1077) — HIGH confidence
-- [LanceDB FAQ OSS](https://docs.lancedb.com/faq/faq-oss) — HIGH confidence
-- [LanceDB embedding dimension mismatch issue #1109](https://github.com/lancedb/lancedb/issues/1109) — HIGH confidence
-- [LanceDB schema mismatch issue #1281](https://github.com/lancedb/lancedb/issues/1281) — MEDIUM confidence
-- [LanceDB FTS index async creation](https://lancedb.com/docs/indexing/fts-index/) — HIGH confidence (official docs)
-- [LanceDB compaction docs](https://lancedb.com/documentation/concepts/data.html) — HIGH confidence
-- [tree-sitter Node.js version mismatch issue #169](https://github.com/tree-sitter/node-tree-sitter/issues/169) — HIGH confidence
-- [tree-sitter WASM ABI incompatibility issue #5171](https://github.com/tree-sitter/tree-sitter/issues/5171) — HIGH confidence
-- [tree-sitter memory leak analysis — Cosine Engineering](https://cosine.sh/blog/tree-sitter-memory-leak) — MEDIUM confidence (single technical blog post, specific and credible)
-- [Ollama hanging on nomic-embed-text issue #3029](https://github.com/ollama/ollama/issues/3029) — HIGH confidence
-- [Ollama keep-alive behavior — official FAQ](https://docs.ollama.com/faq) — HIGH confidence
-- [Ollama keep_alive issue #6401](https://github.com/ollama/ollama/issues/6401) — MEDIUM confidence
-- [Ollama embedding timeout issue (Roo Code) #5733](https://github.com/RooCodeInc/Roo-Code/issues/5733) — MEDIUM confidence
-- [MCP stdio stdout corruption — claude-flow issue #835](https://github.com/ruvnet/claude-flow/issues/835) — HIGH confidence (aligns with official spec)
-- [MCP official transport specification](https://modelcontextprotocol.io/specification/2025-11-25/basic/transports) — HIGH confidence
-- [MCP implementation pitfalls — Nearform](https://nearform.com/digital-community/implementing-model-context-protocol-mcp-tips-tricks-and-pitfalls/) — MEDIUM confidence
-- [MCP error handling — python-sdk issue #396](https://github.com/modelcontextprotocol/python-sdk/issues/396) — MEDIUM confidence (Python SDK, but pattern applies to TS)
-- [RRF analysis — ACM Transactions on Information Systems](https://dl.acm.org/doi/10.1145/3596512) — HIGH confidence (peer-reviewed research)
-- [RRF domain sensitivity — OpenSearch blog](https://opensearch.org/blog/introducing-reciprocal-rank-fusion-hybrid-search/) — MEDIUM confidence
-- [Anything-llm LanceDB dimension issue #2156](https://github.com/Mintplex-Labs/anything-llm/issues/2156) — MEDIUM confidence (community issue)
+- [Claude Agent SDK — Official Overview](https://platform.claude.com/docs/en/agent-sdk/overview) — HIGH confidence (official docs)
+- [Claude Agent SDK — Hooks Reference](https://platform.claude.com/docs/en/agent-sdk/hooks) — HIGH confidence (official docs)
+- [Claude Agent SDK — MCP Integration](https://platform.claude.com/docs/en/agent-sdk/mcp) — HIGH confidence (official docs)
+- [Claude Agent SDK — Subagents Guide](https://platform.claude.com/docs/en/agent-sdk/subagents) — HIGH confidence (official docs)
+- [claude-agent-sdk-python Issue #145 — SDK hangs after MCP tool execution](https://github.com/anthropics/claude-agent-sdk-python/issues/145) — HIGH confidence (official issue tracker)
+- [claude-agent-sdk-python Issue #207 — MCP servers show "failed" status](https://github.com/anthropics/claude-agent-sdk-python/issues/207) — HIGH confidence (official issue tracker)
+- [claude-agent-sdk-python Issue #208 — SDK hangs on Windows during init](https://github.com/anthropics/claude-agent-sdk-python/issues/208) — HIGH confidence (official issue tracker)
+- [Claude Code Issue #7718 — SIGABRT during shutdown due to MCP server termination failure](https://github.com/anthropics/claude-code/issues/7718) — MEDIUM confidence (product issue, patterns applicable to SDK)
+- [DataFusion Issue #9554 — Enable recursive CTE by default](https://github.com/apache/datafusion/issues/9554) — HIGH confidence (official upstream issue; LanceDB uses DataFusion)
+- [Agent Skills Prompt Injection — arXiv 2510.26328](https://arxiv.org/abs/2510.26328) — HIGH confidence (peer-reviewed, October 2025)
+- [Prompt Injection Attacks on Agentic Coding Assistants — arXiv 2601.17548](https://arxiv.org/html/2601.17548v1) — HIGH confidence (peer-reviewed, 2026)
+- [SkillJect: Stealthy Skill-Based Prompt Injection — arXiv 2602.14211](https://arxiv.org/html/2602.14211) — MEDIUM confidence (peer-reviewed, 2026; adversarial context)
+- [Stop Stuffing Your System Prompt — Medium 2026](https://pessini.medium.com/stop-stuffing-your-system-prompt-build-scalable-agent-skills-in-langgraph-a9856378e8f6) — MEDIUM confidence (practitioner blog, aligns with official SDK design)
+- [LanceDB Agent SDK Subagent — "agents cannot spawn subagents"](https://platform.claude.com/docs/en/agent-sdk/subagents) — HIGH confidence (official docs; explicitly stated)
+- [Agentic orchestration state synchronization pitfalls — N-ix observability guide](https://www.n-ix.com/ai-agent-observability/) — MEDIUM confidence (practitioner analysis)
+- [How We Are Testing Our Agents in Dev — Towards Data Science](https://towardsdatascience.com/how-we-are-testing-our-agents-in-dev/) — MEDIUM confidence (practitioner article, patterns align with official guidance)
+- [LanceDB v1.0 PITFALLS.md (Synapse project)](../.planning/research/PITFALLS.md) — HIGH confidence (project-specific, already validated in v1.0 build)
 
 ---
-*Pitfalls research for: MCP server with LanceDB vector database, tree-sitter code indexing, and Ollama embeddings*
-*Researched: 2026-02-27*
+*Pitfalls research for: Adding agentic coordination layer (Claude Agent SDK, decision tracking, task hierarchy, skill loading) to existing Synapse MCP server — v2.0 milestone*
+*Researched: 2026-03-01*

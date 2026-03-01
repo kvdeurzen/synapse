@@ -11,6 +11,7 @@ import { registerGetSmartContextTool } from "./tools/get-smart-context.js";
 import { registerHybridSearchTool } from "./tools/hybrid-search.js";
 import { registerIndexCodebaseTool } from "./tools/index-codebase.js";
 import { registerInitProjectTool } from "./tools/init-project.js";
+import { registerSearchCodeTool } from "./tools/search-code.js";
 import { registerLinkDocumentsTool } from "./tools/link-documents.js";
 import { registerPingTool } from "./tools/ping.js";
 import { registerProjectOverviewTool } from "./tools/project-overview.js";
@@ -84,6 +85,9 @@ export function createServer(config: SynapseConfig): McpServer {
   toolCount++;
 
   registerIndexCodebaseTool(server, config);
+  toolCount++;
+
+  registerSearchCodeTool(server, config);
   toolCount++;
 
   return server;

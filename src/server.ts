@@ -8,6 +8,8 @@ import { registerEchoTool } from "./tools/echo.js";
 import { registerFulltextSearchTool } from "./tools/fulltext-search.js";
 import { registerGetIndexStatusTool } from "./tools/get-index-status.js";
 import { registerGetRelatedDocumentsTool } from "./tools/get-related-documents.js";
+import { registerCheckPrecedentTool } from "./tools/check-precedent.js";
+import { registerQueryDecisionsTool as registerQueryDecisionsMcpTool } from "./tools/query-decisions.js";
 import { registerStoreDecisionTool } from "./tools/store-decision.js";
 import { registerGetSmartContextTool } from "./tools/get-smart-context.js";
 import { registerHybridSearchTool } from "./tools/hybrid-search.js";
@@ -96,6 +98,12 @@ export function createServer(config: SynapseConfig): McpServer {
   toolCount++;
 
   registerStoreDecisionTool(server, config);
+  toolCount++;
+
+  registerQueryDecisionsMcpTool(server, config);
+  toolCount++;
+
+  registerCheckPrecedentTool(server, config);
   toolCount++;
 
   return server;

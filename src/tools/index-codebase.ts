@@ -4,7 +4,7 @@ import { ulid } from "ulidx";
 import { z } from "zod";
 import { insertBatch } from "../db/batch.js";
 import { connectDb } from "../db/connection.js";
-import { CodeChunkRowSchema, RelationshipRowSchema } from "../db/schema.js";
+import { CodeChunkRowSchema, ProjectMetaRowSchema, RelationshipRowSchema } from "../db/schema.js";
 import { OllamaUnreachableError } from "../errors.js";
 import { createToolLogger, logger } from "../logger.js";
 import { logActivity } from "../services/activity-log.js";
@@ -262,20 +262,26 @@ export async function indexCodebase(
     edges_created: allEdges.length,
   });
 
-  // ── 9. Update project_meta last_index_at ─────────────────────────────────
+  // ── 9. Update project_meta last_index_at (upsert via delete+insert) ─────
   try {
     const projectMetaTable = await db.openTable("project_meta");
-    const existing = await projectMetaTable
-      .query()
-      .where(`project_id = '${escapeSQL(projectId)}'`)
-      .limit(1)
-      .toArray();
-    if (existing.length > 0) {
-      await projectMetaTable.update({
-        where: `project_id = '${escapeSQL(projectId)}'`,
-        values: { last_index_at: new Date().toISOString() },
-      });
-    }
+    const now = new Date().toISOString();
+    await projectMetaTable.delete(`project_id = '${escapeSQL(projectId)}'`);
+    await insertBatch(
+      projectMetaTable,
+      [
+        {
+          project_id: projectId,
+          name: projectId,
+          created_at: now,
+          updated_at: now,
+          description: null,
+          last_index_at: now,
+          settings: null,
+        },
+      ],
+      ProjectMetaRowSchema,
+    );
   } catch {
     // Non-critical: log but don't fail
     logger.warn({ projectId }, "Failed to update project_meta last_index_at");

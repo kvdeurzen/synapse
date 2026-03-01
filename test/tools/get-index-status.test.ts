@@ -5,6 +5,8 @@ import { join } from "node:path";
 import { createHash } from "node:crypto";
 import * as lancedb from "@lancedb/lancedb";
 import { ulid } from "ulidx";
+import { insertBatch } from "../../src/db/batch.js";
+import { ProjectMetaRowSchema } from "../../src/db/schema.js";
 import { createServer } from "../../src/server.js";
 import { initProject } from "../../src/tools/init-project.js";
 import { getIndexStatus } from "../../src/tools/get-index-status.js";
@@ -345,5 +347,88 @@ describe("getIndexStatus", () => {
       const toolCount = Object.keys(registeredTools).length;
       expect(toolCount).toBe(18);
     });
+  });
+});
+
+// ── project_meta integration ──────────────────────────────────────────────────
+
+describe("project_meta integration", () => {
+  // Helper to simulate what index_codebase does: delete+insert upsert on project_meta
+  async function simulateIndexCodebase(
+    db: lancedb.Connection,
+    projectId: string,
+    lastIndexAt: string,
+  ): Promise<void> {
+    const projectMetaTable = await db.openTable("project_meta");
+    await projectMetaTable.delete(`project_id = '${projectId}'`);
+    await insertBatch(
+      projectMetaTable,
+      [
+        {
+          project_id: projectId,
+          name: projectId,
+          created_at: lastIndexAt,
+          updated_at: lastIndexAt,
+          description: null,
+          last_index_at: lastIndexAt,
+          settings: null,
+        },
+      ],
+      ProjectMetaRowSchema,
+    );
+  }
+
+  test("init_project seeds project_meta row with last_index_at=null", async () => {
+    await initProject(tmpDir, "test-proj");
+
+    const result = await getIndexStatus(tmpDir, "test-proj");
+    expect(result.last_index_at).toBeNull();
+  });
+
+  test("get_index_status returns non-null last_index_at after simulated index", async () => {
+    await initProject(tmpDir, "test-proj");
+
+    const db = await lancedb.connect(tmpDir);
+    const ts = new Date().toISOString();
+    await simulateIndexCodebase(db, "test-proj", ts);
+
+    const result = await getIndexStatus(tmpDir, "test-proj");
+    expect(result.last_index_at).not.toBeNull();
+    expect(result.last_index_at).toBe(ts);
+  });
+
+  test("simulated index_codebase twice updates (not duplicates) project_meta row", async () => {
+    await initProject(tmpDir, "test-proj");
+
+    const db = await lancedb.connect(tmpDir);
+    const ts1 = new Date("2026-01-01T00:00:00Z").toISOString();
+    await simulateIndexCodebase(db, "test-proj", ts1);
+
+    const ts2 = new Date("2026-01-02T00:00:00Z").toISOString();
+    await simulateIndexCodebase(db, "test-proj", ts2);
+
+    // Verify exactly 1 row (no duplication)
+    const db2 = await lancedb.connect(tmpDir);
+    const table = await db2.openTable("project_meta");
+    const rows = await table.query().toArray();
+    expect(rows.length).toBe(1);
+  });
+
+  test("last_index_at value changes on second index run", async () => {
+    await initProject(tmpDir, "test-proj");
+
+    const db = await lancedb.connect(tmpDir);
+    const ts1 = new Date("2026-01-01T00:00:00Z").toISOString();
+    await simulateIndexCodebase(db, "test-proj", ts1);
+
+    const result1 = await getIndexStatus(tmpDir, "test-proj");
+    expect(result1.last_index_at).toBe(ts1);
+
+    const ts2 = new Date("2026-01-02T00:00:00Z").toISOString();
+    await simulateIndexCodebase(db, "test-proj", ts2);
+
+    const result2 = await getIndexStatus(tmpDir, "test-proj");
+    expect(result2.last_index_at).toBe(ts2);
+    expect(result2.last_index_at).not.toBe(ts1);
   });
 });

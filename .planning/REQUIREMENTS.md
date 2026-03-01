@@ -28,7 +28,7 @@ Requirements for initial release. Each maps to roadmap phases.
 
 ### Document Management
 
-- [x] **DOC-01**: User can store a document with title, content, category (17 types), and optional metadata via store_document
+- [x] **DOC-01**: User can store a document with title, content, category (12 types), and optional metadata via store_document
 - [x] **DOC-02**: Documents are chunked at write time using category-specific strategies (semantic_section, paragraph, fixed_size) with configurable max size and overlap
 - [x] **DOC-03**: Each chunk is prefixed with context header ("Document: {title} | Section: {header}") before embedding
 - [x] **DOC-04**: store_document with existing doc_id creates new version (version + 1) and marks old chunks as superseded

@@ -101,16 +101,16 @@ Requirements for the Agentic Framework milestone. Each maps to roadmap phases 10
 
 ### Task Hierarchy (TASK)
 
-- [ ] **TASK-01**: Agent can create a task with parent_id, depth (0-3), title, description, and dependencies via create_task
-- [ ] **TASK-02**: Task tree supports 4 depth levels: Epic (0), Feature (1), Component (2), Task (3)
+- [x] **TASK-01**: Agent can create a task with parent_id, depth (0-3), title, description, and dependencies via create_task
+- [x] **TASK-02**: Task tree supports 4 depth levels: Epic (0), Feature (1), Component (2), Task (3)
 - [x] **TASK-03**: Agent can update task status, assigned_agent, priority, and other fields via update_task
-- [x] **TASK-04**: Cascade status propagation: all children complete -> parent completes; any child blocked -> parent blocked
+- [x] **TASK-04**: Cascade status propagation: children_all_done signal computed at read time in get_task_tree rollup; no automatic parent status transitions; is_blocked does not cascade upward to parents
 - [x] **TASK-05**: Agent can retrieve full task tree via get_task_tree with rollup statistics (total/complete/blocked counts)
 - [x] **TASK-06**: get_task_tree uses JS-side BFS with root_id denormalization (max depth 5, 200-task cap)
-- [ ] **TASK-07**: Dependency cycles are detected and rejected on create_task and update_task
-- [ ] **TASK-08**: init_project creates the tasks table with Arrow schema and indexes
-- [ ] **TASK-09**: All task mutations are logged to activity_log
-- [ ] **TASK-10**: Task description is embedded as a 768-dim vector for semantic search
+- [x] **TASK-07**: Dependency cycles are detected and rejected on create_task and update_task
+- [x] **TASK-08**: init_project creates the tasks table with Arrow schema and indexes
+- [x] **TASK-09**: All task mutations are logged to activity_log
+- [x] **TASK-10**: Task description is embedded as a 768-dim vector for semantic search
 
 ### Orchestrator Foundation (ORCH)
 
@@ -279,16 +279,16 @@ Which phases cover which requirements. Updated during roadmap creation.
 | DEC-06 | Phase 10 | Complete |
 | DEC-07 | Phase 10 | Complete |
 | DEC-08 | Phase 10 | Pending |
-| TASK-01 | Phase 11 | Pending |
-| TASK-02 | Phase 11 | Pending |
+| TASK-01 | Phase 11 | Complete |
+| TASK-02 | Phase 11 | Complete |
 | TASK-03 | Phase 11 | Complete |
 | TASK-04 | Phase 11 | Complete |
 | TASK-05 | Phase 11 | Complete |
 | TASK-06 | Phase 11 | Complete |
-| TASK-07 | Phase 11 | Pending |
-| TASK-08 | Phase 11 | Pending |
-| TASK-09 | Phase 11 | Pending |
-| TASK-10 | Phase 11 | Pending |
+| TASK-07 | Phase 11 | Complete |
+| TASK-08 | Phase 11 | Complete |
+| TASK-09 | Phase 11 | Complete |
+| TASK-10 | Phase 11 | Complete |
 | ORCH-01 | Phase 12 | Pending |
 | ORCH-02 | Phase 12 | Pending |
 | ORCH-03 | Phase 12 | Pending |

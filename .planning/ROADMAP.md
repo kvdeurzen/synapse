@@ -202,11 +202,12 @@ Plans:
   3. Completing all children of a parent task automatically propagates "complete" status to the parent; blocking any child propagates "blocked" to the parent
   4. Creating a task with a dependency cycle (A depends on B, B depends on A) is rejected with a clear error
   5. init_project creates the tasks table and all required indexes alongside the existing tables
-**Plans**: 2 plans
+**Plans**: 3 plans
 
 Plans:
 - [x] 11-01: Task schema (TASKS_SCHEMA, TaskRowSchema, task-constants.ts), create_task tool with cycle detection (TDD)
 - [x] 11-02: update_task, get_task_tree tools with cascade status propagation and BFS retrieval
+- [x] 11-03: Gap closure — REQUIREMENTS.md updated (6 checkboxes, 6 traceability rows, TASK-04 wording corrected)
 
 ### Phase 12: Orchestrator Bootstrap
 **Goal**: The orchestrator process exists as a separate package, spawns Synapse as an MCP subprocess, validates the connection on startup, manages session lifecycle, and has a mock/record/replay test harness that prevents live API calls in unit tests

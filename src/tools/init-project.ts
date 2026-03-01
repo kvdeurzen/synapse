@@ -227,6 +227,45 @@ export async function initProject(
         "FTS index creation failed on code_chunks — will create on first data insert",
       );
     }
+
+    // ── Create FTS index on decisions.subject (Phase 10) ─────────────────────
+    const decisionsTable = await db.openTable("decisions");
+    try {
+      await decisionsTable.createIndex("subject", {
+        config: lancedb.Index.fts({
+          withPosition: true,
+          stem: false,
+          removeStopWords: false,
+          lowercase: true,
+        }),
+        replace: true,
+      });
+      logger.debug("FTS index created on decisions.subject");
+    } catch (err) {
+      logger.warn(
+        { error: String(err) },
+        "FTS index creation failed on decisions.subject — will create on first data insert",
+      );
+    }
+
+    // ── Create FTS index on decisions.rationale (Phase 10) ───────────────────
+    try {
+      await decisionsTable.createIndex("rationale", {
+        config: lancedb.Index.fts({
+          withPosition: true,
+          stem: false,
+          removeStopWords: false,
+          lowercase: true,
+        }),
+        replace: true,
+      });
+      logger.debug("FTS index created on decisions.rationale");
+    } catch (err) {
+      logger.warn(
+        { error: String(err) },
+        "FTS index creation failed on decisions.rationale — will create on first data insert",
+      );
+    }
   }
 
   // ── Seed starter documents for fresh projects only ────────────────────────
@@ -310,8 +349,8 @@ export function registerInitProjectTool(server: McpServer, config: SynapseConfig
     {
       description:
         "Initialize a Synapse project database with all required tables. " +
-        "Creates the database directory and 6 LanceDB tables (documents, doc_chunks, code_chunks, " +
-        "relationships, project_meta, activity_log). Idempotent — safe to call multiple times.",
+        "Creates the database directory and 7 LanceDB tables (documents, doc_chunks, code_chunks, " +
+        "relationships, project_meta, activity_log, decisions). Idempotent — safe to call multiple times.",
       inputSchema: z.object({
         project_id: z
           .string()

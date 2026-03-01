@@ -417,8 +417,8 @@ describe("insertBatch empty array", () => {
 // ────────────────────────────────────────────────────────────────────────────
 
 describe("TABLE_NAMES and TABLE_SCHEMAS registry", () => {
-  test("TABLE_NAMES has exactly 6 entries", () => {
-    expect(TABLE_NAMES.length).toBe(6);
+  test("TABLE_NAMES has exactly 7 entries", () => {
+    expect(TABLE_NAMES.length).toBe(7);
   });
 
   test("TABLE_SCHEMAS has entry for each TABLE_NAME", () => {

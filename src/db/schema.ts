@@ -1,6 +1,10 @@
 // Arrow types come from apache-arrow (installed as lancedb transitive dep — no explicit install needed)
 import { Field, FixedSizeList, Float32, Int32, Schema, Utf8 } from "apache-arrow";
 import { z } from "zod";
+import {
+  VALID_DECISION_STATUSES,
+  VALID_DECISION_TYPES,
+} from "../tools/decision-constants.js";
 
 // ────────────────────────────────────────────────────────────────────────────
 // Arrow Schemas
@@ -197,6 +201,52 @@ export const DocChunkRowSchema = z.object({
   created_at: z.string().datetime(),
 });
 
+/**
+ * Decisions table — 17 fields.
+ * Stores structured decisions with tier-based categorization and semantic embeddings.
+ * vector is nullable to allow defensive schema design (fail-fast on Ollama-down writes
+ * is enforced at the store_decision level, not the schema level).
+ */
+export const DECISIONS_SCHEMA = new Schema([
+  new Field("decision_id", new Utf8(), false),
+  new Field("project_id", new Utf8(), false),
+  new Field("subject", new Utf8(), false),
+  new Field("context", new Utf8(), false),
+  new Field("rationale", new Utf8(), false),
+  new Field("choice", new Utf8(), false),
+  new Field("tier", new Int32(), false),
+  new Field("tier_name", new Utf8(), false),
+  new Field("decision_type", new Utf8(), false),
+  new Field("status", new Utf8(), false),
+  new Field("actor", new Utf8(), false),
+  new Field("phase", new Utf8(), true),
+  new Field("tags", new Utf8(), false),
+  new Field("superseded_by", new Utf8(), true),
+  new Field("created_at", new Utf8(), false),
+  new Field("updated_at", new Utf8(), false),
+  new Field("vector", new FixedSizeList(768, new Field("item", new Float32(), true)), true),
+]);
+
+export const DecisionRowSchema = z.object({
+  decision_id: z.string().min(1),
+  project_id: z.string().min(1),
+  subject: z.string().min(1),
+  context: z.string(),
+  rationale: z.string().min(1),
+  choice: z.string().min(1),
+  tier: z.number().int().min(0).max(3),
+  tier_name: z.string().min(1),
+  decision_type: z.enum(VALID_DECISION_TYPES),
+  status: z.enum(VALID_DECISION_STATUSES),
+  actor: z.string().min(1),
+  phase: z.string().nullable(),
+  tags: z.string(),
+  superseded_by: z.string().nullable(),
+  created_at: z.string().datetime(),
+  updated_at: z.string().datetime(),
+  vector: z.array(z.number()).length(768).nullable(),
+});
+
 // ────────────────────────────────────────────────────────────────────────────
 // Table Registry
 // ────────────────────────────────────────────────────────────────────────────
@@ -208,6 +258,7 @@ export const TABLE_NAMES = [
   "relationships",
   "project_meta",
   "activity_log",
+  "decisions",
 ] as const;
 
 export type TableName = (typeof TABLE_NAMES)[number];
@@ -219,4 +270,5 @@ export const TABLE_SCHEMAS: Record<string, Schema> = {
   relationships: RELATIONSHIPS_SCHEMA,
   project_meta: PROJECT_META_SCHEMA,
   activity_log: ACTIVITY_LOG_SCHEMA,
+  decisions: DECISIONS_SCHEMA,
 };

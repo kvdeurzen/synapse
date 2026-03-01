@@ -185,7 +185,11 @@ Starting at Phase 10. Dependency order is strict: 10 -> 11 -> 12 -> 13 -> 14.
   3. An agent can call check_precedent with a proposed decision and receive a has_precedent boolean plus matching decisions with similarity scores — threshold is 0.85+
   4. init_project creates the decisions table with Arrow schema, BTree indexes, and FTS index alongside the existing tables
   5. A decision can be superseded (active -> superseded -> revoked lifecycle) and superseded decisions are excluded from precedent results by default
-**Plans**: TBD
+**Plans**: 2 plans
+
+Plans:
+- [ ] 10-01: Decision schema, types, constants, init_project extension, store_decision tool (TDD)
+- [ ] 10-02: query_decisions + check_precedent tools, server wiring (TDD)
 
 ### Phase 11: Task Hierarchy Tooling
 **Goal**: Agents can create and manage a recursive task tree (Epic/Feature/Component/Task) with cascade status propagation, dependency cycle detection, and BFS tree retrieval — three new MCP tools in the Synapse server
@@ -256,7 +260,7 @@ v2.0 in progress: 10 -> 11 -> 12 -> 13 -> 14
 | 7. Code Search and Integration Validation | v1.0 | 2/2 | Complete | 2026-03-01 |
 | 8. Fix project_meta Integration Wiring | v1.0 | 1/1 | Complete | 2026-03-01 |
 | 9. Tech Debt Documentation Cleanup | v1.0 | 1/1 | Complete | 2026-03-01 |
-| 10. Decision Tracking Tooling | v2.0 | 0/TBD | Not started | - |
+| 10. Decision Tracking Tooling | v2.0 | 0/2 | Planned | - |
 | 11. Task Hierarchy Tooling | v2.0 | 0/TBD | Not started | - |
 | 12. Orchestrator Bootstrap | v2.0 | 0/TBD | Not started | - |
 | 13. Agent Specialization, Skill Loading, and Trust | v2.0 | 0/TBD | Not started | - |

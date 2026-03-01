@@ -1,0 +1,40 @@
+{
+  "mcpServers": {
+    "synapse": {
+      "command": "bun",
+      "args": [
+        "run",
+        "SYNAPSE_SERVER_PATH/src/index.ts",
+        "--db",
+        "SYNAPSE_DB_PATH"
+      ],
+      "env": {
+        "OLLAMA_URL": "http://localhost:11434",
+        "EMBED_MODEL": "nomic-embed-text"
+      }
+    }
+  },
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node hooks/synapse-startup.js"
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "mcp__synapse__.*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node hooks/synapse-audit.js"
+          }
+        ]
+      }
+    ]
+  }
+}

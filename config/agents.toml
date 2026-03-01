@@ -1,0 +1,44 @@
+# Agent registry -- model assignments and configuration
+
+[agents.product-strategist]
+model = "opus"
+tier = 0
+skills = []
+
+[agents.researcher]
+model = "sonnet"
+skills = []
+
+[agents.architect]
+model = "opus"
+tier = 1
+skills = []
+
+[agents.decomposer]
+model = "opus"
+skills = []
+
+[agents.plan-reviewer]
+model = "opus"
+skills = []
+
+[agents.executor]
+model = "sonnet"
+tier = 3
+skills = []
+
+[agents.validator]
+model = "sonnet"
+skills = []
+
+[agents.integration-checker]
+model = "sonnet"
+skills = []
+
+[agents.debugger]
+model = "sonnet"
+skills = []
+
+[agents.codebase-analyst]
+model = "sonnet"
+skills = []

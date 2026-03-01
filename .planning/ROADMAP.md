@@ -225,7 +225,12 @@ Plans:
   6. Three-layer test harness works: unit tests for hooks/config (mocked, no API), integration tests against real Synapse with temp LanceDB (no API), behavioral tests with auto-recorded JSON fixtures (no API after first recording)
   7. Agent identity is passed on all Synapse tool calls — decisions and tasks track which agent performed each operation
   8. Prompt scorecards in test/scorecards/ define expected agent behaviors and score recorded outputs for regression testing
-**Plans**: TBD
+**Plans**: 3 plans
+
+Plans:
+- [x] 12-01: Repo bootstrap — directory structure, package.json, TOML config system with Zod validation, settings.template.json (ORCH-01, ORCH-02, ORCH-05)
+- [ ] 12-02: Hook system — session lifecycle hooks (SessionStart, PostToolUse, PreToolUse), startup context assembly
+- [ ] 12-03: Work stream commands — /synapse:new-goal, /synapse:status, /synapse:resume, three-layer test harness
 
 ### Phase 13: Agent Specialization, Skill Loading, and Trust
 **Goal**: All 10 specialized agents are defined as markdown files in agents/ with system prompts, allowed_tools lists, and tier assignments; the skill registry injects project-specific behavior at spawn time; and the Trust-Knowledge Matrix TOML config drives per-domain autonomy levels with configurable approval tiers
@@ -272,6 +277,6 @@ v2.0 in progress: 10 -> 11 -> 12 -> 13 -> 14
 | 9. Tech Debt Documentation Cleanup | v1.0 | 1/1 | Complete | 2026-03-01 |
 | 10. Decision Tracking Tooling | v2.0 | Complete    | 2026-03-01 | 2026-03-01 |
 | 11. Task Hierarchy Tooling | v2.0 | Complete    | 2026-03-01 | 2026-03-01 |
-| 12. Framework Bootstrap | v2.0 | 0/TBD | Not started | - |
+| 12. Framework Bootstrap | v2.0 | 1/3 | In progress | - |
 | 13. Agent Specialization, Skill Loading, and Trust | v2.0 | 0/TBD | Not started | - |
 | 14. Quality Gates and PEV Workflow | v2.0 | 0/TBD | Not started | - |

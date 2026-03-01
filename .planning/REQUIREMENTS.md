@@ -114,11 +114,11 @@ Requirements for the Agentic Framework milestone. Each maps to roadmap phases 10
 
 ### Orchestrator Foundation (ORCH)
 
-- [ ] **ORCH-01**: Framework repo (synapse-framework) has agents/, skills/, hooks/, workflows/, commands/, config/ directories mirroring .claude/ target layout
-- [ ] **ORCH-02**: Synapse MCP server connection configured in config/synapse.toml with Claude Code settings.json as fallback
+- [x] **ORCH-01**: Framework repo (synapse-framework) has agents/, skills/, hooks/, workflows/, commands/, config/ directories mirroring .claude/ target layout
+- [x] **ORCH-02**: Synapse MCP server connection configured in config/synapse.toml with Claude Code settings.json as fallback
 - [ ] **ORCH-03**: Session startup auto-detects open work streams via Synapse get_task_tree and get_smart_context, presenting project status
 - [ ] **ORCH-04**: Work stream lifecycle: create new (natural language or /synapse:new-goal), resume existing, multiple parallel streams supported
-- [ ] **ORCH-05**: TOML config files validated on startup — missing or malformed config produces clear error
+- [x] **ORCH-05**: TOML config files validated on startup — missing or malformed config produces clear error
 - [ ] **ORCH-06**: Three-layer test harness: unit (hooks/config), integration (Synapse MCP with temp LanceDB), behavioral (auto-recorded JSON fixtures committed to git)
 - [ ] **ORCH-07**: Full attribution — agent identity passed on all Synapse tool calls (decisions, tasks, activity log)
 - [ ] **ORCH-08**: Prompt scorecards in test/scorecards/ define expected agent behaviors and score recorded outputs for regression testing
@@ -294,11 +294,11 @@ Which phases cover which requirements. Updated during roadmap creation.
 | TASK-08 | Phase 11 | Complete |
 | TASK-09 | Phase 11 | Complete |
 | TASK-10 | Phase 11 | Complete |
-| ORCH-01 | Phase 12 | Pending |
-| ORCH-02 | Phase 12 | Pending |
+| ORCH-01 | Phase 12 | Complete |
+| ORCH-02 | Phase 12 | Complete |
 | ORCH-03 | Phase 12 | Pending |
 | ORCH-04 | Phase 12 | Pending |
-| ORCH-05 | Phase 12 | Pending |
+| ORCH-05 | Phase 12 | Complete |
 | ORCH-06 | Phase 12 | Pending |
 | ORCH-07 | Phase 12 | Pending |
 | ORCH-08 | Phase 12 | Pending |

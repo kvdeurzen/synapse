@@ -3,12 +3,12 @@ gsd_state_version: 1.0
 milestone: v2.0
 milestone_name: Agentic Framework
 status: unknown
-last_updated: "2026-03-01T18:18:01.496Z"
+last_updated: "2026-03-01T21:15:00Z"
 progress:
-  total_phases: 2
+  total_phases: 5
   completed_phases: 2
-  total_plans: 5
-  completed_plans: 5
+  total_plans: 14
+  completed_plans: 6
 ---
 
 # Project State
@@ -18,17 +18,17 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-01)
 
 **Core value:** Agents get the right context for any task — from both project decisions and actual code — without wasting tokens on irrelevant content. The orchestrator ensures agents respect established decisions and decompose work to context-window-sized executable units.
-**Current focus:** v2.0 Agentic Framework — Phase 11 (Task Hierarchy Tooling)
+**Current focus:** v2.0 Agentic Framework — Phase 12 (Orchestrator Bootstrap)
 **Previous milestone:** v1.0 Data Layer — shipped 2026-03-01 (50/50 requirements, 9 phases, 24 plans)
 
 ## Current Position
 
-Phase: 11 of 14 (Task Hierarchy Tooling) — COMPLETE
-Plan: 03 complete — Phase 11 gap closure done (3/3 plans)
-Status: Phase 11 complete — all 10 TASK requirements marked complete in REQUIREMENTS.md, TASK-04 wording corrected
-Last activity: 2026-03-01 — Phase 11 Plan 03 executed (REQUIREMENTS.md gap closure, all 10 TASK requirements now accurate)
+Phase: 12 of 14 (Orchestrator Bootstrap) — IN PROGRESS
+Plan: 01 complete — synapse-framework repo bootstrapped (1/3 plans)
+Status: Phase 12 Plan 01 complete — synapse-framework repo created with TOML config system, Zod validation, and directory structure
+Last activity: 2026-03-01 — Phase 12 Plan 01 executed (repo bootstrap, TOML config, 13 tests pass)
 
-Progress: [████░░░░░░] 40% (v2.0 milestone — Phase 11 complete, ready for Phase 12)
+Progress: [████░░░░░░] 43% (v2.0 milestone — Phase 12 Plan 01 complete)
 
 ## Performance Metrics
 
@@ -45,6 +45,7 @@ Progress: [████░░░░░░] 40% (v2.0 milestone — Phase 11 comp
 | 11 | 01 | 9min | 2 | 9 |
 | 11 | 02 | 13min | 2 | 7 |
 | 11 | 03 | 3min | 1 | 1 |
+| 12 | 01 | 3min | 2 | 15 |
 
 ## Accumulated Context
 
@@ -65,6 +66,12 @@ Decisions are logged in PROJECT.md Key Decisions table.
 - Precedent check failure is non-fatal — has_precedent=false if vector search errors
 - query_decisions uses SQL WHERE for indexed fields + JS post-filter for subject/tags (LanceDB LIKE limitations)
 - check_precedent gracefully degrades on Ollama unreachable (read operation, unlike store_decision which fails fast)
+
+**Phase 12 decisions (validated):**
+- ConfigError throws (not process.exit) in config loaders — CLI entry points convert to exit(1) for testability
+- Zod 4 z.string({ error: '...' }) syntax for custom missing-field messages (not z.string().min() which only fires on empty string)
+- loadSecretsConfig is optional — returns {} on missing file, not an error
+- Anti-drift test validates actual config/ files against Zod schemas in CI
 
 **Phase 11 decisions (validated):**
 - Bool type used for is_blocked/is_cancelled in TASKS_SCHEMA (LanceDB supports Bool natively; not Int32)
@@ -92,5 +99,5 @@ None.
 ## Session Continuity
 
 Last session: 2026-03-01
-Stopped at: Completed 11-03-PLAN.md — REQUIREMENTS.md gap closure, all 10 TASK requirements marked complete, Phase 11 fully closed
+Stopped at: Completed 12-01-PLAN.md — synapse-framework repo bootstrapped, TOML config system with Zod validation, 13 tests pass
 Resume file: None

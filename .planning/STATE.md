@@ -3,7 +3,7 @@ gsd_state_version: 1.0
 milestone: v2.0
 milestone_name: Agentic Framework
 status: unknown
-last_updated: "2026-03-01T17:36:56Z"
+last_updated: "2026-03-01T17:53:38Z"
 progress:
   total_phases: 1
   completed_phases: 1
@@ -23,12 +23,12 @@ See: .planning/PROJECT.md (updated 2026-03-01)
 
 ## Current Position
 
-Phase: 11 of 14 (Task Hierarchy Tooling) — IN PROGRESS
-Plan: 01 complete — ready for Plan 02 (update_task + get_task_tree)
-Status: Phase 11 plan 01 complete (1/2 plans)
-Last activity: 2026-03-01 — Phase 11 Plan 01 executed (tasks schema, create_task tool, 22 total tools)
+Phase: 11 of 14 (Task Hierarchy Tooling) — COMPLETE
+Plan: 02 complete — Phase 11 fully done (2/2 plans)
+Status: Phase 11 complete — all 3 task tools registered (create_task, update_task, get_task_tree)
+Last activity: 2026-03-01 — Phase 11 Plan 02 executed (update_task, get_task_tree, 24 total tools)
 
-Progress: [███░░░░░░░] 30% (v2.0 milestone — Phase 10 complete, Phase 11 Plan 01 done)
+Progress: [████░░░░░░] 40% (v2.0 milestone — Phase 11 complete, ready for Phase 12)
 
 ## Performance Metrics
 
@@ -43,6 +43,7 @@ Progress: [███░░░░░░░] 30% (v2.0 milestone — Phase 10 comp
 | 10 | 01 | 8min | 2 | 11 |
 | 10 | 02 | 7min | 2 | 7 |
 | 11 | 01 | 9min | 2 | 9 |
+| 11 | 02 | 13min | 2 | 7 |
 
 ## Accumulated Context
 
@@ -71,6 +72,10 @@ Decisions are logged in PROJECT.md Key Decisions table.
 - Dependency edge: from_id = dependent task (blocked), to_id = dependency task (blocker)
 - New tasks always start with status "pending" — no status field accepted at creation time
 - Ollama embedding is fail-fast at create_task level (write operation, unlike check_precedent reads)
+- LanceDB table handles are snapshot-based: always open fresh connections after writes from different connections
+- get_task_tree fetches entire epic subtree (via root_id) then prunes to requested subtree in JS — root_id denormalization works at epic level only
+- children_all_done = false for leaf nodes (vacuously false); true only when ALL direct children have status done
+- Dependency replacement uses what-if graph: project edges MINUS current task edges PLUS proposed edges, then detectCycles
 
 ### Pending Todos
 
@@ -86,5 +91,5 @@ None.
 ## Session Continuity
 
 Last session: 2026-03-01
-Stopped at: Completed 11-01-PLAN.md — tasks schema, create_task tool with cycle detection, 22 tools total (586 tests passing)
+Stopped at: Completed 11-02-PLAN.md — update_task, get_task_tree, 24 tools total (612 tests passing), Phase 11 complete
 Resume file: None

@@ -167,7 +167,7 @@ Plans:
 Starting at Phase 10. Dependency order is strict: 10 -> 11 -> 12 -> 13 -> 14.
 
 - [x] **Phase 10: Decision Tracking Tooling** - Add decisions table and three MCP tools (store_decision, query_decisions, check_precedent) to the Synapse server
-- [ ] **Phase 11: Task Hierarchy Tooling** - Add tasks table and three MCP tools (create_task, update_task, get_task_tree) with cascade status propagation
+- [x] **Phase 11: Task Hierarchy Tooling** - Add tasks table and three MCP tools (create_task, update_task, get_task_tree) with cascade status propagation
 - [ ] **Phase 12: Orchestrator Bootstrap** - Create the orchestrator/ package, Orchestrator class, Synapse subprocess wiring, session lifecycle, and mock/record/replay test harness
 - [ ] **Phase 13: Agent Specialization, Skill Loading, and Trust** - Define 10 AgentDefinition factory functions, skill registry with token budgets, and Trust-Knowledge Matrix config
 - [ ] **Phase 14: Quality Gates and PEV Workflow** - Implement all four hook modules and the Plan-Execute-Validate loop with wave-based parallel execution
@@ -206,7 +206,7 @@ Plans:
 
 Plans:
 - [x] 11-01: Task schema (TASKS_SCHEMA, TaskRowSchema, task-constants.ts), create_task tool with cycle detection (TDD)
-- [ ] 11-02: update_task, get_task_tree tools with cascade status propagation and BFS retrieval
+- [x] 11-02: update_task, get_task_tree tools with cascade status propagation and BFS retrieval
 
 ### Phase 12: Orchestrator Bootstrap
 **Goal**: The orchestrator process exists as a separate package, spawns Synapse as an MCP subprocess, validates the connection on startup, manages session lifecycle, and has a mock/record/replay test harness that prevents live API calls in unit tests
@@ -265,7 +265,7 @@ v2.0 in progress: 10 -> 11 -> 12 -> 13 -> 14
 | 8. Fix project_meta Integration Wiring | v1.0 | 1/1 | Complete | 2026-03-01 |
 | 9. Tech Debt Documentation Cleanup | v1.0 | 1/1 | Complete | 2026-03-01 |
 | 10. Decision Tracking Tooling | v2.0 | Complete    | 2026-03-01 | 2026-03-01 |
-| 11. Task Hierarchy Tooling | v2.0 | 1/2 | In Progress | - |
+| 11. Task Hierarchy Tooling | v2.0 | 2/2 | Complete | 2026-03-01 |
 | 12. Orchestrator Bootstrap | v2.0 | 0/TBD | Not started | - |
 | 13. Agent Specialization, Skill Loading, and Trust | v2.0 | 0/TBD | Not started | - |
 | 14. Quality Gates and PEV Workflow | v2.0 | 0/TBD | Not started | - |

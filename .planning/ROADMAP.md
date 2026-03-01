@@ -121,7 +121,8 @@ Decimal phases appear between their surrounding integers in numeric order.
   2. After index_codebase, project_meta.last_index_at is set to current timestamp (upsert works regardless of existing row)
   3. get_index_status returns non-null last_index_at after an init_project → index_codebase flow
   4. Running index_codebase twice updates (not duplicates) the project_meta row
-**Plans**: TBD
+**Plans**: 1 plan
+  - [ ] 08-01-PLAN.md — Seed project_meta row in init_project, fix delete+insert upsert in index_codebase
 
 ### Phase 9: Tech Debt Documentation Cleanup
 **Goal**: Fix stale requirement descriptions, missing summary frontmatter, and inaccurate tool descriptions identified by the v1 audit

@@ -41,6 +41,10 @@ metrics:
   tasks_total: 2
   files_created: 3
   files_modified: 2
+requirements-completed:
+  - EMBED-01
+  - EMBED-02
+  - EMBED-06
 ---
 
 # Phase 3 Plan 1: Embedding Service Core Summary

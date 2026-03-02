@@ -4,7 +4,7 @@ import { join } from "node:path";
 import { createSynapseTestClient, type SynapseTestClient } from "../helpers/synapse-client";
 
 // Check if synapse-server exists — skip all tests if not
-const SERVER_PATH = join(import.meta.dir, "..", "..", "..", "project_mcp", "src", "index.ts");
+const SERVER_PATH = join(import.meta.dir, "..", "..", "..", "server", "src", "index.ts");
 const serverExists = existsSync(SERVER_PATH);
 
 describe.skipIf(!serverExists)("Integration: Synapse startup sequence", () => {

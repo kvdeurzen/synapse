@@ -14,6 +14,7 @@
     "smol-toml": "latest"
   },
   "dependencies": {
+    "apache-arrow": "18.1.0",
     "@lancedb/lancedb": "0.26.2",
     "@langchain/textsplitters": "^1.0.1",
     "@modelcontextprotocol/sdk": "latest",

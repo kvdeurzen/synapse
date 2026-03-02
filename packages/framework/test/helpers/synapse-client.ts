@@ -29,10 +29,9 @@ interface JsonRpcResponse {
 export async function createSynapseTestClient(): Promise<SynapseTestClient> {
 	const tmpDir = mkdtempSync(join(tmpdir(), "synapse-integration-"));
 
-	// Resolve synapse-server path relative to synapse-framework
-	// synapse-framework is at /home/kanter/code/synapse-framework
-	// synapse-server is at /home/kanter/code/project_mcp
-	const serverPath = join(import.meta.dir, "..", "..", "..", "project_mcp", "src", "index.ts");
+	// Resolve synapse-server path relative to this helper
+	// In monorepo: packages/framework/test/helpers/ → 3 levels up to packages/ → server/
+	const serverPath = join(import.meta.dir, "..", "..", "..", "server", "src", "index.ts");
 
 	const proc = Bun.spawn(["bun", "run", serverPath, "--db", tmpDir], {
 		stdin: "pipe",

@@ -1,5 +1,5 @@
 {
-  "name": "synapse-mcp",
+  "name": "@synapse/server",
   "version": "0.1.0",
   "type": "module",
   "scripts": {
@@ -9,6 +9,10 @@
     "format": "bunx biome format --write src/ test/",
     "postinstall": "node scripts/setup-tree-sitter.js"
   },
+  "peerDependencies": {
+    "zod": "^4.0.0",
+    "smol-toml": "latest"
+  },
   "dependencies": {
     "@lancedb/lancedb": "0.26.2",
     "@langchain/textsplitters": "^1.0.1",
@@ -17,18 +21,10 @@
     "ignore": "^7.0.5",
     "lru-cache": "^11.2.6",
     "pino": "latest",
-    "smol-toml": "latest",
     "tree-sitter": "^0.25.0",
     "tree-sitter-python": "^0.25.0",
     "tree-sitter-rust": "^0.24.0",
     "tree-sitter-typescript": "^0.23.2",
-    "ulidx": "^2.4.1",
-    "zod": "^4.0.0"
-  },
-  "devDependencies": {
-    "@biomejs/biome": "latest",
-    "@types/node": "latest",
-    "bun-types": "latest",
-    "typescript": "latest"
+    "ulidx": "^2.4.1"
   }
 }

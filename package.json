@@ -1,0 +1,22 @@
+{
+  "name": "synapse",
+  "version": "0.1.0",
+  "private": true,
+  "workspaces": ["packages/*"],
+  "dependencies": {
+    "zod": "^4.0.0",
+    "smol-toml": "latest"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "2.4.4",
+    "@types/node": "latest",
+    "bun-types": "latest",
+    "typescript": "latest"
+  },
+  "scripts": {
+    "test": "bun run --filter '*' test",
+    "test:server": "bun run --filter '@synapse/server' test",
+    "test:framework": "bun run --filter '@synapse/framework' test",
+    "lint": "bun run --filter '*' lint"
+  }
+}

@@ -4,5 +4,15 @@ dist/
 *.log
 .env
 .env.local
+.env.*.local
 .DS_Store
 *.tsbuildinfo
+config/secrets.toml
+settings.json
+.synapse-audit.log
+out/
+*.tgz
+coverage/
+*.lcov
+.cache
+.idea/

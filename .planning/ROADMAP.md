@@ -246,7 +246,7 @@ Plans:
 **Plans**: 5 plans
 
 Plans:
-- [ ] 13-01: Config schema extension — trust.toml tier_authority + agent_overrides, agents.toml allowed_tools, Zod validation, unit tests (TRUST-01, TRUST-02, TRUST-03, TRUST-04, TRUST-05, TRUST-06, ROLE-12)
+- [x] 13-01: Config schema extension — trust.toml tier_authority + agent_overrides, agents.toml allowed_tools, Zod validation, unit tests (TRUST-01, TRUST-02, TRUST-03, TRUST-04, TRUST-05, TRUST-06, ROLE-12)
 - [ ] 13-02: Skill loader + 7 built-in skill directories — src/skills.ts with token validation, typescript/react/python/vitest/sql/bun/tailwind SKILL.md files (SKILL-01, SKILL-02, SKILL-03, SKILL-04, SKILL-05, SKILL-06)
 - [ ] 13-03: 4 Opus agent definitions — product-strategist, architect, decomposer, plan-reviewer with verbose prompts (ROLE-02, ROLE-04, ROLE-05, ROLE-06)
 - [ ] 13-04: 6 Sonnet agent definitions — researcher, executor, validator, integration-checker, debugger, codebase-analyst with concise prompts (ROLE-03, ROLE-07, ROLE-08, ROLE-09, ROLE-10, ROLE-11)
@@ -285,5 +285,5 @@ v2.0 in progress: 10 -> 11 -> 12 -> 13 -> 14
 | 10. Decision Tracking Tooling | v2.0 | Complete    | 2026-03-01 | 2026-03-01 |
 | 11. Task Hierarchy Tooling | v2.0 | Complete    | 2026-03-01 | 2026-03-01 |
 | 12. Framework Bootstrap | v2.0 | Complete    | 2026-03-01 | 2026-03-01 |
-| 13. Agent Specialization, Skill Loading, and Trust | v2.0 | 0/5 | Not started | - |
+| 13. Agent Specialization, Skill Loading, and Trust | v2.0 | 1/5 | In progress | - |
 | 14. Quality Gates and PEV Workflow | v2.0 | 0/TBD | Not started | - |

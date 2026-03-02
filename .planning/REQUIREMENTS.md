@@ -136,7 +136,7 @@ Requirements for the Agentic Framework milestone. Each maps to roadmap phases 10
 - [ ] **ROLE-09**: Integration Checker (sonnet) validates cross-task integration at feature/epic boundaries
 - [ ] **ROLE-10**: Debugger (sonnet) performs root-cause analysis on execution and validation failures
 - [ ] **ROLE-11**: Codebase Analyst (sonnet) maintains codebase analysis via index_codebase and store_document
-- [ ] **ROLE-12**: Agent allowed_tools lists enforced via hooks — no agent can call tools outside its definition
+- [x] **ROLE-12**: Agent allowed_tools lists enforced via hooks — no agent can call tools outside its definition
 - [ ] **ROLE-13**: Agent markdown files ARE the system prompts — Claude Code loads them natively at spawn time
 
 ### Skill Loading (SKILL)
@@ -150,12 +150,12 @@ Requirements for the Agentic Framework milestone. Each maps to roadmap phases 10
 
 ### Trust & Authority (TRUST)
 
-- [ ] **TRUST-01**: Trust-Knowledge Matrix stored as TOML config file (config/trust.toml)
-- [ ] **TRUST-02**: Per-domain autonomy levels: autopilot (agent decides), co-pilot (agent proposes, user approves), advisory (agent suggests, user decides)
-- [ ] **TRUST-03**: Tier 0 (Product Strategy) decisions always require user approval regardless of trust config
-- [ ] **TRUST-04**: Trust config drives hook decisions: autopilot -> allow, co-pilot -> ask, advisory -> ask with explanation
-- [ ] **TRUST-05**: Decision tier authority matrix maps each agent role to its permitted decision tiers
-- [ ] **TRUST-06**: Configurable approval tiers for decomposition levels (advisory: approve all levels, co-pilot: approve epics only, autopilot: fully autonomous)
+- [x] **TRUST-01**: Trust-Knowledge Matrix stored as TOML config file (config/trust.toml)
+- [x] **TRUST-02**: Per-domain autonomy levels: autopilot (agent decides), co-pilot (agent proposes, user approves), advisory (agent suggests, user decides)
+- [x] **TRUST-03**: Tier 0 (Product Strategy) decisions always require user approval regardless of trust config
+- [x] **TRUST-04**: Trust config drives hook decisions: autopilot -> allow, co-pilot -> ask, advisory -> ask with explanation
+- [x] **TRUST-05**: Decision tier authority matrix maps each agent role to its permitted decision tiers
+- [x] **TRUST-06**: Configurable approval tiers for decomposition levels (advisory: approve all levels, co-pilot: approve epics only, autopilot: fully autonomous)
 
 ### Quality Gates (GATE)
 
@@ -313,7 +313,7 @@ Which phases cover which requirements. Updated during roadmap creation.
 | ROLE-09 | Phase 13 | Pending |
 | ROLE-10 | Phase 13 | Pending |
 | ROLE-11 | Phase 13 | Pending |
-| ROLE-12 | Phase 13 | Pending |
+| ROLE-12 | Phase 13 | Complete |
 | ROLE-13 | Phase 13 | Pending |
 | SKILL-01 | Phase 13 | Pending |
 | SKILL-02 | Phase 13 | Pending |
@@ -321,12 +321,12 @@ Which phases cover which requirements. Updated during roadmap creation.
 | SKILL-04 | Phase 13 | Pending |
 | SKILL-05 | Phase 13 | Pending |
 | SKILL-06 | Phase 13 | Pending |
-| TRUST-01 | Phase 13 | Pending |
-| TRUST-02 | Phase 13 | Pending |
-| TRUST-03 | Phase 13 | Pending |
-| TRUST-04 | Phase 13 | Pending |
-| TRUST-05 | Phase 13 | Pending |
-| TRUST-06 | Phase 13 | Pending |
+| TRUST-01 | Phase 13 | Complete |
+| TRUST-02 | Phase 13 | Complete |
+| TRUST-03 | Phase 13 | Complete |
+| TRUST-04 | Phase 13 | Complete |
+| TRUST-05 | Phase 13 | Complete |
+| TRUST-06 | Phase 13 | Complete |
 | GATE-01 | Phase 14 | Pending |
 | GATE-02 | Phase 14 | Pending |
 | GATE-03 | Phase 14 | Pending |

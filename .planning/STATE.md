@@ -2,13 +2,13 @@
 gsd_state_version: 1.0
 milestone: v2.0
 milestone_name: Agentic Framework
-status: unknown
-last_updated: "2026-03-01T21:30:17.094Z"
+status: in_progress
+last_updated: "2026-03-02T11:30:34Z"
 progress:
-  total_phases: 3
+  total_phases: 5
   completed_phases: 3
-  total_plans: 8
-  completed_plans: 8
+  total_plans: 13
+  completed_plans: 9
 ---
 
 # Project State
@@ -18,17 +18,17 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-01)
 
 **Core value:** Agents get the right context for any task — from both project decisions and actual code — without wasting tokens on irrelevant content. The orchestrator ensures agents respect established decisions and decompose work to context-window-sized executable units.
-**Current focus:** v2.0 Agentic Framework — Phase 12 (Orchestrator Bootstrap)
+**Current focus:** v2.0 Agentic Framework — Phase 13 (Agent Specialization, Skill Loading, and Trust)
 **Previous milestone:** v1.0 Data Layer — shipped 2026-03-01 (50/50 requirements, 9 phases, 24 plans)
 
 ## Current Position
 
 Phase: 12 of 14 (Orchestrator Bootstrap) — COMPLETE (all 3 plans done)
-Phase: 13 of 14 (Agent Specialization) — NOT STARTED
-Status: Phase 12 complete — all 3 plans shipped (config system, hooks/agents/commands, test harness)
-Last activity: 2026-03-01 — Phase 12 Plan 03 executed (integration tests, behavioral fixtures, scorecard)
+Phase: 13 of 14 (Agent Specialization) — IN PROGRESS (1 of 5 plans done)
+Status: Phase 13 Plan 01 complete — Zod config schemas extended, trust.toml tier_authority, agents.toml allowed_tools
+Last activity: 2026-03-02 — Phase 13 Plan 01 executed (TrustConfigSchema + AgentsConfigSchema extensions, config files updated)
 
-Progress: [██████░░░░] 60% (v2.0 milestone — Phase 12 complete, 3 phases done of 5)
+Progress: [██████░░░░] 62% (v2.0 milestone — Phase 13 started, 9/13 plans done)
 
 ## Performance Metrics
 
@@ -48,6 +48,7 @@ Progress: [██████░░░░] 60% (v2.0 milestone — Phase 12 comp
 | 12 | 01 | 3min | 2 | 15 |
 | 12 | 02 | 3min | 2 | 6 |
 | 12 | 03 | 3min | 2 | 6 |
+| 13 | 01 | 9min | 1 | 4 |
 
 ## Accumulated Context
 
@@ -61,6 +62,14 @@ Decisions are logged in PROJECT.md Key Decisions table.
 - Skills as prompt injection, not code plugins (simpler, no runtime code loading)
 - Trust matrix as YAML config file, not DB table (explicit, auditable)
 - Clean Synapse/Orchestrator process boundary: data layer vs control layer
+
+**Phase 13 decisions (in progress):**
+- tier_authority uses z.record(z.string(), z.array(z.number().int().min(0).max(3))) — validates tier values 0-3 at schema level
+- agent_overrides uses nested object {domains: record} — per-agent domain autonomy overrides with optional domains key
+- allowed_tools defaults to [] — backward-compatible with existing agents.toml entries that omit the field
+- Researcher has no store_decision, create_task, update_task — deliberation via documents pattern
+- Debugger and Codebase Analyst have no Write/Edit — diagnostic/analysis only, Executor applies fixes
+- Validators and Plan Reviewer have update_task — direct authority to gate execution without orchestrator routing
 
 **Phase 10 decisions (validated):**
 - Vector field is nullable in DECISIONS_SCHEMA for defensive schema design; fail-fast enforcement is at store_decision level
@@ -105,6 +114,6 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-03-01
-Stopped at: Completed 12-02-PLAN.md (backfill) — SessionStart hook, PostToolUse audit hook, synapse-orchestrator agent, /synapse:new-goal, /synapse:status slash commands, 10 hook unit tests pass
+Last session: 2026-03-02
+Stopped at: Completed 13-01-PLAN.md — TrustConfigSchema extended (tier_authority, agent_overrides), AgentsConfigSchema extended (allowed_tools), trust.toml and agents.toml updated for all 10 agents, 21 config tests pass
 Resume file: None

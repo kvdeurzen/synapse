@@ -281,7 +281,13 @@ Plans:
   3. A PostToolUse hook logs every tool call to file with timestamp, agent identity, tool name, and result summary — the hook does not block the agent
   4. Every hook callback survives being called with null or malformed input without throwing an unhandled exception — hooks degrade gracefully under any input
   5. A user can trigger the PEV workflow with a goal, watch Decomposer progressively decompose (Epic→Features validated, then Features→Tasks on demand), Executors process independent tasks in parallel waves via Claude Code Task tool, Validators check each task, and iteration 3 failure escalates to the user rather than silently looping
-**Plans**: TBD
+**Plans**: 4 plans
+
+Plans:
+- [ ] 14-01-PLAN.md — PreToolUse enforcement hooks (tier-gate, tool-allowlist, precedent-gate) + tests + settings wiring (GATE-01, GATE-02, GATE-03, GATE-04, GATE-06, GATE-07)
+- [ ] 14-02-PLAN.md — Expanded audit hook (all tools + token estimates) + SessionStart tier identity injection (GATE-05, GATE-06)
+- [ ] 14-03-PLAN.md — PEV config schema ([pev] section in trust.toml) + pev-workflow.md document (WFLOW-01, WFLOW-02, WFLOW-03, WFLOW-04, WFLOW-07)
+- [ ] 14-04-PLAN.md — Orchestrator PEV integration + decomposer/validator protocol updates (WFLOW-05, WFLOW-06, WFLOW-08)
 
 ## Progress
 
@@ -305,4 +311,4 @@ v2.0 in progress: 10 -> 11 -> 12 -> 13 -> 14
 | 12. Framework Bootstrap | v2.0 | Complete    | 2026-03-01 | 2026-03-01 |
 | 13. Agent Specialization, Skill Loading, and Trust | 5/5 | Complete    | 2026-03-02 | - |
 | 13.1 Move Separate Modules into a Single Repo | v2.0 | Complete    | 2026-03-02 | 2026-03-02 |
-| 14. Quality Gates and PEV Workflow | v2.0 | 0/TBD | Not started | - |
+| 14. Quality Gates and PEV Workflow | v2.0 | 0/4 | Not started | - |

@@ -23,9 +23,9 @@ See: .planning/PROJECT.md (updated 2026-03-01)
 
 ## Current Position
 
-Phase: 14 of 14 (Quality Gates and PEV Workflow) — IN PROGRESS (1 of 4 plans done)
-Status: Phase 14 plan 01 complete — three PreToolUse enforcement hooks (tier-gate, tool-allowlist, precedent-gate), 21 unit tests, settings.template.json wired
-Last activity: 2026-03-02 — Phase 14 plan 01 executed (gate hooks, tests, settings wiring)
+Phase: 14 of 14 (Quality Gates and PEV Workflow) — IN PROGRESS (3 of 4 plans done)
+Status: Phase 14 plan 03 complete — PEV config schema ([pev] in TrustConfigSchema + trust.toml), pev-workflow.md created (166 lines), 26 config tests passing
+Last activity: 2026-03-02 — Phase 14 plan 03 executed (TrustConfigSchema pev extension, trust.toml [pev] section, pev-workflow.md, 5 new config tests)
 
 Progress: [██████████] 100% (v2.0 milestone — Phase 14 in progress 1/4)
 
@@ -55,6 +55,8 @@ Progress: [██████████] 100% (v2.0 milestone — Phase 14 in 
 | 13.1 | 01 | 15min | 2 | 12 |
 | 13.1 | 02 | 24min | 1 | 7 |
 | 14 | 01 | 3min | 2 | 5 |
+| 14 | 02 | 3min | 2 | 3 |
+| 14 | 03 | 4min | 2 | 4 |
 
 ## Accumulated Context
 
@@ -73,6 +75,12 @@ Decisions are logged in PROJECT.md Key Decisions table.
 - precedent-gate fails open on error (advisory hook) — exit 0 silently vs deny used by enforcement hooks
 - tier-gate checks tier === 0 before loading trust.toml — Tier 0 always requires "ask" regardless of actor identity
 - PostToolUse updated to audit-log.js with no matcher, consolidated from Plan 14-02 to avoid parallel write conflict
+- audit-log.js is a NEW file alongside synapse-audit.js — backward compatibility preserved
+- Zod nested defaults: explicit .default({...}) required on pev field — Zod 4 does not apply nested field defaults when parent key is absent and uses .default({})
+- pev.approval_threshold (epic/feature/task/none) replaces approval.decomposition (always/strategic/none) with more granular control; both coexist for backward compat
+- pev-workflow.md as agent-consumed markdown document — orchestrator reads and follows it via reasoning; Plan 04 wires the agent to reference it
+- Multi-root config path resolution in startup hook: tries cwd, cwd/packages/framework, import.meta.url relative
+- startup hook uses inner try/catch for config reads — graceful degradation isolated from base instructions
 
 **Phase 13.1 decisions (validated):**
 - git subtree add without --squash — preserves all 16 framework commits as accessible merge history
@@ -144,5 +152,5 @@ None.
 ## Session Continuity
 
 Last session: 2026-03-02
-Stopped at: Completed Phase 14 plan 01 — three PreToolUse enforcement hooks (tier-gate.js, tool-allowlist.js, precedent-gate.js), 21 unit tests in gate-hooks.test.ts, settings.template.json wired with PreToolUse matchers and consolidated PostToolUse (audit-log.js, no matcher).
+Stopped at: Completed Phase 14 plan 03 — PEV config schema (TrustConfigSchema pev field with 5 settings), trust.toml [pev] section with defaults, pev-workflow.md (166 lines covering full lifecycle), 26 config tests passing. Awaiting plan 04 execution.
 Resume file: None

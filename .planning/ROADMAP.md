@@ -169,7 +169,7 @@ Starting at Phase 10. Dependency order is strict: 10 -> 11 -> 12 -> 13 -> 14.
 - [x] **Phase 10: Decision Tracking Tooling** - Add decisions table and three MCP tools (store_decision, query_decisions, check_precedent) to the Synapse server
 - [x] **Phase 11: Task Hierarchy Tooling** - Add tasks table and three MCP tools (create_task, update_task, get_task_tree) with cascade status propagation
 - [x] **Phase 12: Framework Bootstrap** - Create synapse-framework repo with agents/, skills/, hooks/, workflows/, commands/, config/ directories; TOML config; Synapse MCP wiring; session lifecycle; three-layer test harness (completed 2026-03-01)
-- [ ] **Phase 13: Agent Specialization, Skill Loading, and Trust** - Define 10 agent markdown files with tool allowlists, skill registry with token budgets, and Trust-Knowledge Matrix TOML config
+- [x] **Phase 13: Agent Specialization, Skill Loading, and Trust** - Define 10 agent markdown files with tool allowlists, skill registry with token budgets, and Trust-Knowledge Matrix TOML config (completed 2026-03-02)
 - [ ] **Phase 14: Quality Gates and PEV Workflow** - Implement hook-based enforcement modules and the Plan-Execute-Validate workflow with wave-based parallel execution
 
 ## Phase Details
@@ -285,5 +285,5 @@ v2.0 in progress: 10 -> 11 -> 12 -> 13 -> 14
 | 10. Decision Tracking Tooling | v2.0 | Complete    | 2026-03-01 | 2026-03-01 |
 | 11. Task Hierarchy Tooling | v2.0 | Complete    | 2026-03-01 | 2026-03-01 |
 | 12. Framework Bootstrap | v2.0 | Complete    | 2026-03-01 | 2026-03-01 |
-| 13. Agent Specialization, Skill Loading, and Trust | 4/5 | In Progress|  | - |
+| 13. Agent Specialization, Skill Loading, and Trust | 5/5 | Complete   | 2026-03-02 | - |
 | 14. Quality Gates and PEV Workflow | v2.0 | 0/TBD | Not started | - |

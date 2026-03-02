@@ -311,4 +311,4 @@ v2.0 in progress: 10 -> 11 -> 12 -> 13 -> 14
 | 12. Framework Bootstrap | v2.0 | Complete    | 2026-03-01 | 2026-03-01 |
 | 13. Agent Specialization, Skill Loading, and Trust | 5/5 | Complete    | 2026-03-02 | - |
 | 13.1 Move Separate Modules into a Single Repo | v2.0 | Complete    | 2026-03-02 | 2026-03-02 |
-| 14. Quality Gates and PEV Workflow | v2.0 | 4/4 | Complete | 2026-03-02 |
+| 14. Quality Gates and PEV Workflow | v2.0 | Complete    | 2026-03-02 | 2026-03-02 |

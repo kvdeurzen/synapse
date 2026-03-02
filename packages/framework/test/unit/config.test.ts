@@ -372,6 +372,126 @@ decomposition = "strategic"
 	});
 });
 
+describe("PEV config schema", () => {
+	let tmpDir: string;
+
+	afterEach(() => {
+		if (tmpDir) rmSync(tmpDir, { recursive: true, force: true });
+	});
+
+	test("trust.toml with [pev] section parses correctly", () => {
+		tmpDir = makeTmpDir();
+		const configPath = join(tmpDir, "trust.toml");
+		writeFileSync(
+			configPath,
+			`
+[domains]
+architecture = "co-pilot"
+
+[approval]
+decomposition = "strategic"
+
+[pev]
+approval_threshold = "feature"
+max_parallel_executors = 4
+max_retries_task = 2
+max_retries_feature = 1
+max_retries_epic = 0
+`,
+		);
+
+		const config = loadTrustConfig(configPath);
+		expect(config.pev.approval_threshold).toBe("feature");
+		expect(config.pev.max_parallel_executors).toBe(4);
+		expect(config.pev.max_retries_task).toBe(2);
+		expect(config.pev.max_retries_feature).toBe(1);
+		expect(config.pev.max_retries_epic).toBe(0);
+	});
+
+	test("trust.toml without [pev] section applies defaults (backward compatible)", () => {
+		tmpDir = makeTmpDir();
+		const configPath = join(tmpDir, "trust.toml");
+		writeFileSync(
+			configPath,
+			`
+[domains]
+architecture = "co-pilot"
+
+[approval]
+decomposition = "strategic"
+`,
+		);
+
+		const config = loadTrustConfig(configPath);
+		expect(config.pev.approval_threshold).toBe("epic");
+		expect(config.pev.max_parallel_executors).toBe(3);
+		expect(config.pev.max_retries_task).toBe(3);
+		expect(config.pev.max_retries_feature).toBe(2);
+		expect(config.pev.max_retries_epic).toBe(1);
+	});
+
+	test("invalid pev.approval_threshold rejected", () => {
+		tmpDir = makeTmpDir();
+		const configPath = join(tmpDir, "trust.toml");
+		writeFileSync(
+			configPath,
+			`
+[domains]
+architecture = "co-pilot"
+
+[pev]
+approval_threshold = "invalid"
+`,
+		);
+
+		let threwConfigError = false;
+		try {
+			loadTrustConfig(configPath);
+		} catch (err) {
+			if (err instanceof ConfigError) threwConfigError = true;
+		}
+		expect(threwConfigError).toBe(true);
+	});
+
+	test("pev.max_parallel_executors must be positive (min 1)", () => {
+		tmpDir = makeTmpDir();
+		const configPath = join(tmpDir, "trust.toml");
+		writeFileSync(
+			configPath,
+			`
+[pev]
+max_parallel_executors = 0
+`,
+		);
+
+		let threwConfigError = false;
+		try {
+			loadTrustConfig(configPath);
+		} catch (err) {
+			if (err instanceof ConfigError) threwConfigError = true;
+		}
+		expect(threwConfigError).toBe(true);
+	});
+
+	test("pev.approval_threshold accepts all valid values", () => {
+		const validValues = ["epic", "feature", "task", "none"] as const;
+		for (const value of validValues) {
+			tmpDir = makeTmpDir();
+			const configPath = join(tmpDir, "trust.toml");
+			writeFileSync(
+				configPath,
+				`
+[pev]
+approval_threshold = "${value}"
+`,
+			);
+			const config = loadTrustConfig(configPath);
+			expect(config.pev.approval_threshold).toBe(value);
+			rmSync(tmpDir, { recursive: true, force: true });
+		}
+	});
+});
+
 describe("AgentsConfigSchema extensions", () => {
 	let tmpDir: string;
 

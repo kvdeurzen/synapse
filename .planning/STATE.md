@@ -23,12 +23,11 @@ See: .planning/PROJECT.md (updated 2026-03-01)
 
 ## Current Position
 
-Phase: 12 of 14 (Orchestrator Bootstrap) — COMPLETE (all 3 plans done)
-Phase: 13 of 14 (Agent Specialization) — COMPLETE (all 5 plans done)
-Status: Phase 13 complete — 10 agent markdown files, skill loader, trust matrix, anti-drift tests
-Last activity: 2026-03-02 — Phase 13 all 5 plans executed (10 agents, 7 skills, anti-drift tests, 65 tests pass)
+Phase: 13.1 of 14 (Move Modules Single Repo) — IN PROGRESS (1 of 2 plans done)
+Status: Phase 13.1 plan 01 complete — git scaffold done: packages/server/ (git mv) + packages/framework/ (git subtree), root workspace config (package.json, tsconfig.base.json, biome.json)
+Last activity: 2026-03-02 — Phase 13.1 plan 01 executed (monorepo structure + root config)
 
-Progress: [████████░░] 85% (v2.0 milestone — Phase 13 complete, 13/13 plans done, Phase 14 remaining)
+Progress: [████████░░] 86% (v2.0 milestone — Phase 13.1 plan 1/2 done)
 
 ## Performance Metrics
 
@@ -53,6 +52,7 @@ Progress: [████████░░] 85% (v2.0 milestone — Phase 13 comp
 | 13 | 03 | 5min | 2 | 4 |
 | 13 | 04 | 5min | 2 | 6 |
 | 13 | 05 | 5min | 2 | 2 |
+| 13.1 | 01 | 15min | 2 | 12 |
 
 ## Accumulated Context
 
@@ -66,6 +66,13 @@ Decisions are logged in PROJECT.md Key Decisions table.
 - Skills as prompt injection, not code plugins (simpler, no runtime code loading)
 - Trust matrix as YAML config file, not DB table (explicit, auditable)
 - Clean Synapse/Orchestrator process boundary: data layer vs control layer
+
+**Phase 13.1 decisions (validated):**
+- git subtree add without --squash — preserves all 16 framework commits as accessible merge history
+- framework peerDependencies does NOT include @synapse/server — MCP protocol boundary intentional
+- noUncheckedIndexedAccess and exactOptionalPropertyTypes in base tsconfig (both packages pass at these settings)
+- framework tsconfig keeps allowImportingTsExtensions: true and noEmit: true as package-specific overrides
+- Bun workspace monorepo layout: packages/server/ and packages/framework/ under packages/*
 
 **Phase 13 decisions (in progress):**
 - tier_authority uses z.record(z.string(), z.array(z.number().int().min(0).max(3))) — validates tier values 0-3 at schema level
@@ -127,5 +134,5 @@ None.
 ## Session Continuity
 
 Last session: 2026-03-02
-Stopped at: Completed Phase 13 — all 5 plans (config schemas, skill loader, 4 Opus agents, 6 Sonnet agents, skill wiring + anti-drift tests). 65 tests passing.
+Stopped at: Completed Phase 13.1 plan 01 — git scaffold (packages/server/ move, packages/framework/ subtree add) + root workspace config. Plan 02 remains (bun install, path updates, test verification).
 Resume file: None

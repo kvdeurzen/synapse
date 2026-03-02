@@ -267,7 +267,7 @@ Plans:
 **Plans**: 2 plans
 
 Plans:
-- [ ] 13.1-01-PLAN.md — Git scaffold (server move + framework subtree add) and root workspace config files
+- [x] 13.1-01-PLAN.md — Git scaffold (server move + framework subtree add) and root workspace config files
 - [ ] 13.1-02-PLAN.md — Path reference updates, bun install, test verification, CLAUDE.md
 
 ### Phase 14: Quality Gates and PEV Workflow
@@ -304,5 +304,5 @@ v2.0 in progress: 10 -> 11 -> 12 -> 13 -> 14
 | 11. Task Hierarchy Tooling | v2.0 | Complete    | 2026-03-01 | 2026-03-01 |
 | 12. Framework Bootstrap | v2.0 | Complete    | 2026-03-01 | 2026-03-01 |
 | 13. Agent Specialization, Skill Loading, and Trust | 5/5 | Complete    | 2026-03-02 | - |
-| 13.1 Move Separate Modules into a Single Repo | v2.0 | 0/2 | Not started (INSERTED) | - |
+| 13.1 Move Separate Modules into a Single Repo | v2.0 | 1/2 | In Progress | - |
 | 14. Quality Gates and PEV Workflow | v2.0 | 0/TBD | Not started | - |

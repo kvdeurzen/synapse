@@ -40,7 +40,7 @@ allowed_tools = [
 [agents.architect]
 model = "opus"
 tier = 1
-skills = []
+skills = ["typescript"]
 allowed_tools = [
   "Read",
   "Bash",
@@ -59,7 +59,7 @@ allowed_tools = [
 
 [agents.decomposer]
 model = "opus"
-skills = []
+skills = ["typescript"]
 allowed_tools = [
   "Read",
   "Bash",
@@ -92,7 +92,7 @@ allowed_tools = [
 [agents.executor]
 model = "sonnet"
 tier = 3
-skills = []
+skills = ["typescript", "bun"]
 allowed_tools = [
   "Read",
   "Write",
@@ -111,7 +111,7 @@ allowed_tools = [
 
 [agents.validator]
 model = "sonnet"
-skills = []
+skills = ["typescript", "vitest"]
 allowed_tools = [
   "Read",
   "Bash",
@@ -127,7 +127,7 @@ allowed_tools = [
 
 [agents.integration-checker]
 model = "sonnet"
-skills = []
+skills = ["typescript"]
 allowed_tools = [
   "Read",
   "Bash",
@@ -144,7 +144,7 @@ allowed_tools = [
 
 [agents.debugger]
 model = "sonnet"
-skills = []
+skills = ["typescript", "vitest"]
 allowed_tools = [
   "Read",
   "Bash",
@@ -160,7 +160,7 @@ allowed_tools = [
 
 [agents.codebase-analyst]
 model = "sonnet"
-skills = []
+skills = ["typescript"]
 allowed_tools = [
   "Read",
   "Bash",

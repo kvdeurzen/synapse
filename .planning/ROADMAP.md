@@ -243,7 +243,14 @@ Plans:
   3. The skill registry reads markdown skill files from skills/, maps project attributes to skill bundles via config/agents.toml, and injects skill content into agent context — per-agent skill budget enforced (max 2K tokens per skill, max 3 skills for Executor)
   4. Skill content hashes are validated before injection to prevent tampered skill files from executing
   5. The Trust-Knowledge Matrix in config/trust.toml defines per-domain autonomy levels (autopilot/co-pilot/advisory), a decision tier authority map per agent role, and configurable approval tiers for decomposition levels
-**Plans**: TBD
+**Plans**: 5 plans
+
+Plans:
+- [ ] 13-01: Config schema extension — trust.toml tier_authority + agent_overrides, agents.toml allowed_tools, Zod validation, unit tests (TRUST-01, TRUST-02, TRUST-03, TRUST-04, TRUST-05, TRUST-06, ROLE-12)
+- [ ] 13-02: Skill loader + 7 built-in skill directories — src/skills.ts with token validation, typescript/react/python/vitest/sql/bun/tailwind SKILL.md files (SKILL-01, SKILL-02, SKILL-03, SKILL-04, SKILL-05, SKILL-06)
+- [ ] 13-03: 4 Opus agent definitions — product-strategist, architect, decomposer, plan-reviewer with verbose prompts (ROLE-02, ROLE-04, ROLE-05, ROLE-06)
+- [ ] 13-04: 6 Sonnet agent definitions — researcher, executor, validator, integration-checker, debugger, codebase-analyst with concise prompts (ROLE-03, ROLE-07, ROLE-08, ROLE-09, ROLE-10, ROLE-11)
+- [ ] 13-05: Integration wiring — agents.toml skill assignments, anti-drift tests for config/agents/skills sync (ROLE-01, ROLE-13)
 
 ### Phase 14: Quality Gates and PEV Workflow
 **Goal**: Hook-based enforcement in .claude/hooks/ prevents agents from exceeding their authority; the Plan-Execute-Validate workflow orchestrates progressive decomposition with wave-based parallel execution; and the complete system can run a user goal through task decomposition, execution, and validation end-to-end with full rollback support
@@ -278,5 +285,5 @@ v2.0 in progress: 10 -> 11 -> 12 -> 13 -> 14
 | 10. Decision Tracking Tooling | v2.0 | Complete    | 2026-03-01 | 2026-03-01 |
 | 11. Task Hierarchy Tooling | v2.0 | Complete    | 2026-03-01 | 2026-03-01 |
 | 12. Framework Bootstrap | v2.0 | Complete    | 2026-03-01 | 2026-03-01 |
-| 13. Agent Specialization, Skill Loading, and Trust | v2.0 | 0/TBD | Not started | - |
+| 13. Agent Specialization, Skill Loading, and Trust | v2.0 | 0/5 | Not started | - |
 | 14. Quality Gates and PEV Workflow | v2.0 | 0/TBD | Not started | - |

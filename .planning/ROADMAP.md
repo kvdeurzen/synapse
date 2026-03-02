@@ -254,11 +254,21 @@ Plans:
 - [ ] 13-05: Integration wiring — agents.toml skill assignments, anti-drift tests for config/agents/skills sync (ROLE-01, ROLE-13)
 
 ### Phase 13.1: Move Separate Modules into a Single Repo (INSERTED)
-**Goal**: Move separate modules into a single repo
+**Goal**: Consolidate synapse-server and synapse-framework from two separate repositories into a single Bun workspace monorepo at packages/server/ and packages/framework/, preserving git history, with shared tsconfig/biome/deps hoisted to root, all 677+ tests passing, and updated path references throughout
 **Depends on**: Phase 13
+**Requirements**: MONO-01, MONO-02, MONO-03, MONO-04, MONO-05, MONO-06
 **Success Criteria** (what must be TRUE):
-  TBD — to be defined during /gsd:plan-phase
-**Plans**: TBD
+  1. packages/server/ contains all former synapse-server files and packages/framework/ contains all former synapse-framework files with git history preserved
+  2. Root package.json declares workspaces: ["packages/*"] with shared deps (zod, smol-toml) hoisted; aggregate test/lint scripts work
+  3. Shared tsconfig.base.json at root; both packages extend it
+  4. Single biome.json at root for consistent lint/format
+  5. All path references updated: settings.template.json hooks and MCP server paths, integration test server path, CLAUDE.md with monorepo paths
+  6. All tests pass: bun run test from root (612+ server + 65+ framework)
+**Plans**: 2 plans
+
+Plans:
+- [ ] 13.1-01-PLAN.md — Git scaffold (server move + framework subtree add) and root workspace config files
+- [ ] 13.1-02-PLAN.md — Path reference updates, bun install, test verification, CLAUDE.md
 
 ### Phase 14: Quality Gates and PEV Workflow
 **Goal**: Hook-based enforcement in .claude/hooks/ prevents agents from exceeding their authority; the Plan-Execute-Validate workflow orchestrates progressive decomposition with wave-based parallel execution; and the complete system can run a user goal through task decomposition, execution, and validation end-to-end with full rollback support
@@ -294,5 +304,5 @@ v2.0 in progress: 10 -> 11 -> 12 -> 13 -> 14
 | 11. Task Hierarchy Tooling | v2.0 | Complete    | 2026-03-01 | 2026-03-01 |
 | 12. Framework Bootstrap | v2.0 | Complete    | 2026-03-01 | 2026-03-01 |
 | 13. Agent Specialization, Skill Loading, and Trust | 5/5 | Complete    | 2026-03-02 | - |
-| 13.1 Move Separate Modules into a Single Repo | v2.0 | 0/TBD | Not started (INSERTED) | - |
+| 13.1 Move Separate Modules into a Single Repo | v2.0 | 0/2 | Not started (INSERTED) | - |
 | 14. Quality Gates and PEV Workflow | v2.0 | 0/TBD | Not started | - |

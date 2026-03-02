@@ -2,31 +2,15 @@
 
 ## What This Is
 
-Synapse is an MCP-based platform for AI agent coordination. The data layer (v1.0) provides 18 MCP tools for storing, querying, and searching project knowledge and source code via LanceDB with semantic/hybrid search. The coordination layer (v2.0) adds an orchestrator built on the Claude Agent SDK that coordinates 10 specialized agents through Synapse's MCP tools — with decision tracking as "case law," recursive task decomposition, tiered authority, and a skill loading system for project-specific behavior. Built as an open-source tool for the AI-assisted development community.
+Synapse is an MCP-based platform for AI agent coordination. It consists of two layers: the **data layer** (v1.0) provides 18 MCP tools for storing, querying, and searching project knowledge and source code via LanceDB with semantic/hybrid search. The **coordination layer** (v2.0) provides a Claude Code framework with 10 specialized agents, decision precedent tracking as "case law," recursive task decomposition (Epic/Feature/Component/Task), tiered authority enforcement via hooks, a skill loading system for project-specific behavior, and a Plan-Execute-Validate workflow with wave-based parallel execution. Built as an open-source tool for the AI-assisted development community.
 
 ## Core Value
 
 Agents get the right context for any task — from both project decisions and actual code — without wasting tokens on irrelevant content. The orchestrator ensures agents respect established decisions and decompose work to context-window-sized executable units.
 
-## Current Milestone: v2.0 Agentic Framework
-
-**Goal:** Build a coordination layer on top of Synapse's data layer — 10 specialized agents orchestrated via the Claude Agent SDK, with decision precedent tracking, recursive task decomposition, and tiered authority enforcement.
-
-**Target features:**
-- Decision tracking system ("Case Law") with semantic precedent search
-- Recursive task hierarchy (Epic → Feature → Component → Task)
-- Orchestrator process using Claude Agent SDK
-- 10 specialized agents with distinct authority and tool restrictions
-- Skill loading system for project-specific agent behavior
-- Config-based Trust-Knowledge Matrix for adaptive oversight
-- Hook-based quality gates and tier enforcement
-- Plan-Execute-Validate workflow
-
 ## Requirements
 
 ### Validated
-
-<!-- Shipped and confirmed valuable in v1.0. -->
 
 - ✓ LanceDB embedded database with 6 tables (documents, doc_chunks, code_chunks, relationships, project_meta, activity_log) — v1.0
 - ✓ Embedding service via Ollama (nomic-embed-text, 768-dim) with fail-fast on unavailability — v1.0
@@ -45,44 +29,41 @@ Agents get the right context for any task — from both project decisions and ac
 - ✓ Schema foundations for v2 decomposition (parent_id, depth, decision_type fields) — v1.0
 - ✓ MCP stdio transport with stderr-only logging — v1.0
 - ✓ Zod-validated tool inputs — v1.0
+- ✓ Decision tracking with semantic precedent search (store_decision, query_decisions, check_precedent) — v2.0
+- ✓ Recursive task hierarchy with cascade status propagation and cycle detection (create_task, update_task, get_task_tree) — v2.0
+- ✓ Claude Code framework with agents/, skills/, hooks/, workflows/, config/ directories and TOML config validation — v2.0
+- ✓ 10 specialized agents (Product Strategist, Researcher, Architect, Decomposer, Plan Reviewer, Executor, Validator, Integration Checker, Debugger, Codebase Analyst) as markdown system prompts — v2.0
+- ✓ Skill loading system with token budgets, hash validation, and per-agent skill assignment via agents.toml — v2.0
+- ✓ Trust-Knowledge Matrix (per-domain autonomy levels, tier authority map, configurable approval tiers) — v2.0
+- ✓ Hook-based quality gates: fail-closed tier enforcement, tool allowlist enforcement, advisory precedent checking, all-tool audit logging — v2.0
+- ✓ Plan-Execute-Validate workflow with progressive decomposition, wave-based parallel execution, failure escalation ladder, and rollback support — v2.0
 
 ### Active
 
-<!-- Current scope — v2.0 Agentic Framework. See REQUIREMENTS.md for REQ-IDs. -->
-
-- [ ] Decision tracking: `decisions` LanceDB table with semantic search on rationale
-- [ ] Decision tools: store_decision, query_decisions, check_precedent
-- [ ] Task hierarchy: `tasks` LanceDB table with recursive parent_id
-- [ ] Task tools: create_task, update_task, get_task_tree
-- [ ] Orchestrator process using Claude Agent SDK (`@anthropic-ai/claude-agent-sdk`)
-- [ ] 10 specialized agents: Product Strategist, Researcher, Architect, Decomposer, Plan Reviewer, Executor, Validator, Integration Checker, Debugger, Codebase Analyst
-- [ ] Agent tier authority enforcement (Tier 0-3 decision hierarchy)
-- [ ] Skill loading system: generic agents + project-specific skills injected at runtime
-- [ ] Config-based Trust-Knowledge Matrix (per-domain autonomy levels)
-- [ ] Hook-based quality gates (tier enforcement, precedent checking, tool audit)
-- [ ] Plan-Execute-Validate (PEV) workflow with wave-based parallel execution
+(No active requirements — next milestone not yet planned)
 
 ### Out of Scope
 
 - GSD/BMad import tools — future milestone
 - MCP resources and prompt templates — future milestone
 - Additional code languages beyond TS/Python/Rust — future milestone
-- Automated preference learning from past decisions — v2.0 uses explicit config, not ML
+- Automated preference learning from past decisions — explicit config is more predictable
 - Real-time collaboration (multiple users) — single-user orchestrator for now
 - Web UI or dashboard — CLI/MCP interface only
 - Cloud deployment / hosted service — local-first
+- Standalone Agent SDK orchestrator — Claude Code framework chosen; Agent SDK decouple is a future option
 
 ## Context
 
-**Shipped v1.0 (2026-03-01):** 18 MCP tools, 6 LanceDB tables, 495 tests passing, 18,561 LOC TypeScript. Synapse MCP server is fully operational as a data layer. 50/50 requirements satisfied, 9 phases complete. See `.planning/MILESTONES.md` and `.planning/milestones/v1.0-ROADMAP.md` for full details.
+**Shipped v1.0 (2026-03-01):** 18 MCP tools, 6 LanceDB tables, 495 tests passing, 18,561 LOC TypeScript. Complete data layer. 50/50 requirements satisfied. See `.planning/MILESTONES.md`.
 
-**Problem being solved:** The v1.0 data layer gives agents memory. The v2.0 coordination layer gives agents structure — knowing *what* to work on, *who* should do it, *what decisions* to respect, and *when* to ask the user. Without this, agents either operate in isolation (no coordination) or dump everything into a single context window (no scalability).
+**Shipped v2.0 (2026-03-02):** Coordination layer added — 10 specialized agents, 6 hook scripts, 7 skill directories, TOML config system, PEV workflow. 708 tests passing (612 server + 96 framework), 14,661 LOC total. 65/65 requirements satisfied. See `.planning/MILESTONES.md`.
 
-**Architecture:** Two-process design. Orchestrator spawns Synapse as an MCP subprocess via the Agent SDK's `mcpServers` config. Clean boundary: Synapse stores data, orchestrator controls workflow/authority/agent lifecycle.
+**Architecture:** Bun workspace monorepo with `packages/server/` (data layer) and `packages/framework/` (coordination layer). Server runs as an MCP subprocess via stdio. Framework is a Claude Code native integration — agents, skills, hooks, and workflows are files that Claude Code loads directly. Clean boundary: server stores data, framework controls workflow/authority/agent lifecycle.
 
-**Agent roster:** 10 agents inspired by GSD's 11-agent architecture. Key patterns adopted: research-before-action, plan-then-verify loop (max 3 iterations), wave-based parallel execution, progressive verification (per-task → per-feature → per-epic → per-project).
+**Agent roster:** 10 agents with narrow cognitive focus. 4 Opus-tier (Product Strategist, Architect, Decomposer, Plan Reviewer) for high-judgment tasks, 6 Sonnet-tier (Researcher, Executor, Validator, Integration Checker, Debugger, Codebase Analyst) for execution tasks. Each has distinct allowed_tools lists enforced by hooks.
 
-**Skill loading:** Agent roles are generic templates. Skills are project-specific capabilities (domain knowledge, quality criteria, vocabulary) injected at runtime via the skill registry. This makes the framework domain-agnostic.
+**Skill loading:** Agent roles are generic templates. Skills are project-specific capabilities (domain knowledge, quality criteria, vocabulary) injected at spawn time via the skill registry in agents.toml. 7 built-in skills: typescript, react, python, vitest, sql, bun, tailwind.
 
 **Ollama:** Running locally with nomic-embed-text model available.
 
@@ -91,11 +72,11 @@ Agents get the right context for any task — from both project decisions and ac
 - **Embedding provider**: Ollama only — fail-fast, no fallback
 - **Transport**: MCP stdio — standard for Claude Code, no HTTP server
 - **Storage**: LanceDB embedded — zero-config, no separate database process
-- **Code languages**: TypeScript, Python, Rust only (v1.0 scope, unchanged)
+- **Code languages**: TypeScript, Python, Rust only
 - **Vector dimensions**: 768 (nomic-embed-text) — all vectors must use same model
-- **Agent SDK**: `@anthropic-ai/claude-agent-sdk` — no custom agent runtime
-- **Trust matrix**: Config file, not DB table — simple and explicit
-- **Orchestrator**: Same monorepo as Synapse, separate `orchestrator/` package
+- **Framework**: Claude Code native — agents/skills/hooks/workflows as files, not standalone process
+- **Trust matrix**: TOML config file, not DB table — simple and explicit
+- **Monorepo**: Bun workspace with packages/server/ and packages/framework/
 
 ## Key Decisions
 
@@ -112,11 +93,14 @@ Agents get the right context for any task — from both project decisions and ac
 | Auto relationships from AST imports | Knowledge graph stays fresh without manual maintenance; imports are ground truth | ✓ Good |
 | Include v2 schema foundations in v1 | parent_id, depth, decision_type fields now; cheaper than migration later | ✓ Good |
 | Open source from the start | Building for the community, not just personal use | ✓ Good |
-| Claude Agent SDK over custom runtime | Battle-tested, maintained by Anthropic, provides query(), subagents, hooks, MCP client | — Pending |
-| 10 agents over 3 | Narrow focus per agent (GSD pattern); distinct cognitive tasks need distinct prompts/constraints | — Pending |
-| Skills as prompt injection, not code plugins | Simpler, no runtime code loading; skills are system prompt content + quality criteria | — Pending |
-| Trust matrix as config, not DB table | Explicit, auditable, no premature complexity; can migrate to DB later if needed | — Pending |
-| Synapse/Orchestrator boundary: data vs control | Synapse stores data without knowing about agents; orchestrator knows about agents without owning storage | — Pending |
+| Claude Code framework over standalone Agent SDK | Native integration with Claude Code subscription; agents/skills/hooks load as files; avoids separate process management | ✓ Good |
+| 10 agents over 3 | Narrow focus per agent (GSD pattern); distinct cognitive tasks need distinct prompts/constraints | ✓ Good |
+| Skills as prompt injection, not code plugins | Simpler, no runtime code loading; skills are markdown content + quality criteria | ✓ Good |
+| Trust matrix as TOML config, not DB table | Explicit, auditable, no premature complexity; can migrate to DB later if needed | ✓ Good |
+| Synapse/Framework boundary: data vs control | Server stores data without knowing about agents; framework knows about agents without owning storage | ✓ Good |
+| Fail-closed enforcement hooks, fail-open advisory hooks | Enforcement (tier-gate, tool-allowlist) must deny on any error; advisory (precedent-gate) should not block on error | ✓ Good |
+| PEV workflow as agent-consumed markdown | Orchestrator reads and follows pev-workflow.md via reasoning, not runtime code | ✓ Good |
+| Bun workspace monorepo | Shared deps hoisted, single test/lint commands, shared tsconfig.base.json | ✓ Good |
 
 ---
-*Last updated: 2026-03-01 after v1.0 milestone completion*
+*Last updated: 2026-03-02 after v2.0 milestone completion*

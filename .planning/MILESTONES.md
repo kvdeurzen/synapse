@@ -34,3 +34,37 @@ Complete MCP data layer with 18 tools for storing, querying, and searching proje
 - [Audit](milestones/v1.0-MILESTONE-AUDIT.md)
 
 ---
+
+## v2.0 Agentic Framework
+
+**Shipped:** 2026-03-02
+**Phases:** 6 (Phases 10-14, plus 13.1 inserted) | **Plans:** 19 | **Tests:** 708 (612 server + 96 framework)
+**LOC:** 14,661 TypeScript (10,025 server + 4,636 framework)
+**Timeline:** 4 days (2026-02-27 → 2026-03-02)
+**Commits:** 94
+
+### Delivered
+
+Coordination layer on top of Synapse's data layer — 10 specialized agents orchestrated as a Claude Code framework with decision precedent tracking, recursive task decomposition, configurable trust tiers, hook-based authority enforcement, and Plan-Execute-Validate workflow.
+
+### Key Accomplishments
+
+1. Decision tracking with semantic precedent search — store_decision, query_decisions, check_precedent tools with 0.85+ similarity threshold
+2. Recursive task hierarchy — create_task, update_task, get_task_tree with cascade status propagation and cycle detection (Epic/Feature/Component/Task)
+3. Framework bootstrap — agents/, skills/, hooks/, workflows/, config/ with TOML validation, three-layer test harness, MCP integration client
+4. 10 specialized agents with trust boundaries — markdown agent definitions, skill loader with token budgets, Trust-Knowledge Matrix config
+5. Monorepo consolidation — synapse-server + synapse-framework into Bun workspace monorepo with 708 tests passing
+6. Quality gates and PEV workflow — fail-closed enforcement hooks, all-tool audit logging, Plan-Execute-Validate workflow with wave-based parallel execution
+
+### Tech Debt Carried Forward
+
+- v1.0 escapeSQL duplication and project_meta.created_at overwrite still present
+- v1.0 INT-02 (AST import edges use file paths vs ULIDs) still open
+- REQUIREMENTS.md checkbox tracking fell behind during execution (fixed during archival)
+
+### Archives
+
+- [Roadmap](milestones/v2.0-ROADMAP.md)
+- [Requirements](milestones/v2.0-REQUIREMENTS.md)
+
+---

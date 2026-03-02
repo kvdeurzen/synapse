@@ -25,13 +25,36 @@
         ]
       }
     ],
-    "PostToolUse": [
+    "PreToolUse": [
+      {
+        "matcher": "mcp__synapse__store_decision",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node packages/framework/hooks/tier-gate.js"
+          },
+          {
+            "type": "command",
+            "command": "node packages/framework/hooks/precedent-gate.js"
+          }
+        ]
+      },
       {
         "matcher": "mcp__synapse__.*",
         "hooks": [
           {
             "type": "command",
-            "command": "node packages/framework/hooks/synapse-audit.js"
+            "command": "node packages/framework/hooks/tool-allowlist.js"
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node packages/framework/hooks/audit-log.js"
           }
         ]
       }

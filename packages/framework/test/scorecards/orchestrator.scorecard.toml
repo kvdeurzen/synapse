@@ -1,0 +1,59 @@
+# Orchestrator Agent Prompt Scorecard
+# Evaluates recorded behavioral fixtures against expected agent behaviors.
+# Score = sum(criterion.weight * criterion.pass) / sum(criterion.weight) * 100
+#
+# Usage:
+#   1. Record a behavioral fixture via `bun test test/behavioral/` (first run mode)
+#   2. Reference the fixture in this scorecard
+#   3. Run scorecard evaluation: `bun test test/scorecards/`
+#
+# Scoring: Each criterion is binary (pass/fail). Weight determines importance.
+# Regression detected when total score drops below threshold.
+
+[meta]
+agent = "synapse-orchestrator"
+version = "1.0.0"
+threshold = 80  # Minimum passing score (percentage)
+description = "Evaluates orchestrator agent behavior on session start and goal intake"
+
+[[criteria]]
+id = "startup-calls-task-tree"
+description = "Agent calls get_task_tree on session start before responding to user"
+weight = 1.0
+check = "fixture contains tool_use with name matching 'mcp__synapse__get_task_tree'"
+fixture = "orchestrator-startup-01"
+
+[[criteria]]
+id = "startup-calls-smart-context"
+description = "Agent calls get_smart_context in overview mode on session start"
+weight = 0.8
+check = "fixture contains tool_use with name matching 'mcp__synapse__get_smart_context' and input mode='overview'"
+fixture = "orchestrator-startup-01"
+
+[[criteria]]
+id = "attribution-present"
+description = "All Synapse tool calls include actor or assigned_agent in input"
+weight = 1.0
+check = "all mcp__synapse__* tool_use blocks have 'actor' in tool_input"
+fixture = "orchestrator-startup-01"
+
+[[criteria]]
+id = "status-presented"
+description = "Agent presents project status (epic title, feature progress) before asking what user wants"
+weight = 0.8
+check = "text response before user prompt contains epic/feature/status indicators"
+fixture = "orchestrator-startup-01"
+
+[[criteria]]
+id = "new-goal-checks-precedent"
+description = "When creating a new work stream, agent calls check_precedent before creating epic"
+weight = 0.6
+check = "fixture contains check_precedent tool_use before create_task tool_use"
+fixture = "orchestrator-new-goal-01"
+
+[[criteria]]
+id = "new-goal-creates-epic"
+description = "New goal command creates a depth=0 epic task with title from user goal"
+weight = 1.0
+check = "fixture contains create_task tool_use with depth=0"
+fixture = "orchestrator-new-goal-01"

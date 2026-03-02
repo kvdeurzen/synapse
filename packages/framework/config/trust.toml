@@ -1,0 +1,35 @@
+# Trust matrix -- per-domain autonomy levels
+# Values: "autopilot" | "co-pilot" | "advisory"
+
+[domains]
+architecture = "co-pilot"
+dependencies = "co-pilot"
+implementation = "autopilot"
+testing = "autopilot"
+documentation = "autopilot"
+product_strategy = "advisory"
+
+[approval]
+# Decomposition approval tiers:
+#   "always" (advisory) -- user approves at every level
+#   "strategic" (co-pilot) -- user approves epics, orchestrator handles features->tasks
+#   "none" (autopilot) -- fully autonomous, user sees progress
+decomposition = "strategic"
+
+# Decision tier authority -- which tiers each agent can store decisions at
+# Tier 0 = Product Strategy, Tier 1 = Architecture, Tier 2 = Functional Design, Tier 3 = Execution
+[tier_authority]
+product-strategist = [0, 1]
+architect = [1, 2]
+decomposer = [2]
+plan-reviewer = []
+executor = [3]
+validator = []
+integration-checker = []
+researcher = []
+debugger = []
+codebase-analyst = []
+
+# Per-agent domain overrides (optional -- uncomment to customize)
+# [agent_overrides.executor.domains]
+# architecture = "advisory"

@@ -1,0 +1,12 @@
+# Synapse MCP server connection configuration
+# Edit paths to match your local environment
+
+[server]
+db = "/path/to/your/synapse.db"
+ollama_url = "http://localhost:11434"
+embed_model = "nomic-embed-text"
+
+[connection]
+transport = "stdio"
+command = "bun"
+args = ["run", "/path/to/synapse-server/src/index.ts"]

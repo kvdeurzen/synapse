@@ -60,6 +60,23 @@ export const TrustConfigSchema = z.object({
 			}),
 		)
 		.default({}),
+	pev: z
+		.object({
+			approval_threshold: z
+				.enum(["epic", "feature", "task", "none"])
+				.default("epic"),
+			max_parallel_executors: z.number().int().min(1).default(3),
+			max_retries_task: z.number().int().min(0).default(3),
+			max_retries_feature: z.number().int().min(0).default(2),
+			max_retries_epic: z.number().int().min(0).default(1),
+		})
+		.default({
+			approval_threshold: "epic",
+			max_parallel_executors: 3,
+			max_retries_task: 3,
+			max_retries_feature: 2,
+			max_retries_epic: 1,
+		}),
 });
 
 export type TrustConfig = z.infer<typeof TrustConfigSchema>;

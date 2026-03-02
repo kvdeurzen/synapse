@@ -33,3 +33,18 @@ codebase-analyst = []
 # Per-agent domain overrides (optional -- uncomment to customize)
 # [agent_overrides.executor.domains]
 # architecture = "advisory"
+
+# PEV workflow control -- approval thresholds and retry caps
+[pev]
+# Approval threshold: "epic" | "feature" | "task" | "none"
+# "epic" = user approves feature breakdown, execution below is autonomous
+# "feature" = user approves task decomposition per feature
+# "task" = user approves each task plan
+# "none" = fully autonomous end-to-end
+approval_threshold = "epic"
+# Maximum parallel executor subagents per wave
+max_parallel_executors = 3
+# Maximum retry attempts per layer before escalation
+max_retries_task = 3
+max_retries_feature = 2
+max_retries_epic = 1

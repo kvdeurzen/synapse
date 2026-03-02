@@ -275,3 +275,167 @@ describe("default config files pass validation", () => {
 		expect(() => loadAgentsConfig(configPath)).not.toThrow();
 	});
 });
+
+describe("TrustConfigSchema extensions", () => {
+	let tmpDir: string;
+
+	afterEach(() => {
+		if (tmpDir) rmSync(tmpDir, { recursive: true, force: true });
+	});
+
+	test("accepts trust.toml with [tier_authority] section mapping agent names to tier arrays", () => {
+		tmpDir = makeTmpDir();
+		const configPath = join(tmpDir, "trust.toml");
+		writeFileSync(
+			configPath,
+			`
+[domains]
+architecture = "co-pilot"
+
+[approval]
+decomposition = "strategic"
+
+[tier_authority]
+product-strategist = [0, 1]
+executor = [3]
+validator = []
+`,
+		);
+
+		const config = loadTrustConfig(configPath);
+		expect(config.tier_authority["product-strategist"]).toEqual([0, 1]);
+		expect(config.tier_authority["executor"]).toEqual([3]);
+		expect(config.tier_authority["validator"]).toEqual([]);
+	});
+
+	test("accepts trust.toml with [agent_overrides] section for per-agent domain overrides", () => {
+		tmpDir = makeTmpDir();
+		const configPath = join(tmpDir, "trust.toml");
+		writeFileSync(
+			configPath,
+			`
+[domains]
+architecture = "co-pilot"
+
+[approval]
+decomposition = "strategic"
+
+[agent_overrides.executor.domains]
+architecture = "advisory"
+`,
+		);
+
+		const config = loadTrustConfig(configPath);
+		expect(config.agent_overrides["executor"]?.domains?.["architecture"]).toBe("advisory");
+	});
+
+	test("rejects tier values outside 0-3 range", () => {
+		tmpDir = makeTmpDir();
+		const configPath = join(tmpDir, "trust.toml");
+		writeFileSync(
+			configPath,
+			`
+[domains]
+architecture = "co-pilot"
+
+[tier_authority]
+executor = [4]
+`,
+		);
+
+		let threwConfigError = false;
+		try {
+			loadTrustConfig(configPath);
+		} catch (err) {
+			if (err instanceof ConfigError) threwConfigError = true;
+		}
+		expect(threwConfigError).toBe(true);
+	});
+
+	test("defaults tier_authority and agent_overrides to empty objects when sections absent (backward-compatible)", () => {
+		tmpDir = makeTmpDir();
+		const configPath = join(tmpDir, "trust.toml");
+		writeFileSync(
+			configPath,
+			`
+[domains]
+architecture = "co-pilot"
+
+[approval]
+decomposition = "strategic"
+`,
+		);
+
+		const config = loadTrustConfig(configPath);
+		expect(config.tier_authority).toEqual({});
+		expect(config.agent_overrides).toEqual({});
+	});
+});
+
+describe("AgentsConfigSchema extensions", () => {
+	let tmpDir: string;
+
+	afterEach(() => {
+		if (tmpDir) rmSync(tmpDir, { recursive: true, force: true });
+	});
+
+	test("accepts agents.toml with allowed_tools string arrays per agent", () => {
+		tmpDir = makeTmpDir();
+		const configPath = join(tmpDir, "agents.toml");
+		writeFileSync(
+			configPath,
+			`
+[agents.executor]
+model = "sonnet"
+tier = 3
+skills = []
+allowed_tools = ["Read", "Write", "Edit", "Bash", "mcp__synapse__update_task"]
+`,
+		);
+
+		const config = loadAgentsConfig(configPath);
+		expect(config.agents.executor?.allowed_tools).toEqual([
+			"Read",
+			"Write",
+			"Edit",
+			"Bash",
+			"mcp__synapse__update_task",
+		]);
+	});
+
+	test("defaults allowed_tools to empty array when absent (backward-compatible)", () => {
+		tmpDir = makeTmpDir();
+		const configPath = join(tmpDir, "agents.toml");
+		writeFileSync(
+			configPath,
+			`
+[agents.researcher]
+model = "sonnet"
+skills = []
+`,
+		);
+
+		const config = loadAgentsConfig(configPath);
+		expect(config.agents.researcher?.allowed_tools).toEqual([]);
+	});
+
+	test("anti-drift: actual config/agents.toml passes validation with extended schema", () => {
+		const repoRoot = new URL("../../", import.meta.url).pathname;
+		const configPath = join(repoRoot, "config/agents.toml");
+		const config = loadAgentsConfig(configPath);
+		// All 10 agents should have allowed_tools arrays
+		const agentNames = Object.keys(config.agents);
+		expect(agentNames.length).toBeGreaterThanOrEqual(10);
+		for (const name of agentNames) {
+			expect(Array.isArray(config.agents[name]?.allowed_tools)).toBe(true);
+		}
+	});
+
+	test("anti-drift: actual config/trust.toml passes validation with extended schema", () => {
+		const repoRoot = new URL("../../", import.meta.url).pathname;
+		const configPath = join(repoRoot, "config/trust.toml");
+		const config = loadTrustConfig(configPath);
+		// tier_authority should have all 10 agent names
+		expect(Object.keys(config.tier_authority).length).toBeGreaterThanOrEqual(10);
+	});
+});

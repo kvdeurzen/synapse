@@ -4,41 +4,173 @@
 model = "opus"
 tier = 0
 skills = []
+allowed_tools = [
+  "Read",
+  "Bash",
+  "Glob",
+  "Grep",
+  "mcp__synapse__store_decision",
+  "mcp__synapse__query_decisions",
+  "mcp__synapse__check_precedent",
+  "mcp__synapse__create_task",
+  "mcp__synapse__update_task",
+  "mcp__synapse__get_task_tree",
+  "mcp__synapse__get_smart_context",
+  "mcp__synapse__project_overview",
+]
 
 [agents.researcher]
 model = "sonnet"
 skills = []
+allowed_tools = [
+  "Read",
+  "Bash",
+  "Glob",
+  "Grep",
+  "mcp__synapse__store_document",
+  "mcp__synapse__update_document",
+  "mcp__synapse__link_documents",
+  "mcp__synapse__query_documents",
+  "mcp__synapse__semantic_search",
+  "mcp__synapse__search_code",
+  "mcp__synapse__get_smart_context",
+  "mcp__synapse__check_precedent",
+]
 
 [agents.architect]
 model = "opus"
 tier = 1
 skills = []
+allowed_tools = [
+  "Read",
+  "Bash",
+  "Glob",
+  "Grep",
+  "mcp__synapse__store_decision",
+  "mcp__synapse__query_decisions",
+  "mcp__synapse__check_precedent",
+  "mcp__synapse__create_task",
+  "mcp__synapse__update_task",
+  "mcp__synapse__get_task_tree",
+  "mcp__synapse__get_smart_context",
+  "mcp__synapse__store_document",
+  "mcp__synapse__link_documents",
+]
 
 [agents.decomposer]
 model = "opus"
 skills = []
+allowed_tools = [
+  "Read",
+  "Bash",
+  "Glob",
+  "Grep",
+  "mcp__synapse__create_task",
+  "mcp__synapse__update_task",
+  "mcp__synapse__get_task_tree",
+  "mcp__synapse__get_smart_context",
+  "mcp__synapse__store_decision",
+  "mcp__synapse__check_precedent",
+  "mcp__synapse__query_decisions",
+]
 
 [agents.plan-reviewer]
 model = "opus"
 skills = []
+allowed_tools = [
+  "Read",
+  "Bash",
+  "Glob",
+  "Grep",
+  "mcp__synapse__get_task_tree",
+  "mcp__synapse__get_smart_context",
+  "mcp__synapse__query_decisions",
+  "mcp__synapse__check_precedent",
+  "mcp__synapse__update_task",
+]
 
 [agents.executor]
 model = "sonnet"
 tier = 3
 skills = []
+allowed_tools = [
+  "Read",
+  "Write",
+  "Edit",
+  "Bash",
+  "Glob",
+  "Grep",
+  "mcp__synapse__get_task_tree",
+  "mcp__synapse__get_smart_context",
+  "mcp__synapse__update_task",
+  "mcp__synapse__store_decision",
+  "mcp__synapse__check_precedent",
+  "mcp__synapse__query_decisions",
+  "mcp__synapse__search_code",
+]
 
 [agents.validator]
 model = "sonnet"
 skills = []
+allowed_tools = [
+  "Read",
+  "Bash",
+  "Glob",
+  "Grep",
+  "mcp__synapse__get_task_tree",
+  "mcp__synapse__get_smart_context",
+  "mcp__synapse__query_decisions",
+  "mcp__synapse__check_precedent",
+  "mcp__synapse__update_task",
+  "mcp__synapse__search_code",
+]
 
 [agents.integration-checker]
 model = "sonnet"
 skills = []
+allowed_tools = [
+  "Read",
+  "Bash",
+  "Glob",
+  "Grep",
+  "mcp__synapse__get_task_tree",
+  "mcp__synapse__get_smart_context",
+  "mcp__synapse__query_decisions",
+  "mcp__synapse__check_precedent",
+  "mcp__synapse__update_task",
+  "mcp__synapse__search_code",
+  "mcp__synapse__get_index_status",
+]
 
 [agents.debugger]
 model = "sonnet"
 skills = []
+allowed_tools = [
+  "Read",
+  "Bash",
+  "Glob",
+  "Grep",
+  "mcp__synapse__get_task_tree",
+  "mcp__synapse__get_smart_context",
+  "mcp__synapse__search_code",
+  "mcp__synapse__query_decisions",
+  "mcp__synapse__store_document",
+  "mcp__synapse__link_documents",
+]
 
 [agents.codebase-analyst]
 model = "sonnet"
 skills = []
+allowed_tools = [
+  "Read",
+  "Bash",
+  "Glob",
+  "Grep",
+  "mcp__synapse__index_codebase",
+  "mcp__synapse__get_index_status",
+  "mcp__synapse__store_document",
+  "mcp__synapse__update_document",
+  "mcp__synapse__link_documents",
+  "mcp__synapse__search_code",
+  "mcp__synapse__get_smart_context",
+]

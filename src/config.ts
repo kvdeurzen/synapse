@@ -49,6 +49,17 @@ export const TrustConfigSchema = z.object({
 				.default("strategic"),
 		})
 		.default({}),
+	tier_authority: z
+		.record(z.string(), z.array(z.number().int().min(0).max(3)))
+		.default({}),
+	agent_overrides: z
+		.record(
+			z.string(),
+			z.object({
+				domains: z.record(z.string(), autonomyLevel).optional(),
+			}),
+		)
+		.default({}),
 });
 
 export type TrustConfig = z.infer<typeof TrustConfigSchema>;
@@ -61,6 +72,7 @@ export const AgentsConfigSchema = z.object({
 				model: z.enum(["opus", "sonnet"]).default("sonnet"),
 				tier: z.number().int().min(0).max(3).optional(),
 				skills: z.array(z.string()).default([]),
+				allowed_tools: z.array(z.string()).default([]),
 			}),
 		)
 		.default({}),

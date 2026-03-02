@@ -3,12 +3,12 @@ gsd_state_version: 1.0
 milestone: v2.0
 milestone_name: Agentic Framework
 status: unknown
-last_updated: "2026-03-02T12:04:26.251Z"
+last_updated: "2026-03-02T16:20:00.000Z"
 progress:
   total_phases: 4
   completed_phases: 4
-  total_plans: 13
-  completed_plans: 13
+  total_plans: 15
+  completed_plans: 15
 ---
 
 # Project State
@@ -23,11 +23,11 @@ See: .planning/PROJECT.md (updated 2026-03-01)
 
 ## Current Position
 
-Phase: 13.1 of 14 (Move Modules Single Repo) — IN PROGRESS (1 of 2 plans done)
-Status: Phase 13.1 plan 01 complete — git scaffold done: packages/server/ (git mv) + packages/framework/ (git subtree), root workspace config (package.json, tsconfig.base.json, biome.json)
-Last activity: 2026-03-02 — Phase 13.1 plan 01 executed (monorepo structure + root config)
+Phase: 13.1 of 14 (Move Modules Single Repo) — COMPLETE (2 of 2 plans done)
+Status: Phase 13.1 plan 02 complete — path updates, bun install, 677 tests passing, CLAUDE.md created
+Last activity: 2026-03-02 — Phase 13.1 plan 02 executed (path refs, bun.lock, test verification)
 
-Progress: [████████░░] 86% (v2.0 milestone — Phase 13.1 plan 1/2 done)
+Progress: [██████████] 100% (v2.0 milestone — Phase 13.1 COMPLETE — awaiting Phase 14)
 
 ## Performance Metrics
 
@@ -53,6 +53,7 @@ Progress: [████████░░] 86% (v2.0 milestone — Phase 13.1 pl
 | 13 | 04 | 5min | 2 | 6 |
 | 13 | 05 | 5min | 2 | 2 |
 | 13.1 | 01 | 15min | 2 | 12 |
+| 13.1 | 02 | 24min | 1 | 7 |
 
 ## Accumulated Context
 
@@ -73,6 +74,9 @@ Decisions are logged in PROJECT.md Key Decisions table.
 - noUncheckedIndexedAccess and exactOptionalPropertyTypes in base tsconfig (both packages pass at these settings)
 - framework tsconfig keeps allowImportingTsExtensions: true and noEmit: true as package-specific overrides
 - Bun workspace monorepo layout: packages/server/ and packages/framework/ under packages/*
+- bun install --ignore-scripts required: tree-sitter@0.25.x binding.gyp uses C++17 but Node.js 24 headers require C++20; setup-tree-sitter.js handles rebuild with CXXFLAGS=-std=c++20
+- apache-arrow@18.1.0 is an explicit server dependency (not auto-installed as lancedb peerDep by Bun workspaces)
+- Root CLAUDE.md is the single project instructions file with Bun conventions and monorepo-relative paths
 
 **Phase 13 decisions (in progress):**
 - tier_authority uses z.record(z.string(), z.array(z.number().int().min(0).max(3))) — validates tier values 0-3 at schema level
@@ -134,5 +138,5 @@ None.
 ## Session Continuity
 
 Last session: 2026-03-02
-Stopped at: Completed Phase 13.1 plan 01 — git scaffold (packages/server/ move, packages/framework/ subtree add) + root workspace config. Plan 02 remains (bun install, path updates, test verification).
+Stopped at: Completed Phase 13.1 plan 02 — path updates (settings.template.json, synapse-client.ts, startup.test.ts), bun.lock generated, 677 tests passing, root CLAUDE.md created. Awaiting human verification checkpoint before Phase 14.
 Resume file: None

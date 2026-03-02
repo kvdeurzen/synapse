@@ -3,7 +3,7 @@
 ## Milestones
 
 - ✅ **v1.0 Data Layer** - Phases 1-9 (shipped 2026-03-01)
-- 🚧 **v2.0 Agentic Framework** - Phases 10-14 (in progress)
+- ✅ **v2.0 Agentic Framework** - Phases 10-14 (completed 2026-03-02)
 
 ## Phases
 
@@ -159,7 +159,7 @@ Plans:
 
 </details>
 
-### 🚧 v2.0 Agentic Framework (In Progress)
+### ✅ v2.0 Agentic Framework (Completed 2026-03-02)
 
 **Milestone Goal:** Build a coordination layer on top of Synapse's data layer — 10 specialized agents orchestrated as a Claude Code framework (agents, skills, hooks, workflows), with decision precedent tracking, progressive task decomposition, configurable trust tiers, and hook-based authority enforcement.
 
@@ -171,7 +171,7 @@ Starting at Phase 10. Dependency order is strict: 10 -> 11 -> 12 -> 13 -> 14.
 - [x] **Phase 12: Framework Bootstrap** - Create synapse-framework repo with agents/, skills/, hooks/, workflows/, commands/, config/ directories; TOML config; Synapse MCP wiring; session lifecycle; three-layer test harness (completed 2026-03-01)
 - [x] **Phase 13: Agent Specialization, Skill Loading, and Trust** - Define 10 agent markdown files with tool allowlists, skill registry with token budgets, and Trust-Knowledge Matrix TOML config (completed 2026-03-02)
 - [x] **Phase 13.1: Move Separate Modules into a Single Repo** - Move separate modules into a single repo (completed 2026-03-02)
-- [ ] **Phase 14: Quality Gates and PEV Workflow** - Implement hook-based enforcement modules and the Plan-Execute-Validate workflow with wave-based parallel execution
+- [x] **Phase 14: Quality Gates and PEV Workflow** - Implement hook-based enforcement modules and the Plan-Execute-Validate workflow with wave-based parallel execution (completed 2026-03-02)
 
 ## Phase Details
 
@@ -287,7 +287,7 @@ Plans:
 - [x] 14-01-PLAN.md — PreToolUse enforcement hooks (tier-gate, tool-allowlist, precedent-gate) + tests + settings wiring (GATE-01, GATE-02, GATE-03, GATE-04, GATE-06, GATE-07)
 - [x] 14-02-PLAN.md — Expanded audit hook (all tools + token estimates) + SessionStart tier identity injection (GATE-05, GATE-06)
 - [x] 14-03-PLAN.md — PEV config schema ([pev] section in trust.toml) + pev-workflow.md document (WFLOW-01, WFLOW-02, WFLOW-03, WFLOW-04, WFLOW-07)
-- [ ] 14-04-PLAN.md — Orchestrator PEV integration + decomposer/validator protocol updates (WFLOW-05, WFLOW-06, WFLOW-08)
+- [x] 14-04-PLAN.md — Orchestrator PEV integration + decomposer/validator protocol updates (WFLOW-05, WFLOW-06, WFLOW-08)
 
 ## Progress
 
@@ -311,4 +311,4 @@ v2.0 in progress: 10 -> 11 -> 12 -> 13 -> 14
 | 12. Framework Bootstrap | v2.0 | Complete    | 2026-03-01 | 2026-03-01 |
 | 13. Agent Specialization, Skill Loading, and Trust | 5/5 | Complete    | 2026-03-02 | - |
 | 13.1 Move Separate Modules into a Single Repo | v2.0 | Complete    | 2026-03-02 | 2026-03-02 |
-| 14. Quality Gates and PEV Workflow | v2.0 | 3/4 | In progress | - |
+| 14. Quality Gates and PEV Workflow | v2.0 | 4/4 | Complete | 2026-03-02 |

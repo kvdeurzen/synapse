@@ -173,10 +173,10 @@ Requirements for the Agentic Framework milestone. Each maps to roadmap phases 10
 - [ ] **WFLOW-02**: PEV loop capped at 3 iterations; iteration 3 failure escalates to user
 - [ ] **WFLOW-03**: Wave-based parallel execution: independent leaf tasks in the same wave execute concurrently via Claude Code Task tool
 - [ ] **WFLOW-04**: Wave N+1 starts only after all tasks in wave N are validated complete
-- [ ] **WFLOW-05**: Executor failures trigger Debugger agent for root-cause analysis before retry
-- [ ] **WFLOW-06**: Decomposer <-> Plan Reviewer verification loop (max 3 iterations) gates execution start
+- [x] **WFLOW-05**: Executor failures trigger Debugger agent for root-cause analysis before retry
+- [x] **WFLOW-06**: Decomposer <-> Plan Reviewer verification loop (max 3 iterations) gates execution start
 - [ ] **WFLOW-07**: Progressive decomposition: Epic->Features validated for completeness before execution, Features->Tasks decomposed on demand when feature starts
-- [ ] **WFLOW-08**: Full rollback support: tasks can be reopened and associated code changes reverted via git
+- [x] **WFLOW-08**: Full rollback support: tasks can be reopened and associated code changes reverted via git
 
 ## Future Requirements
 
@@ -338,10 +338,10 @@ Which phases cover which requirements. Updated during roadmap creation.
 | WFLOW-02 | Phase 14 | Pending |
 | WFLOW-03 | Phase 14 | Pending |
 | WFLOW-04 | Phase 14 | Pending |
-| WFLOW-05 | Phase 14 | Pending |
-| WFLOW-06 | Phase 14 | Pending |
+| WFLOW-05 | Phase 14 | Complete |
+| WFLOW-06 | Phase 14 | Complete |
 | WFLOW-07 | Phase 14 | Pending |
-| WFLOW-08 | Phase 14 | Pending |
+| WFLOW-08 | Phase 14 | Complete |
 
 **Coverage:**
 - v1.0 requirements: 50 total — 50 complete

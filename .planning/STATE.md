@@ -3,7 +3,7 @@ gsd_state_version: 1.0
 milestone: v2.0
 milestone_name: Agentic Framework
 status: unknown
-last_updated: "2026-03-02T20:09:35Z"
+last_updated: "2026-03-02T20:17:48Z"
 progress:
   total_phases: 5
   completed_phases: 5
@@ -23,11 +23,11 @@ See: .planning/PROJECT.md (updated 2026-03-01)
 
 ## Current Position
 
-Phase: 14 of 14 (Quality Gates and PEV Workflow) — IN PROGRESS (3 of 4 plans done)
-Status: Phase 14 plan 03 complete — PEV config schema ([pev] in TrustConfigSchema + trust.toml), pev-workflow.md created (166 lines), 26 config tests passing
-Last activity: 2026-03-02 — Phase 14 plan 03 executed (TrustConfigSchema pev extension, trust.toml [pev] section, pev-workflow.md, 5 new config tests)
+Phase: 14 of 14 (Quality Gates and PEV Workflow) — COMPLETE (4 of 4 plans done)
+Status: Phase 14 plan 04 complete — synapse-orchestrator.md extended with 6 PEV sections (progressive decomposition, wave execution, failure escalation, rollback, checkpoint format), decomposer.md with mandatory validation task creation and Plan Reviewer loop, validator.md with task validation protocol
+Last activity: 2026-03-02 — Phase 14 plan 04 executed (orchestrator/decomposer/validator agent extensions, 3 files modified, 2 commits, 96 framework tests passing)
 
-Progress: [██████████] 100% (v2.0 milestone — Phase 14 in progress 1/4)
+Progress: [██████████] 100% (v2.0 milestone — Phase 14 COMPLETE)
 
 ## Performance Metrics
 
@@ -57,6 +57,7 @@ Progress: [██████████] 100% (v2.0 milestone — Phase 14 in 
 | 14 | 01 | 3min | 2 | 5 |
 | 14 | 02 | 3min | 2 | 3 |
 | 14 | 03 | 4min | 2 | 4 |
+| 14 | 04 | 3min | 2 | 3 |
 
 ## Accumulated Context
 
@@ -79,6 +80,9 @@ Decisions are logged in PROJECT.md Key Decisions table.
 - Zod nested defaults: explicit .default({...}) required on pev field — Zod 4 does not apply nested field defaults when parent key is absent and uses .default({})
 - pev.approval_threshold (epic/feature/task/none) replaces approval.decomposition (always/strategic/none) with more granular control; both coexist for backward compat
 - pev-workflow.md as agent-consumed markdown document — orchestrator reads and follows it via reasoning; Plan 04 wires the agent to reference it
+- Orchestrator appended with 6 PEV sections (PEV Workflow, Progressive Decomposition, Wave Execution, Failure Escalation, Rollback, Checkpoint Format) — existing sections unchanged
+- Decomposer creates mandatory validation tasks: per-leaf unit test expectations embedded in task description, per-feature integration test task, per-epic integration task
+- Validator failure reports must include specific file:line references, actual vs expected values, and test output — required for Debugger actionability
 - Multi-root config path resolution in startup hook: tries cwd, cwd/packages/framework, import.meta.url relative
 - startup hook uses inner try/catch for config reads — graceful degradation isolated from base instructions
 
@@ -152,5 +156,5 @@ None.
 ## Session Continuity
 
 Last session: 2026-03-02
-Stopped at: Completed Phase 14 plan 03 — PEV config schema (TrustConfigSchema pev field with 5 settings), trust.toml [pev] section with defaults, pev-workflow.md (166 lines covering full lifecycle), 26 config tests passing. Awaiting plan 04 execution.
+Stopped at: Completed Phase 14 plan 04 — synapse-orchestrator.md with 6 PEV sections (132 lines), decomposer.md with mandatory validation task creation + Plan Reviewer loop, validator.md with task validation protocol. Phase 14 complete. v2.0 Agentic Framework milestone complete.
 Resume file: None

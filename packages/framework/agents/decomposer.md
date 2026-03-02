@@ -116,3 +116,58 @@ Split into:
 4. "Dashboard integration test" — 2 files (test, test fixtures)
 
 Dependencies: Tasks 2 and 3 depend on Task 1. Task 4 depends on Tasks 2 and 3.
+
+## Mandatory Validation Tasks
+
+When decomposing any feature into tasks, ALWAYS create the following validation tasks in addition to implementation tasks:
+
+### Per Leaf Task: Unit Test Expectations
+
+For every leaf task (depth=3) you create, include a "unit test expectations" description in that task's description field:
+- What conditions must the tests verify (specific behaviors, edge cases, error paths)
+- Which test files should exist and roughly what they should assert
+- What constitutes "passing" for the Validator agent
+
+This is embedded in the task description — not a separate task — but must be explicit enough that the Validator can independently assess pass/fail.
+
+### Per Feature: Integration Test Task
+
+For every feature (depth=1), create a child "feature integration test" task (depth=2 or 3) that:
+- Depends on ALL other implementation tasks within the feature
+- Verifies cross-task integration: interfaces match, data flows correctly end-to-end
+- Specifies what the Integration Checker agent must verify
+- Title format: `"{Feature Title} — Integration Test"`
+
+### Per Epic: Epic Integration Task
+
+For every epic (depth=0), create a child "epic integration" task (depth=1) that:
+- Depends on ALL features being complete
+- Verifies cross-feature integration: no regressions, combined behavior matches epic acceptance criteria
+- Title format: `"{Epic Title} — Epic Integration"`
+
+### Validation Task Acceptance Criteria
+
+All validation tasks must include acceptance criteria that are independently verifiable by the Validator and Integration Checker agents without additional context from you:
+- Specific commands to run (e.g., `bun test packages/server/src/auth/`)
+- Expected test count or coverage thresholds
+- Files that must exist and exports/patterns they must contain
+
+## Decomposer <-> Plan Reviewer Loop
+
+After you produce a decomposition, the orchestrator sends it to the Plan Reviewer agent. You may be respawned with the reviewer's feedback if the plan is rejected.
+
+**When respawned with reviewer feedback:**
+1. Read the reviewer's feedback carefully — it will specify exact concerns with the plan
+2. Address ALL concerns explicitly and specifically — do not just acknowledge and resubmit the same plan
+3. Where the reviewer says a task is too large: split it into smaller tasks
+4. Where the reviewer says acceptance criteria are vague: add specific, verifiable criteria
+5. Where the reviewer identifies a circular dependency: restructure the dependency graph
+6. State explicitly in your output what changed in response to each reviewer concern
+
+**Focus areas the Plan Reviewer checks:**
+- **Completeness:** Do the tasks together cover all of the feature's acceptance criteria?
+- **Testability:** Can each task be independently validated? Are acceptance criteria specific enough?
+- **Dependencies:** Are all dependencies correctly ordered? No circular dependencies?
+- **Sizing:** Are leaf tasks within the 2-5 file / ~50% context window guideline?
+
+**Cycle limit:** Maximum 3 Decomposer <-> Plan Reviewer cycles. If the plan is still rejected after cycle 3, the orchestrator escalates to the user — both your plan and the reviewer's objections are presented.

@@ -51,3 +51,61 @@ Task: "Implement JWT signing utility — RS256, 15-min TTL, jose library"
 4. TTL is set to `'1h'` instead of `'15m'` — spec says 15-min
 5. `Bash "cd src && npx vitest run auth/jwt"` — tests pass but don't assert TTL value
 6. `update_task(status: "failed", description: "VALIDATION FINDING: Token TTL is '1h' (jwt.ts:23) but spec and decision D-47 require 15-min. Tests don't assert TTL value.", actor: "validator")`
+
+## Task Validation Protocol
+
+When spawned by the orchestrator to validate a completed task, follow this protocol:
+
+### Step 1: Load Task Spec
+
+1. Call `get_task_tree` with the task_id to retrieve the full task spec
+   - Read: title, description, acceptance criteria, unit test expectations
+2. Call `get_smart_context` to gather relevant decisions and project context
+
+### Step 2: Verify Against Spec
+
+For each acceptance criterion in the task spec:
+
+1. **Check files exist:** Verify all expected files exist at the specified paths (use `Glob`, `Read`)
+2. **Check exports and patterns:** Verify expected exports, function signatures, types, or patterns are present in the implementation (use `Grep`, `Read`, `search_code`)
+3. **Run tests:** Execute the test commands specified in the unit test expectations:
+   - Use `bun test` (not jest or vitest) for this project
+   - Run the specific test file(s) for this task, not the full suite
+   - Capture exit code — non-zero is a failure regardless of output
+4. **Check for regressions:** Run the broader test suite for the affected module to ensure existing tests still pass
+5. **Verify correctness, not just compilation:** The implementation must match the spec behavior — passing tests that don't assert the specified behavior is insufficient
+
+### Step 3: Verdict
+
+**If all acceptance criteria are met:**
+- Report to orchestrator: task passes
+- Update task status to "done" via `update_task(task_id, status: "done", actor: "validator")`
+
+**If any acceptance criterion is not met:**
+- Update task status to "failed" via `update_task` with a detailed failure description:
+  ```
+  update_task(task_id, status: "failed", description: "VALIDATION FINDING: {clear summary}
+
+  Expected: {what the spec requires}
+  Found: {what was implemented}
+  Location: {specific file:line references}
+  Test output: {relevant test failure output}
+
+  The Debugger needs the above detail for root-cause analysis.", actor: "validator")
+  ```
+- Include specific file paths and line numbers where possible
+- The orchestrator will trigger Debugger → retry based on your failure report
+
+### Failure Report Quality
+
+Your failure reports are the Debugger's primary input. Make them actionable:
+- **Specify the exact file and line** where the discrepancy exists
+- **Quote the actual value** found vs the expected value from the spec
+- **Include test command and output** if tests failed
+- **Do NOT say "tests failed"** — say "test `auth/jwt.test.ts` failed at line 34: expected TTL to be `15m` but got `1h`"
+
+### Regression Checks
+
+Before declaring a task "done":
+1. Run the test suite for the module the task modified (not just the new tests)
+2. If existing tests broke: this is a regression — report it as a validation failure even if the new functionality is correct

@@ -141,12 +141,12 @@ Requirements for the Agentic Framework milestone. Each maps to roadmap phases 10
 
 ### Skill Loading (SKILL)
 
-- [ ] **SKILL-01**: Skill registry in config/agents.toml maps project attributes (tech stack, domain) to skill bundles
-- [ ] **SKILL-02**: Skills are markdown files in skills/ containing domain knowledge, quality criteria, and vocabulary
-- [ ] **SKILL-03**: Skills are injected into agent context at spawn time via Claude Code's agent loading mechanism
-- [ ] **SKILL-04**: Progressive skill loading: skill names in agent definition, full body loaded on demand
-- [ ] **SKILL-05**: Per-agent skill budget enforced (max 2K tokens per skill, max 3 skills for Executor)
-- [ ] **SKILL-06**: Skill content hash validated before injection to prevent tampering
+- [x] **SKILL-01**: Skill registry in config/agents.toml maps project attributes (tech stack, domain) to skill bundles
+- [x] **SKILL-02**: Skills are markdown files in skills/ containing domain knowledge, quality criteria, and vocabulary
+- [x] **SKILL-03**: Skills are injected into agent context at spawn time via Claude Code's agent loading mechanism
+- [x] **SKILL-04**: Progressive skill loading: skill names in agent definition, full body loaded on demand
+- [x] **SKILL-05**: Per-agent skill budget enforced (max 2K tokens per skill, max 3 skills for Executor)
+- [x] **SKILL-06**: Skill content hash validated before injection to prevent tampering
 
 ### Trust & Authority (TRUST)
 
@@ -315,12 +315,12 @@ Which phases cover which requirements. Updated during roadmap creation.
 | ROLE-11 | Phase 13 | Pending |
 | ROLE-12 | Phase 13 | Complete |
 | ROLE-13 | Phase 13 | Pending |
-| SKILL-01 | Phase 13 | Pending |
-| SKILL-02 | Phase 13 | Pending |
-| SKILL-03 | Phase 13 | Pending |
-| SKILL-04 | Phase 13 | Pending |
-| SKILL-05 | Phase 13 | Pending |
-| SKILL-06 | Phase 13 | Pending |
+| SKILL-01 | Phase 13 | Complete |
+| SKILL-02 | Phase 13 | Complete |
+| SKILL-03 | Phase 13 | Complete |
+| SKILL-04 | Phase 13 | Complete |
+| SKILL-05 | Phase 13 | Complete |
+| SKILL-06 | Phase 13 | Complete |
 | TRUST-01 | Phase 13 | Complete |
 | TRUST-02 | Phase 13 | Complete |
 | TRUST-03 | Phase 13 | Complete |

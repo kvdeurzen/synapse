@@ -3,12 +3,12 @@ gsd_state_version: 1.0
 milestone: v2.0
 milestone_name: Agentic Framework
 status: in_progress
-last_updated: "2026-03-02T11:30:34Z"
+last_updated: "2026-03-02T11:25:01Z"
 progress:
   total_phases: 5
   completed_phases: 3
   total_plans: 13
-  completed_plans: 9
+  completed_plans: 10
 ---
 
 # Project State
@@ -24,11 +24,11 @@ See: .planning/PROJECT.md (updated 2026-03-01)
 ## Current Position
 
 Phase: 12 of 14 (Orchestrator Bootstrap) — COMPLETE (all 3 plans done)
-Phase: 13 of 14 (Agent Specialization) — IN PROGRESS (1 of 5 plans done)
-Status: Phase 13 Plan 01 complete — Zod config schemas extended, trust.toml tier_authority, agents.toml allowed_tools
-Last activity: 2026-03-02 — Phase 13 Plan 01 executed (TrustConfigSchema + AgentsConfigSchema extensions, config files updated)
+Phase: 13 of 14 (Agent Specialization) — IN PROGRESS (2 of 5 plans done)
+Status: Phase 13 Plan 02 complete — Skill loader (loadSkill/loadAgentSkills/warnUnreferencedSkills), 7 built-in skill directories
+Last activity: 2026-03-02 — Phase 13 Plan 02 executed (src/skills.ts, 7 SKILL.md files, 16 unit tests)
 
-Progress: [██████░░░░] 62% (v2.0 milestone — Phase 13 started, 9/13 plans done)
+Progress: [██████░░░░] 65% (v2.0 milestone — Phase 13 in progress, 10/13 plans done)
 
 ## Performance Metrics
 
@@ -49,6 +49,7 @@ Progress: [██████░░░░] 62% (v2.0 milestone — Phase 13 star
 | 12 | 02 | 3min | 2 | 6 |
 | 12 | 03 | 3min | 2 | 6 |
 | 13 | 01 | 9min | 1 | 4 |
+| 13 | 02 | 3min | 2 | 10 |
 
 ## Accumulated Context
 
@@ -70,6 +71,10 @@ Decisions are logged in PROJECT.md Key Decisions table.
 - Researcher has no store_decision, create_task, update_task — deliberation via documents pattern
 - Debugger and Codebase Analyst have no Write/Edit — diagnostic/analysis only, Executor applies fixes
 - Validators and Plan Reviewer have update_task — direct authority to gate execution without orchestrator routing
+- 2K token warning is non-blocking: loadSkill warns to stderr but always returns full content
+- warnUnreferencedSkills ignores 'project' directory — reserved for user-defined skills, intentionally unchecked
+- estimateTokens uses Math.ceil(chars / 4) — simple proxy matching CONTEXT.md locked decision
+- Skill SKILL.md files target 400-600 tokens each (1600-2400 chars) — well under 2K warning threshold
 
 **Phase 10 decisions (validated):**
 - Vector field is nullable in DECISIONS_SCHEMA for defensive schema design; fail-fast enforcement is at store_decision level
@@ -115,5 +120,5 @@ None.
 ## Session Continuity
 
 Last session: 2026-03-02
-Stopped at: Completed 13-01-PLAN.md — TrustConfigSchema extended (tier_authority, agent_overrides), AgentsConfigSchema extended (allowed_tools), trust.toml and agents.toml updated for all 10 agents, 21 config tests pass
+Stopped at: Completed 13-02-PLAN.md — Skill loader (loadSkill, loadAgentSkills, warnUnreferencedSkills, estimateTokens), 7 built-in SKILL.md files (typescript/react/python/vitest/sql/bun/tailwind), 16 unit tests pass
 Resume file: None

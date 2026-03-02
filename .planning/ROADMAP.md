@@ -170,6 +170,7 @@ Starting at Phase 10. Dependency order is strict: 10 -> 11 -> 12 -> 13 -> 14.
 - [x] **Phase 11: Task Hierarchy Tooling** - Add tasks table and three MCP tools (create_task, update_task, get_task_tree) with cascade status propagation
 - [x] **Phase 12: Framework Bootstrap** - Create synapse-framework repo with agents/, skills/, hooks/, workflows/, commands/, config/ directories; TOML config; Synapse MCP wiring; session lifecycle; three-layer test harness (completed 2026-03-01)
 - [x] **Phase 13: Agent Specialization, Skill Loading, and Trust** - Define 10 agent markdown files with tool allowlists, skill registry with token budgets, and Trust-Knowledge Matrix TOML config (completed 2026-03-02)
+- [ ] **Phase 13.1: Move Separate Modules into a Single Repo** - Move separate modules into a single repo (INSERTED)
 - [ ] **Phase 14: Quality Gates and PEV Workflow** - Implement hook-based enforcement modules and the Plan-Execute-Validate workflow with wave-based parallel execution
 
 ## Phase Details
@@ -252,6 +253,13 @@ Plans:
 - [ ] 13-04: 6 Sonnet agent definitions — researcher, executor, validator, integration-checker, debugger, codebase-analyst with concise prompts (ROLE-03, ROLE-07, ROLE-08, ROLE-09, ROLE-10, ROLE-11)
 - [ ] 13-05: Integration wiring — agents.toml skill assignments, anti-drift tests for config/agents/skills sync (ROLE-01, ROLE-13)
 
+### Phase 13.1: Move Separate Modules into a Single Repo (INSERTED)
+**Goal**: Move separate modules into a single repo
+**Depends on**: Phase 13
+**Success Criteria** (what must be TRUE):
+  TBD — to be defined during /gsd:plan-phase
+**Plans**: TBD
+
 ### Phase 14: Quality Gates and PEV Workflow
 **Goal**: Hook-based enforcement in .claude/hooks/ prevents agents from exceeding their authority; the Plan-Execute-Validate workflow orchestrates progressive decomposition with wave-based parallel execution; and the complete system can run a user goal through task decomposition, execution, and validation end-to-end with full rollback support
 **Depends on**: Phase 13
@@ -286,4 +294,5 @@ v2.0 in progress: 10 -> 11 -> 12 -> 13 -> 14
 | 11. Task Hierarchy Tooling | v2.0 | Complete    | 2026-03-01 | 2026-03-01 |
 | 12. Framework Bootstrap | v2.0 | Complete    | 2026-03-01 | 2026-03-01 |
 | 13. Agent Specialization, Skill Loading, and Trust | 5/5 | Complete    | 2026-03-02 | - |
+| 13.1 Move Separate Modules into a Single Repo | v2.0 | 0/TBD | Not started (INSERTED) | - |
 | 14. Quality Gates and PEV Workflow | v2.0 | 0/TBD | Not started | - |

@@ -111,6 +111,10 @@ Decisions are logged in PROJECT.md Key Decisions table.
 - children_all_done = false for leaf nodes (vacuously false); true only when ALL direct children have status done
 - Dependency replacement uses what-if graph: project edges MINUS current task edges PLUS proposed edges, then detectCycles
 
+### Roadmap Evolution
+
+- Phase 13.1 inserted after Phase 13: Move separate modules into a single repo (URGENT)
+
 ### Pending Todos
 
 None.

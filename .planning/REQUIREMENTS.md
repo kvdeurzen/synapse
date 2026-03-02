@@ -163,8 +163,8 @@ Requirements for the Agentic Framework milestone. Each maps to roadmap phases 10
 - [ ] **GATE-02**: PreToolUse hook enforces tool allowlists — agents can only call tools in their agent definition's allowed_tools
 - [ ] **GATE-03**: PreToolUse precedent-gate injects "check precedent first" context before decision storage
 - [ ] **GATE-04**: PreToolUse user-approval hook returns "ask" for Tier 0 decisions
-- [ ] **GATE-05**: PostToolUse audit hook logs all tool calls to file with timestamp, agent, tool, and result summary
-- [ ] **GATE-06**: Every hook callback wrapped in top-level try/catch — hooks degrade gracefully under any input
+- [x] **GATE-05**: PostToolUse audit hook logs all tool calls to file with timestamp, agent, tool, and result summary
+- [x] **GATE-06**: Every hook callback wrapped in top-level try/catch — hooks degrade gracefully under any input
 - [ ] **GATE-07**: Hook ordering is tested: deny takes priority over ask over allow
 
 ### PEV Workflow (WFLOW)
@@ -331,8 +331,8 @@ Which phases cover which requirements. Updated during roadmap creation.
 | GATE-02 | Phase 14 | Pending |
 | GATE-03 | Phase 14 | Pending |
 | GATE-04 | Phase 14 | Pending |
-| GATE-05 | Phase 14 | Pending |
-| GATE-06 | Phase 14 | Pending |
+| GATE-05 | Phase 14 | Complete |
+| GATE-06 | Phase 14 | Complete |
 | GATE-07 | Phase 14 | Pending |
 | WFLOW-01 | Phase 14 | Pending |
 | WFLOW-02 | Phase 14 | Pending |

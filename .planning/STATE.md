@@ -3,7 +3,7 @@ gsd_state_version: 1.0
 milestone: v2.0
 milestone_name: Agentic Framework
 status: unknown
-last_updated: "2026-03-02T15:40:39.500Z"
+last_updated: "2026-03-02T20:09:35Z"
 progress:
   total_phases: 5
   completed_phases: 5
@@ -23,11 +23,11 @@ See: .planning/PROJECT.md (updated 2026-03-01)
 
 ## Current Position
 
-Phase: 13.1 of 14 (Move Modules Single Repo) — COMPLETE (2 of 2 plans done)
-Status: Phase 13.1 plan 02 complete — path updates, bun install, 677 tests passing, CLAUDE.md created
-Last activity: 2026-03-02 — Phase 13.1 plan 02 executed (path refs, bun.lock, test verification)
+Phase: 14 of 14 (Quality Gates and PEV Workflow) — IN PROGRESS (1 of 4 plans done)
+Status: Phase 14 plan 01 complete — three PreToolUse enforcement hooks (tier-gate, tool-allowlist, precedent-gate), 21 unit tests, settings.template.json wired
+Last activity: 2026-03-02 — Phase 14 plan 01 executed (gate hooks, tests, settings wiring)
 
-Progress: [██████████] 100% (v2.0 milestone — Phase 13.1 COMPLETE — awaiting Phase 14)
+Progress: [██████████] 100% (v2.0 milestone — Phase 14 in progress 1/4)
 
 ## Performance Metrics
 
@@ -54,6 +54,7 @@ Progress: [██████████] 100% (v2.0 milestone — Phase 13.1 C
 | 13 | 05 | 5min | 2 | 2 |
 | 13.1 | 01 | 15min | 2 | 12 |
 | 13.1 | 02 | 24min | 1 | 7 |
+| 14 | 01 | 3min | 2 | 5 |
 
 ## Accumulated Context
 
@@ -67,6 +68,11 @@ Decisions are logged in PROJECT.md Key Decisions table.
 - Skills as prompt injection, not code plugins (simpler, no runtime code loading)
 - Trust matrix as YAML config file, not DB table (explicit, auditable)
 - Clean Synapse/Orchestrator process boundary: data layer vs control layer
+
+**Phase 14 decisions (validated):**
+- precedent-gate fails open on error (advisory hook) — exit 0 silently vs deny used by enforcement hooks
+- tier-gate checks tier === 0 before loading trust.toml — Tier 0 always requires "ask" regardless of actor identity
+- PostToolUse updated to audit-log.js with no matcher, consolidated from Plan 14-02 to avoid parallel write conflict
 
 **Phase 13.1 decisions (validated):**
 - git subtree add without --squash — preserves all 16 framework commits as accessible merge history
@@ -138,5 +144,5 @@ None.
 ## Session Continuity
 
 Last session: 2026-03-02
-Stopped at: Completed Phase 13.1 plan 02 — path updates (settings.template.json, synapse-client.ts, startup.test.ts), bun.lock generated, 677 tests passing, root CLAUDE.md created. Awaiting human verification checkpoint before Phase 14.
+Stopped at: Completed Phase 14 plan 01 — three PreToolUse enforcement hooks (tier-gate.js, tool-allowlist.js, precedent-gate.js), 21 unit tests in gate-hooks.test.ts, settings.template.json wired with PreToolUse matchers and consolidated PostToolUse (audit-log.js, no matcher).
 Resume file: None

@@ -1,23 +1,33 @@
-# Feature Research — v2.0 Agentic Coordination Layer
+# Feature Research — v3.0 Working Prototype
 
-**Domain:** Agentic coordination framework — decision tracking, task decomposition, agent specialization, skill loading, quality gates, PEV workflow
-**Researched:** 2026-03-01
-**Confidence:** MEDIUM-HIGH (Claude Agent SDK hooks verified against official docs at HIGH confidence; task decomposition patterns at MEDIUM from academic papers and frameworks; decision tracking as "case law" is a novel Synapse-specific framing with LOW-MEDIUM confidence on existing comparable systems)
+**Domain:** Developer tool onboarding, MCP server integration, AI agent framework usability, end-to-end workflow wiring
+**Researched:** 2026-03-03
+**Confidence:** HIGH (Claude Code official docs verified for integration patterns; MEDIUM for comparative developer tool UX patterns; HIGH for Claude Code skills/subagent frontmatter)
 
-> **Scope note:** This file covers NEW features for v2.0 only. v1.0 features (document storage, code indexing, hybrid search, smart context assembly, relationship graph) are fully built and out of scope.
+> **Scope note:** This file covers NEW features for v3.0 only. v1.0 (data layer) and v2.0 (agentic coordination framework) are fully built. v3.0 is the "working prototype" milestone: wiring all existing pieces into a usable end-to-end product — from install to agent-driven workflow execution.
+
+> **What already exists (do not re-build):**
+> - 24 MCP tools across documents, code, tasks, decisions, project management
+> - 10 specialized agent `.md` files in `packages/framework/agents/`
+> - 7 skills directories in `packages/framework/skills/`
+> - 6 hook scripts in `packages/framework/hooks/`
+> - `packages/framework/workflows/pev-workflow.md` — full PEV spec
+> - `packages/framework/config/synapse.toml` and `agents.toml`
+> - `packages/framework/settings.template.json` — MCP + hooks config template
+> - 2 existing commands: `/synapse:new-goal` and `/synapse:status`
 
 ---
 
-## Domain Overview: What Agentic Coordination Systems Do
+## Domain Overview: What End-to-End Usability Means for This Category
 
-Agentic coordination is the layer above data storage that gives multi-agent systems structure, authority, and memory-across-sessions. The core problems it solves:
+Synapse has two distinct user groups to onboard: (1) developers setting up Synapse for the first time, and (2) Claude Code agents that run during sessions. Both need their own "onboarding":
 
-1. **Who decides what?** Without authority levels, every agent can override every other agent. Decisions made in session 1 are invisible to agents in session 50.
-2. **How big is a unit of work?** Tasks must fit in a context window to be executable. Without decomposition, agents either refuse (too big) or hallucinate (wrong scope).
-3. **Who does which work?** Generalist agents waste tokens on context irrelevant to their role. Specialists with scoped tools are faster and more reliable.
-4. **What does this agent know about this project?** Generic agents don't know domain vocabulary, quality criteria, or project conventions. Runtime skill injection solves this without training.
-5. **How do you prevent bad actions?** Pre/post tool hooks let the orchestrator enforce policy at the boundary between the agent and the outside world.
-6. **How do you validate work systematically?** PEV (Plan-Execute-Validate) loops with explicit iteration limits prevent infinite refinement while ensuring correctness.
+- **Human onboarding:** Install prerequisites, configure project, understand the user journey (install → init → map → goal → plan → execute → validate)
+- **Agent onboarding:** Agents must know HOW to use Synapse MCP tools — which tools to call, in what order, with what parameters, and how to treat MCP as the single source of truth
+
+The gap analysis (`PROTO_GAP_ANALYSIS.md`) is authoritative on what's missing. This research maps those gaps to feature categories, complexity, and patterns from the broader ecosystem.
+
+**Key insight from ecosystem research:** The single biggest differentiator in developer tool UX is **time-to-first-value**. GSD achieves first value via `npx get-shit-done-cc@latest` + `/gsd:new-project`. Claude Code itself achieves first value via `claude mcp add`. Synapse needs a comparable path: prerequisite check → one install command → first working session.
 
 ---
 
@@ -25,153 +35,165 @@ Agentic coordination is the layer above data storage that gives multi-agent syst
 
 ### Table Stakes (Users Expect These)
 
-Features that any serious agentic coordination system must have. Missing these makes the system feel like a prototype, not a production tool.
+Features that any serious developer tool / Claude Code framework must have. Missing these makes the product feel unfinished.
 
 | Feature | Why Expected | Complexity | Notes |
 |---------|--------------|------------|-------|
-| Task storage with parent-child hierarchy | Every project management system (Jira, Linear, GitHub Projects) supports epics → tasks; agents expect the same structure | MEDIUM | Recursive parent_id in LanceDB `tasks` table; v1.0 schema already has parent_id and depth fields — minimal migration |
-| Task status lifecycle | "todo → in_progress → done → blocked" is universal; status must propagate upward (parent blocked if child blocked) | LOW | Status rollup: parent is "blocked" if any child is blocked; "complete" when all children complete; "in_progress" otherwise |
-| Decision logging with rationale | GSD, BMad, ConPort all log architectural decisions; agents expect decisions to persist across sessions | LOW | decisions table with summary, rationale, outcome fields; extends v1.0 documents table concept |
-| Searchable decisions | Agents need to find past decisions by topic, not just by ID; FTS + semantic search are expected | MEDIUM | Synapse v1.0 hybrid search applies directly; decisions table gets same indexing pipeline as documents |
-| Agent role definitions | Agent systems (LangGraph, CrewAI, AutoGen) all define agents by role + tool list + system prompt | LOW | Role definitions are config, not runtime DB; 10 named roles with distinct tool allowlists and system prompts |
-| Orchestrator process | A top-level process that spawns agents, routes tasks, and enforces authority; all major frameworks have this | HIGH | Claude Agent SDK `query()` as orchestrator; Synapse MCP as data backend via `mcpServers` config |
-| Pre-tool execution hooks | LangGraph, Agno, and the Claude Agent SDK all support hooks that run before tool calls; used for authorization and logging | MEDIUM | Claude Agent SDK `PreToolUse` hook with `permissionDecision: deny/allow/ask` — official, documented, HIGH confidence |
-| Post-tool execution hooks | Logging, audit trail, result validation after tool execution; expected in any production agentic system | LOW | Claude Agent SDK `PostToolUse` hook with `additionalContext` field; can append validation results |
-| Human-in-the-loop escalation | All enterprise agentic frameworks support escalation checkpoints; users expect a way to require approval | MEDIUM | Claude Agent SDK `PermissionRequest` hook for custom handling; `ask` permission decision pauses for approval |
-| Subagent lifecycle tracking | When orchestrators spawn subagents, they need to know when subagents complete and whether they succeeded | LOW | Claude Agent SDK `SubagentStart` / `SubagentStop` hooks — first-class events with agent_id and transcript path |
+| One-command install | Every mature CLI tool (GSD, GitHub MCP, Playwright MCP) installs via one command; multi-step manual setup is a friction wall | MEDIUM | Install script that configures `.claude/`, copies/links agent files, writes `.mcp.json`, checks prerequisites (Bun, Ollama, nomic-embed-text) |
+| Prerequisite check with clear error messages | Users running `node`, missing Ollama, or using wrong Bun version need actionable errors, not cryptic failures | LOW | Script that checks `bun --version`, `ollama list`, presence of `nomic-embed-text`; fails with specific fix instructions |
+| First-run setup command | `/synapse:init` pattern is expected for any project initialization tool; GSD has `/gsd:new-project`, Claude Code has `/init` | MEDIUM | Guides user through project_id setup, skill selection, synapse.toml creation, initial `init_project` call |
+| Codebase indexing command | Any AI coding tool that promises code awareness must expose a command to trigger indexing; users expect `/synapse:map` or equivalent | LOW | Thin wrapper over existing `index_codebase` MCP tool with progress feedback |
+| Goal-to-workflow entry point | Users need a clear "how do I start a task?" path; `/synapse:plan` or equivalent entry point is the answer | MEDIUM | Connects user goal to PEV workflow; builds on existing `/synapse:new-goal` |
+| Project status visibility | Users expect to see current state without asking; `/synapse:status` already exists and is table stakes — it must be complete and reliable | LOW | Already built; needs verification that all fields display correctly |
+| MCP server wired into Claude Code | The MCP server must auto-start when Claude Code opens; nothing in the framework works until this is true | MEDIUM | `.mcp.json` at project root (project-scope) OR amend user's `.claude.json` (user-scope) during install; per official Claude Code MCP docs |
+| Hooks wired into Claude Code | Quality gates are useless if hooks never fire; hooks must appear in `settings.json` with correct matchers | LOW | `settings.json` already has the template (`settings.template.json`); install script must copy this to the right location |
+| Agents wired as Claude Code subagents | Framework agents are just `.md` files until they live in `.claude/agents/`; Claude Code will not use them otherwise | LOW | Copy or symlink from `packages/framework/agents/*.md` to `.claude/agents/` during install; validate frontmatter compliance |
+| CLAUDE.md project awareness | Synapse-specific instructions must be in `CLAUDE.md` so every session starts Synapse-aware; the orchestrator and workflow references must be resolvable | MEDIUM | On `/synapse:init`, offer to append Synapse context to project CLAUDE.md (opt-in, never silent); tells Claude Code about the orchestrator, workflow document, and MCP conventions |
+| Usage documentation | Every mature tool has a "how to use" guide separate from "what it is"; README covers the latter but not the former | MEDIUM | Install manual covering: user journey, commands reference, agent roster, trust.toml autonomy configuration, skills configuration |
+| Project ID seamless injection | Every MCP tool requires `project_id` but no agent currently knows where it comes from; this must be transparent | MEDIUM | Store project_id in `synapse.toml`; startup hook reads it and injects it into session context; agents reference it from context rather than asking user |
 
 ### Differentiators (Competitive Advantage)
 
-Features that set Synapse v2.0 apart from generic agent orchestration frameworks. These are the reason to use Synapse rather than LangGraph or CrewAI.
+Features that set Synapse apart in the Claude Code framework ecosystem. These are where the product competes.
 
 | Feature | Value Proposition | Complexity | Notes |
 |---------|-------------------|------------|-------|
-| Decision precedent checking ("case law") | Before any agent makes a scoped decision, it checks Synapse for prior decisions on the same topic. Prevents contradictions across sessions. No comparable open-source system does this with semantic search | HIGH | Requires: decisions table, `check_precedent` MCP tool (semantic search over decisions), PreToolUse hook that calls check_precedent before write operations. Precedent is enforced by the orchestrator, not agents themselves |
-| Recursive task decomposition to context-window size | Decomposer agent recursively breaks tasks until each leaf is <500 tokens of context. No existing open-source orchestrator enforces size limits at decomposition time | HIGH | Depth limit recommended: 5 levels (Epic → Feature → Component → Task → Subtask). Tasks are "executable" when: no children, clear success criteria, scoped to one agent role, estimated context < threshold |
-| Tiered authority enforcement via hooks | Decision authority is enforced at the infrastructure level (hooks), not by asking agents to self-report their tier. Agents cannot override tier rules by ignoring them in their prompt | HIGH | Tier 0: orchestrator only (architecture changes, dependency decisions). Tier 1: senior agents with precedent check. Tier 2: executor agents with pre-approval. Tier 3: leaf agents, read-only decisions. Enforcement via PreToolUse hook inspecting which tool and which agent is calling |
-| Config-based Trust-Knowledge Matrix | Per-domain autonomy levels in a YAML config (e.g., `ui: { autonomy: high, review_required: false }`, `security: { autonomy: low, review_required: true }`). No dynamic DB; explicit, auditable, version-controllable | MEDIUM | Trust matrix determines when `ask` vs `allow` vs `deny` fires in hooks. Domain is inferred from the task's category field. Single YAML file, hot-reloadable via `ConfigChange` hook |
-| Skill loading system (project-specific agent behavior) | Generic agent roles + project-specific knowledge injected at runtime. The same "Researcher" agent has different quality criteria for a TypeScript API project vs a Rust CLI project | MEDIUM | Skills are SKILL.md-style markdown files in `.synapse/skills/`. Agent SDK's `UserPromptSubmit` hook or system prompt injection at agent spawn time. Skill = domain vocabulary + quality criteria + project conventions |
-| Semantic precedent search (not just keyword) | "Should we use a service layer?" finds the prior ADR titled "Repository pattern over direct DB access" because they're semantically related. Keyword search misses this. | LOW | Uses Synapse v1.0 `semantic_search` over the decisions table. The `check_precedent` tool is a thin wrapper over existing search infrastructure — LOW implementation complexity because v1.0 built it |
-| Wave-based parallel execution with DAG dependency tracking | Tasks in a wave execute in parallel if they have no dependencies between them. Wave N+1 starts only when all of wave N is complete. Dependency-aware, not just sequential | HIGH | DAG of task dependencies extracted from the task tree. Wave = set of tasks with no unresolved dependencies. Claude Agent SDK `SubagentStart` hooks track per-wave completion. Inspired by dag-executor pattern (verified in search results) |
-| Progressive verification (task → feature → epic → project) | Validation isn't just "did it work?" — it runs at four granularities. A task validator checks unit output; a feature validator checks integration; an epic validator checks product coherence; a project validator checks architectural consistency | HIGH | Each granularity uses a different agent (Validator, Integration Checker, Plan Reviewer, Product Strategist). Triggered by status transitions in the task tree, not by time |
+| MCP as single source of truth principle | Agents are explicitly trained to use Synapse MCP as their primary knowledge source BEFORE filesystem exploration. No other Claude Code framework enforces this discipline | MEDIUM | Each agent prompt gets a "MCP First" section with the principle + tool call order: query Synapse → filesystem if not found → store result back to Synapse. Prevents agents from re-discovering what's already stored |
+| Dynamic skill injection via synapse.toml | Project declares its stack (`skills = ["typescript", "bun", "vitest"]`) once; startup hook auto-injects the matching skills into every session. No manual per-agent skill assignment | MEDIUM | `synapse.toml` gets a `[project] skills = [...]` field; `synapse-startup.js` reads it and injects skill content into `additionalContext`; removes hardcoded TypeScript skills from `agents.toml` |
+| Context reference delivery (decomposer to executor) | Decomposer attaches `decision_ids` and `document_ids` to each leaf task it creates. Executors receive targeted references, not "search and hope." This is core Synapse value: strategic context delivery | HIGH | Add `context_refs` field to task creation; decomposer must populate it; executor and validator prompts must start with fetching those references via `query_decisions(ids=[...])` and `get_smart_context(document_ids=[...])` |
+| Agent findings persisted as queryable documents | Integration Checker, Plan Reviewer, Validator, and Executor all store their outputs as `store_document` calls with `link_documents`. Future agents can query these findings without re-running the agent | MEDIUM | Expand allowed_tools for Integration Checker and Plan Reviewer to include `store_document` + `link_documents`; add explicit persistence steps to each agent's workflow section |
+| Domain mode (co-pilot/autopilot/advisory) delivered at runtime | trust.toml defines per-domain autonomy but currently no mechanism delivers the active mode to agents. Synapse will be the first Claude Code framework to inject domain mode per-session | MEDIUM | Startup hook reads `trust.toml` domains section; injects the active mode for each domain into additionalContext; agents reference their mode from context rather than hardcoding behavior |
+| Wave execution progress in Claude Code statusline | Task tree progress (Wave N of M, X/Y tasks done) visible in the Claude Code status line, not buried in conversation. Comparable to GSD's statusline hook | HIGH | Requires querying `get_task_tree` for active epic; emit wave/task counts; hook into Claude Code statusline via `statusLine.command` in settings.json |
+| Fail-closed error handling with explicit guidance | When a Synapse tool call fails (Ollama down, DB error), agents have explicit protocol: stop, report error, do not proceed silently. Not found in comparable frameworks | LOW | Add "MCP Error Handling" section to every agent prompt: if any `mcp__synapse__*` call returns `success: false`, halt current workflow step, report tool name + error to orchestrator, await instruction |
 
 ### Anti-Features (Commonly Requested, Often Problematic)
 
-Features that seem good for agentic coordination but create maintenance, complexity, or safety problems.
+Features that seem good but create maintenance, complexity, or safety problems for this milestone.
 
 | Feature | Why Requested | Why Problematic | Alternative |
 |---------|---------------|-----------------|-------------|
-| ML-based preference learning from past decisions | "The system should learn my preferences automatically" | Requires inference over past data, training feedback loops, and version management of learned preferences. The false positive risk (wrong preference applied silently) exceeds the benefit at v2.0 scale | Explicit skill files and Trust-Knowledge Matrix config. Human-editable, version-controlled, auditable. If learning is needed later, it becomes a dedicated milestone |
-| Dynamic agent spawning based on task analysis | "Spawn exactly the right agent for each task at runtime" | Agent specialization is a prompt engineering + tool restriction problem, not a dynamic spawning problem. Dynamic spawning adds orchestration complexity (managing arbitrary agent topologies) with minimal benefit if roles are well-defined | Fixed 10-agent roster with clear responsibilities. Orchestrator routes tasks to the appropriate fixed agent |
-| Agents deciding their own tool permissions | "Trust agents to request only what they need" | LLMs cannot reliably self-impose restrictions; they will use the broadest permission available. Hooking this to actual enforcement requires infrastructure-level control anyway | Tool allowlists in agent definitions + PreToolUse enforcement in hooks. Agent cannot override. This is a safety non-negotiable |
-| Global decision enforcement across all tool calls | "Every single action should check precedents" | Semantic search on every tool call creates massive latency and token overhead. Not all tool calls have decision implications | Precedent checking triggered only on: write operations (store_document, store_decision), on task creation (create_task), and by the Plan Reviewer agent before plan approval |
-| Unbounded task decomposition depth | "Let agents decompose as deep as they need" | Depth > 5-6 creates coordination overhead that exceeds the benefit; leaf tasks become so small they're indistinguishable from single function calls; cycle detection becomes non-trivial | Depth limit of 5 (Epic=1, Feature=2, Component=3, Task=4, Subtask=5). Orchestrator rejects decomposition attempts that would exceed the limit |
-| Agents collaborating via shared memory (blackboard) | "Agents should read each other's working memory" | Concurrent writes to shared state require locking; lock contention causes deadlocks; the blackboard pattern is well-studied as a source of coordination bugs | Agent outputs flow through the task tree as completion notes on `tasks` table fields. Orchestrator mediates all cross-agent information flow |
-| Real-time agent monitoring dashboard | "I want to see what agents are doing live" | Web UI / dashboard is explicitly out of scope (see PROJECT.md). CLI-only for v2.0. Dashboard adds an entirely separate product surface | SubagentStart/Stop hooks write to the activity_log table (v1.0 already exists). Users can query it via existing project_overview or raw SQL |
-| Automated rollback on validation failure | "If validation fails, undo the changes automatically" | Code changes are not easily reversible at the agent level; partial rollback creates worse state than the original failure; agents operating in git repos can't atomically undo file writes | Validation failure triggers a human escalation checkpoint (`ask` permission decision). Git history provides manual rollback capability |
+| Silent CLAUDE.md amendment | "Just add Synapse instructions automatically during install" | Modifying a user's project files without consent destroys trust; CLAUDE.md might have conflicting instructions; discovery is impossible when things break silently | Opt-in append: `/synapse:init` proposes the exact text to add and asks for approval; user sees what will be added before it happens |
+| Global `.claude/` installation (default) | "Install once, use everywhere" | Project-scope keeps config explicit and version-controllable; global install creates invisible dependencies that break when users switch projects; project teams can't share global config | Default to project-scope (`/.claude/` and `/.mcp.json`); offer global option explicitly with warning |
+| Automatic dependency installation (Ollama, bun) | "The install script should set up everything" | Installing system-level tools (Ollama, Bun) without explicit user consent is a bad practice; different users have different package managers; version conflicts are hard to debug | Prerequisites check with clear installation instructions per platform; script tells users exactly what to install and how, then validates |
+| Agent self-selection of project_id | "Let each agent figure out the project_id from context" | Inconsistency risk: different agents in the same session might resolve to different projects; fragile when multiple projects are indexed | Single source of truth: project_id in `synapse.toml`, injected by startup hook, referenced from session context by all agents |
+| E2E test suite for the entire PEV workflow | "Add automated tests for the full workflow" | The PEV workflow involves Claude Code spawning subagents, which cannot be meaningfully automated in unit tests; attempts create brittle mocks that test nothing real | Manual E2E validation on a real project (gap analysis item #6); document what was validated and what broke; automated testing of individual hooks and tool integrations only |
+| Runtime skill discovery (agents pick their own skills) | "Let agents choose which skills apply" | Dynamic skill selection is Claude Code's approach for personal skills; Synapse needs deterministic, auditable skill injection for reproducibility | Project-declared skills in `synapse.toml`; startup hook reads and injects; no agent-side discovery |
+| Web dashboard for workflow progress | "I want a live view of what agents are doing" | Explicitly out of scope per PROJECT.md; adds a second product surface; requires a running web server | Claude Code statusline hook for task/wave progress; `/synapse:status` command for detailed view; activity log queryable via MCP tools |
 
 ---
 
 ## Feature Dependencies
 
 ```
-[Orchestrator Process (Claude Agent SDK)]
-    └──spawns──> [All 10 Specialized Agents]
-    └──uses──> [Synapse MCP (v1.0 data layer, already built)]
-    └──enforces via──> [Hook System (PreToolUse, PostToolUse)]
-    └──requires──> [Agent Role Definitions (config)]
-    └──requires──> [Trust-Knowledge Matrix (YAML config)]
+[Install Script]
+    └──creates──> [.mcp.json at project root]
+    └──creates──> [.claude/agents/ from packages/framework/agents/]
+    └──creates──> [.claude/hooks/ from packages/framework/hooks/]
+    └──creates──> [.claude/settings.json from settings.template.json]
+    └──creates──> [synapse.toml with project_id + skills]
+    └──checks──> [Prerequisites: Bun, Ollama, nomic-embed-text]
 
-[Decision Tracking (decisions table + tools)]
-    └──requires──> [Synapse v1.0 embedding pipeline] (already built)
-    └──requires──> [Synapse v1.0 hybrid search] (already built)
-    └──enables──> [Precedent Checking (check_precedent tool)]
-    └──enables──> [Tiered Authority Enforcement]
+[/synapse:init command]
+    └──requires──> [Install Script] (framework wired before init runs)
+    └──calls──> [init_project MCP tool]
+    └──proposes──> [CLAUDE.md amendment] (opt-in)
+    └──configures──> [synapse.toml skills field]
 
-[Tiered Authority Enforcement]
-    └──requires──> [Decision Tracking] (precedent lookup)
-    └──requires──> [Hook System] (enforcement mechanism)
-    └──requires──> [Agent Role Definitions] (which tier each role is)
-    └──requires──> [Trust-Knowledge Matrix] (per-domain autonomy levels)
+[/synapse:map command]
+    └──requires──> [MCP server wired] (.mcp.json present and working)
+    └──calls──> [index_codebase MCP tool]
+    └──requires──> [Ollama running] (embedding requires it)
 
-[Task Hierarchy (tasks table + tools)]
-    └──requires──> [Synapse v1.0 schema foundations] (parent_id, depth fields — already seeded)
-    └──enables──> [Recursive Decomposition]
-    └──enables──> [Status Propagation]
-    └──enables──> [Wave-Based Parallel Execution]
+[/synapse:plan command]
+    └──requires──> [/synapse:init] (project must be initialized)
+    └──requires──> [/synapse:map] (code context helps decomposition)
+    └──triggers──> [PEV workflow via synapse-orchestrator agent]
+    └──requires──> [Agents wired into .claude/agents/]
 
-[Wave-Based Parallel Execution]
-    └──requires──> [Task Hierarchy] (DAG derived from task tree)
-    └──requires──> [Orchestrator Process] (wave controller)
-    └──requires──> [Hook System] (SubagentStart/SubagentStop tracking)
-    └──enhances──> [Progressive Verification]
+[Dynamic Skill Injection]
+    └──requires──> [synapse.toml with skills field]
+    └──requires──> [synapse-startup.js updated] (reads toml, injects skills)
+    └──enhances──> [All 10 agent prompts] (agents no longer need hardcoded skills)
 
-[Skill Loading System]
-    └──requires──> [Agent Role Definitions] (skills injected per role)
-    └──requires──> [Orchestrator Process] (injection point at spawn time)
-    └──enhances──> [All 10 Specialized Agents]
+[project_id Injection]
+    └──requires──> [synapse.toml with project_id field]
+    └──requires──> [synapse-startup.js updated] (injects project_id into context)
+    └──required by──> [Every MCP tool call by any agent]
 
-[Progressive Verification]
-    └──requires──> [Task Hierarchy] (triggers on status transitions)
-    └──requires──> [Wave-Based Parallel Execution] (verification runs after each wave)
-    └──requires──> [Hook System] (SubagentStop → trigger verification)
+[Agent MCP Usage Instructions]
+    └──requires──> [Agent prompts updated] (add "MCP First" principle)
+    └──enhances──> [E2E PEV Workflow Validation]
+    └──requires──> [tool knowledge documented] (parameter shapes, accepted values)
 
-[Plan-Execute-Validate Workflow]
-    └──requires──> [Task Hierarchy] (plan = task tree)
-    └──requires──> [Wave-Based Parallel Execution] (execute phase)
-    └──requires──> [Progressive Verification] (validate phase)
-    └──requires──> [Hook System] (iteration limit enforcement)
-    └──requires──> [Decision Tracking] (validate phase checks precedents)
+[Context Reference Delivery]
+    └──requires──> [Decomposer prompt updated] (must populate context_refs)
+    └──requires──> [Executor/Validator prompts updated] (must fetch refs at start)
+    └──requires──> [MCP task schema extended] (context_refs field on tasks)
+
+[Domain Mode Injection]
+    └──requires──> [synapse-startup.js updated] (reads trust.toml domains)
+    └──requires──> [All agent prompts updated] (reference injected mode)
+    └──requires──> [trust.toml domain modes defined]
+
+[Progress Visibility / Statusline]
+    └──requires──> [settings.json statusLine config]
+    └──requires──> [statusline hook script]
+    └──requires──> [Active epic in task tree] (something to display)
+
+[E2E PEV Workflow Validation]
+    └──requires──> [All of the above] (install, init, map, plan, agents wired)
+    └──requires──> [Agents have MCP usage instructions]
+    └──requires──> [project_id injected seamlessly]
+    └──produces──> [Documented validation results + gap list]
 ```
 
 ### Dependency Notes
 
-- **Decision Tracking requires v1.0, not new infrastructure.** The decisions table is new, but embedding, hybrid search, and chunking are all v1.0. `check_precedent` is a thin MCP tool over `semantic_search`. LOW implementation cost relative to the value delivered.
-- **Hook System is the enforcement layer for everything.** Authority enforcement, tier checking, precedent lookup, audit logging — all flow through PreToolUse/PostToolUse hooks. The Claude Agent SDK hook system is the infrastructure substrate that makes the whole authority model implementable.
-- **Task Hierarchy bootstraps from v1.0 schema.** The `parent_id` and `depth` columns exist in the v1.0 schema already. New: `tasks` as a dedicated LanceDB table with status, assigned_agent, success_criteria, estimated_tokens, wave_number fields.
-- **Skill Loading and Trust Matrix are config, not DB.** Both are YAML/markdown files, not tables. This keeps them simple, version-controllable, and auditable. The tradeoff is no runtime mutation — which is the point.
-- **Progressive Verification depends on Wave Execution because verification is wave-scoped.** After each wave completes (SubagentStop fires for the last subagent in a wave), the orchestrator triggers the appropriate verification agent for that wave's scope level.
+- **Install script is the critical path gating.** Nothing works until the MCP server, hooks, and agents are wired into Claude Code. All command and agent features depend on this foundation. It must be the first thing built.
+- **project_id injection unlocks agent usability.** Currently every agent would need to ask the user for `project_id` since no prompt mentions where it comes from. This must be solved before any E2E validation can succeed.
+- **Dynamic skill injection is a prerequisite for language-agnostic agents.** Currently 7 of 11 agents have TypeScript hardcoded in `agents.toml`. This must be removed before the framework is usable on Python or Rust projects.
+- **CLAUDE.md amendment is opt-in but high leverage.** Without it, users get a generic Claude Code session. With it, the orchestrator agent is visible and the PEV workflow is referenced. The amendment proposal is part of `/synapse:init`, not a standalone feature.
+- **Context reference delivery is Synapse's core differentiator.** The whole premise of the platform is "agents get the right context." If the decomposer doesn't attach document/decision references to tasks, executors are reduced to `get_smart_context` and hoping. This is high priority despite high complexity.
 
 ---
 
 ## MVP Definition
 
-### Launch With (v2.0)
+### Launch With (v3.0)
 
-Minimum set to validate the coordination layer concept end-to-end.
+Minimum viable working prototype — what's needed to run PEV end-to-end on a real project.
 
-- [ ] **decisions table + store_decision + query_decisions** — Decision persistence. Without this, precedent checking has no data. Required before everything else in the decision tracking chain.
-- [ ] **check_precedent MCP tool** — Semantic search over decisions. The "case law" behavior. Thin wrapper over v1.0 search.
-- [ ] **tasks table + create_task + update_task + get_task_tree** — Task hierarchy storage. Required for decomposition, wave execution, and status tracking.
-- [ ] **Orchestrator process skeleton (Claude Agent SDK)** — The process that spawns Synapse as MCP subprocess and routes work to agents. Required to wire anything else together.
-- [ ] **Agent role definitions (10 roles as config + system prompts)** — Without defined roles, you have one undifferentiated agent. This is pure config work, not code.
-- [ ] **PreToolUse hook — tier enforcement** — Agents cannot call tools above their tier authority. This is the safety-critical hook that makes the authority model real, not aspirational.
-- [ ] **PreToolUse hook — tool allowlist enforcement** — Each agent is constrained to its allowed tool set. Enforcement in the hook, not in the agent prompt.
-- [ ] **Skill loading system (SKILL.md injection at spawn)** — Generic agents + project skills. Without this, all agents behave identically regardless of project domain.
-- [ ] **Trust-Knowledge Matrix (YAML config)** — Per-domain autonomy levels. Determines when hooks return `ask` vs `allow`. Without this, the hook has no policy to enforce.
-- [ ] **Wave-based parallel execution** — Task DAG → waves → parallel subagent spawning. Without this, execution is purely sequential and slow.
-- [ ] **Plan-Execute-Validate loop (max 3 iterations)** — The core workflow loop. Plan Reviewer agent checks the plan before execution; Validator agent checks output after. Three-iteration limit prevents infinite refinement.
-- [ ] **PostToolUse hook — audit logging** — Every tool call logged to activity_log (v1.0 table). Required for traceability and debugging.
+- [ ] **Install script** — prerequisite check + `.mcp.json` + `.claude/agents/` + `.claude/hooks/` + `settings.json`; single command to wire everything
+- [ ] **`/synapse:init` command** — project setup: `synapse.toml` creation, `init_project` call, opt-in CLAUDE.md amendment, initial skill selection
+- [ ] **`/synapse:map` command** — `index_codebase` wrapper with progress feedback and Ollama status check
+- [ ] **`/synapse:plan` command** — connects user goal to PEV workflow via orchestrator agent
+- [ ] **project_id injection** — `synapse.toml` stores it, startup hook reads and injects it; agents reference from context
+- [ ] **Dynamic skill injection** — `synapse.toml` `skills` field, startup hook injects matched skills; remove hardcoded TypeScript from `agents.toml`
+- [ ] **Agent MCP usage instructions** — each agent gets: tool call examples, parameter shapes, tool constraints, content structure templates, "MCP First" principle, error handling guidance
+- [ ] **Domain mode injection** — startup hook reads trust.toml, injects active domain modes; all agent prompts updated to reference their mode
+- [ ] **Context reference delivery** — decomposer populates `context_refs` on leaf tasks; executor/validator prompts start with fetching those refs
+- [ ] **Findings persistence** — Integration Checker, Plan Reviewer, Validator, Executor all store their outputs as queryable documents
+- [ ] **E2E PEV workflow validation** — manual run on a real project; document what breaks; patch the top-3 issues found
 
-### Add After Validation (v2.x)
+### Add After Validation (v3.x)
 
-Features to add once the coordination layer is running and being used in practice.
+Features to add once the first real E2E cycle has run and been validated.
 
-- [ ] **Progressive verification at epic/project granularity** — Task-level and feature-level verification in v2.0. Epic and project-level verification adds complexity that's only valuable once the lower levels are proven. Trigger: first completed epic.
-- [ ] **SubagentStop → verification pipeline integration** — Hook-triggered verification after each wave. Requires stable hook infrastructure first. Trigger: 3+ full PEV cycles completed.
-- [ ] **Decision enforcement in Plan Review phase** — Plan Reviewer agent checks whether the proposed plan contradicts existing decisions before execution starts. Trigger: a plan actually contradicted a decision in practice.
-- [ ] **Agent SDK ConfigChange hook for hot-reload of Trust Matrix** — Reload YAML config without restarting orchestrator. Trigger: users report needing to adjust autonomy levels mid-session.
-- [ ] **Decomposer depth estimation via token counting** — Currently depth limit is a fixed 5 levels. Adding token estimation of task scope enables dynamic stopping. Trigger: tasks at depth 3 are still too large for executors.
+- [ ] **Progress statusline hook** — task tree progress in Claude Code statusline; trigger: E2E validation confirms task tree updates correctly
+- [ ] **Flesh out thin skills** — tailwind, python, sql SKILL.md files are stubs; source from community standards (Airbnb style guide, official docs); trigger: first non-TypeScript project attempted
+- [ ] **Additional generic skills** — brainstorming, testing strategy, architecture design; trigger: user feedback identifying gaps
+- [ ] **Tech debt resolution** — escapeSQL dedup, created_at fix, INT-02 AST edges, lint warnings; trigger: before public release
+- [ ] **Autonomy mode ordering consistency** — Co-Pilot/Advisor/Autopilot order standardized across all config and agent files; trigger: documentation pass
 
-### Future Consideration (v3+)
+### Future Consideration (v4+)
 
-Features to defer until v2.0 is validated in production.
+Features to defer until v3.0 is validated in production use.
 
-- [ ] **GSD/BMad project import** — Import existing project structures into Synapse decision + task format. Complex format parsing; lower value than building the coordination layer itself. Defer until users request migration path.
-- [ ] **ML preference learning** — Anti-feature until v2.0 is proven; requires training signal that only exists after extensive use.
-- [ ] **Multi-user / collaborative orchestration** — Single-user orchestrator for now. Multi-user requires session isolation, conflict resolution, and concurrent task claiming. Out of scope.
-- [ ] **MCP resources and prompt templates** — Useful but not blocking; v2.0 uses direct system prompts and skill injection instead.
-- [ ] **Web UI / monitoring dashboard** — Explicitly out of scope per PROJECT.md. Activity log is queryable via MCP tools.
+- [ ] **GSD / BMad project import** — import existing project structures; requires format parsing; defer until users request migration
+- [ ] **MCP resources and prompt templates** — Claude Code supports MCP `prompts` as slash commands; useful but not blocking v3.0
+- [ ] **Additional code languages (beyond TS/Python/Rust)** — AST parsing expansion; defer per PROJECT.md constraints
+- [ ] **Automated preference learning** — explicit config is more predictable; ML preference learning deferred per PROJECT.md decision
+- [ ] **Real-time collaboration** — single-user orchestrator; multi-user is a separate product surface
 
 ---
 
@@ -179,183 +201,230 @@ Features to defer until v2.0 is validated in production.
 
 | Feature | User Value | Implementation Cost | Priority |
 |---------|------------|---------------------|----------|
-| decisions table + store/query/check_precedent | HIGH | LOW (v1.0 search already built) | P1 |
-| tasks table + create/update/get_task_tree | HIGH | LOW (v1.0 schema foundations exist) | P1 |
-| Orchestrator process skeleton | HIGH | MEDIUM (Agent SDK well-documented) | P1 |
-| 10 agent role definitions (config + prompts) | HIGH | LOW (no code, pure config) | P1 |
-| PreToolUse hook — tier + tool allowlist enforcement | HIGH (safety critical) | MEDIUM (hook API is straightforward) | P1 |
-| Skill loading system | HIGH | LOW (SKILL.md injection at spawn) | P1 |
-| Trust-Knowledge Matrix (YAML config) | HIGH | LOW (config file, no DB) | P1 |
-| Wave-based parallel execution | HIGH | HIGH (DAG traversal, wave controller) | P1 |
-| PEV loop (plan → execute → validate, max 3) | HIGH | HIGH (orchestration logic) | P1 |
-| PostToolUse hook — audit logging | MEDIUM | LOW (async hook, writes to existing activity_log) | P1 |
-| Tiered authority enforcement (Tier 0-3 decision hierarchy) | HIGH (safety critical) | MEDIUM (requires tier metadata on decisions) | P1 |
-| Progressive verification (task + feature level) | MEDIUM | HIGH (multi-agent coordination) | P2 |
-| SubagentStop → verification trigger integration | MEDIUM | MEDIUM (hook plumbing) | P2 |
-| Decision enforcement in Plan Review | MEDIUM | LOW (Reviewer agent calls check_precedent) | P2 |
-| ConfigChange hook for Trust Matrix hot-reload | LOW | LOW (one hook, one file reload) | P2 |
-| Dynamic depth estimation via token counting | LOW | MEDIUM | P3 |
-| GSD/BMad project import | MEDIUM | HIGH | P3 |
-| Multi-user orchestration | LOW | VERY HIGH | P3 |
+| Install script (MCP + hooks + agents wired) | HIGH | MEDIUM | P1 |
+| `/synapse:init` command | HIGH | MEDIUM | P1 |
+| `/synapse:map` command | MEDIUM | LOW | P1 |
+| `/synapse:plan` command | HIGH | MEDIUM | P1 |
+| project_id seamless injection | HIGH | LOW | P1 |
+| Dynamic skill injection via synapse.toml | HIGH | MEDIUM | P1 |
+| Agent MCP usage instructions ("MCP First") | HIGH | MEDIUM | P1 |
+| Domain mode injection into agents | HIGH | LOW | P1 |
+| MCP error handling guidance in agent prompts | HIGH | LOW | P1 |
+| Context reference delivery (decomposer → executor) | HIGH | HIGH | P1 |
+| CLAUDE.md amendment (opt-in, in `/synapse:init`) | HIGH | LOW | P1 |
+| Findings persistence (agents store outputs as docs) | MEDIUM | MEDIUM | P1 |
+| E2E PEV workflow validation (manual, real project) | HIGH | MEDIUM | P1 |
+| Usage manual / documentation | HIGH | MEDIUM | P1 |
+| Progress statusline hook | MEDIUM | HIGH | P2 |
+| Skill content completion (stub skills fleshed out) | MEDIUM | MEDIUM | P2 |
+| Additional generic skills | LOW | MEDIUM | P2 |
+| Tech debt resolution | MEDIUM | LOW | P2 |
+| Autonomy mode ordering consistency | LOW | LOW | P2 |
 
 **Priority key:**
-- P1: Must have for v2.0 launch
-- P2: Should have, add when core is working
-- P3: Nice to have, future milestone
+- P1: Must have for v3.0 working prototype
+- P2: Should have once core is working
+- P3: Nice to have, future consideration
 
 ---
 
-## Domain-Specific Analysis: Each Research Question
+## Domain-Specific Analysis
 
-### 1. Decision Tracking / "Case Law" Systems
+### 1. Install and Setup Experience
 
-**How precedent systems work in practice:**
-Decision precedent systems store decisions with structured fields and make them searchable. The "case law" framing means: a prior decision on Topic X has authority over future decisions on Topic X. Searchability is required because agents won't know the exact title of a prior decision — they need semantic retrieval.
+**Ecosystem patterns (MEDIUM confidence, WebSearch verified):**
 
-**What makes a decision searchable:**
-- **Rationale field** with full-text content (what was decided and why) — most important for semantic search
-- **Summary/title** for display and FTS keyword matching
-- **Outcome** (accepted/rejected/superseded) for filtering active vs historical decisions
-- **Scope tags** (domain, component, tier) for filtering without embedding lookup
-- **Embedding on rationale + summary concatenated** — this is the semantic search target
+The strongest pattern in Claude Code tool distribution is the `npx` one-command installer. GSD uses `npx get-shit-done-cc@latest`; GitHub MCP uses `claude mcp add --transport http github https://api.githubcopilot.com/mcp/`. The key UX requirement: the user should be in a working state within 5 minutes of encountering the tool.
 
-**What makes a decision "enforceable":**
-Enforcement is NOT in the decision itself. It's in the hook. The PreToolUse hook intercepts write operations, calls `check_precedent`, and if a blocking prior decision is found, returns `permissionDecision: deny` with the conflicting decision as `permissionDecisionReason`. The agent then sees the conflict and must either align with the prior decision or escalate to a higher tier to override it.
+For Synapse specifically, the install script must:
+1. Check prerequisites (Bun ≥ 1.0, Ollama running, `nomic-embed-text` model available)
+2. Create project-scoped `.mcp.json` pointing to the Synapse server
+3. Create `.claude/agents/` with the 10 agent files
+4. Create `.claude/hooks/` with the 5 hook scripts (excluding `audit-log.js` which is PostToolUse — verify all still relevant)
+5. Write `settings.json` from `settings.template.json` with correct paths
+6. Create `synapse.toml` skeleton for user to fill in
 
-**Confidence:** MEDIUM. The "case law" pattern is a Synapse-original framing. No existing open-source system was found that does semantic precedent search with hook-based enforcement. The individual components (decision logging, semantic search, hook enforcement) are all well-understood separately.
+**Why project-scope over user-scope (HIGH confidence — official Claude Code docs):**
+Claude Code's `.mcp.json` at the project root is the recommended approach for team tools. It is checked into version control, making Synapse setup reproducible for any team member. User-scope (`~/.claude.json`) is appropriate for personal tools used across all projects — Synapse is project-specific by design (different DB per project).
 
-### 2. Recursive Task Decomposition
+**First-run experience pattern (MEDIUM confidence):**
+The best developer tools distinguish "install" from "initialize." Install = system-level wiring (happens once). Initialize = project-level setup (happens per project). Synapse should follow this pattern: install script does system wiring, `/synapse:init` does project initialization.
 
-**How task hierarchy systems work:**
-Hierarchical Task Networks (HTNs) distinguish primitive tasks (directly executable) from compound tasks (requiring decomposition). The decomposition process is recursive until all tasks are primitive. In agent systems, "primitive" means: executable by a single agent in a single context window without further planning.
+### 2. Claude Code Integration
 
-**What makes a task "executable":**
-Based on research synthesis:
-- No child tasks (it's a leaf node in the tree)
-- Has explicit success_criteria field (verifiable output definition)
-- Scoped to a single agent role (no cross-agent dependencies within the task)
-- Estimated context < 500 tokens (fits in executor's working context after skill injection)
-- Has no blocked dependencies (all prerequisite tasks are complete)
+**What needs to be in `.mcp.json` (HIGH confidence — official Claude Code docs):**
 
-**Depth limits:**
-5 levels is the practical maximum (Epic → Feature → Component → Task → Subtask). Research indicates depth > 5-6 creates coordination overhead exceeding the benefit. Leaf tasks at depth 5 should never require further decomposition if the decomposer applies the "500 token context" rule correctly. Orchestrator rejects `create_task` calls that would create a node at depth > 5.
+```json
+{
+  "mcpServers": {
+    "synapse": {
+      "command": "bun",
+      "args": ["run", "${SYNAPSE_PACKAGE_PATH}/src/index.ts", "--db", "${SYNAPSE_DB_PATH}"],
+      "env": {
+        "OLLAMA_URL": "${OLLAMA_URL:-http://localhost:11434}",
+        "EMBED_MODEL": "nomic-embed-text"
+      }
+    }
+  }
+}
+```
 
-**Status propagation:**
-Upward rollup is the standard pattern (validated from Smartsheet, ServiceNow, Temporal Workflows documentation):
-- Parent is `blocked` if ANY child is `blocked`
-- Parent is `in_progress` if any child is `in_progress` and none are `blocked`
-- Parent is `complete` if ALL children are `complete`
-- Parent is `todo` if all children are `todo`
+Claude Code supports `${VAR}` and `${VAR:-default}` environment variable expansion in `.mcp.json`. The install script should write this with actual paths substituted, not environment variable placeholders (paths are machine-specific).
 
-**Confidence:** MEDIUM. HTN and recursive decomposition are well-researched. Depth limits of 5 are empirically supported but not authoritative. The "500 token" threshold for executability is a Synapse-specific design choice, not an industry standard.
+**What needs to be in `settings.json` (HIGH confidence — verified from existing `settings.template.json`):**
+The template already has the correct hook configuration. The install script must ensure:
+- Hooks reference correct paths (relative to project root or absolute)
+- SessionStart hook fires `synapse-startup.js`
+- PreToolUse hooks cover `mcp__synapse__store_decision` (tier-gate + precedent-gate) and `mcp__synapse__.*` (tool-allowlist)
+- PostToolUse hook fires `audit-log.js`
 
-### 3. Agent Specialization
+**CLAUDE.md amendment pattern (MEDIUM confidence — community practice):**
+The recommended pattern (from multiple Claude Code community sources) is to treat project `CLAUDE.md` as "AI onboarding + operating manual." The Synapse amendment should add:
+- Availability of the `synapse-orchestrator` agent and when to use it
+- Reference to `@packages/framework/workflows/pev-workflow.md`
+- The "MCP First" principle for Synapse tools
+- How to find `project_id` (from session context, injected by startup hook)
 
-**Patterns for role constraints:**
-All major frameworks (LangGraph, CrewAI, AutoGen) implement role constraints as: (a) a system prompt defining the role's purpose and behavior, and (b) a tool allowlist restricting what tools the agent can call. Enforcement in the hook layer is the correct approach because agent self-enforcement (via prompt instruction) is unreliable — LLMs use available tools regardless of prompt instructions under pressure.
+The amendment must be opt-in and show the user exact proposed text before writing.
 
-**Model selection per role:**
-Claude Agent Skills (official docs, HIGH confidence) support per-skill model override via YAML frontmatter. The same pattern applies to agent roles: Decomposer may use a reasoning model (Opus); Executor may use a faster model (Sonnet/Haiku) to reduce latency and cost.
+### 3. User-Facing Commands
 
-**Authority levels:**
-The industry is converging on 3-5 authority tiers. The Synapse Tier 0-3 design (orchestrator → senior agents → executors → leaf) is consistent with frameworks surveyed. Tiers are enforced via PreToolUse hooks that check which agent is calling which MCP tool and which tier that tool is restricted to.
+**Gap in existing commands:**
 
-**Confidence:** HIGH for the constraint approach (verified against official Agent SDK docs and multiple frameworks). MEDIUM for the specific 4-tier design.
+Existing: `/synapse:new-goal` (creates epic), `/synapse:status` (shows work streams)
+Missing: `/synapse:init` (project setup), `/synapse:map` (codebase indexing), `/synapse:plan` (trigger PEV)
 
-### 4. Skill Loading
+**Command design pattern (HIGH confidence — Claude Code official docs):**
+Claude Code commands are markdown files in `.claude/commands/<namespace>/<name>.md` with YAML frontmatter (`name`, `description`, `allowed-tools`). Commands use `$ARGUMENTS` for passed arguments. Arguments are appended automatically if not in the content.
 
-**How frameworks inject domain knowledge:**
-Claude Agent Skills (official documentation, HIGH confidence) use a two-part architecture:
-1. YAML frontmatter (name, description, allowed-tools, optional model override) — loaded at startup into the "meta-tool" description
-2. Markdown body (detailed instructions, quality criteria, project vocabulary) — loaded only when the skill is invoked
+The three missing commands are distinct in intent:
+- `/synapse:init` — setup/configuration workflow; user-invocable only; runs once per project
+- `/synapse:map` — explicit action with side effects; user-invocable only; can be re-run
+- `/synapse:plan` — triggers PEV workflow; user-invocable; primary ongoing use command
 
-The LLM selects which skill to load based on matching task intent against skill descriptions. The injection happens via hidden system messages appended to the conversation.
+All three should have `disable-model-invocation: true` in Claude Code skills format (or equivalent) to prevent automatic invocation. They are explicit user-triggered actions.
 
-**For Synapse skill loading:**
-Skills are not selected by the agent — they are explicitly injected by the orchestrator at spawn time based on agent role + project type. The orchestrator reads `.synapse/skills/<role>/<project-type>.md` and injects the content into the agent's system prompt before the first task. This is simpler than Claude Code's dynamic skill selection and avoids the security concern (malicious skill injection via long files) identified in 2025 research.
+### 4. Agent MCP Usage Instructions
 
-**Security consideration (LOW confidence, flag for phase research):**
-2025 research found that the Claude Agent Skills format enables prompt injection attacks via malicious skill files. For Synapse, skills are stored in the project repository and managed by the user — not loaded from untrusted sources. This mitigates the primary attack vector. Still worth noting in PITFALLS.md.
+**What agents currently lack (HIGH confidence — gap analysis):**
 
-**Confidence:** HIGH for the injection mechanism (official Agent SDK docs). MEDIUM for the security tradeoffs.
+Every agent prompt is missing:
+1. Concrete tool call examples (what parameters, in what order)
+2. Tool knowledge depth (accepted values for `category`, `status`, `depth` fields)
+3. Response shape documentation (what does `check_precedent` return? how to interpret it?)
+4. "MCP First" principle — explicit rule to query Synapse before filesystem exploration
+5. Error handling protocol — what to do when a Synapse tool call fails
+6. Task update rules — what fields can be overwritten vs appended; `description` should never be overwritten by validator
 
-### 5. Quality Gates / Hooks
+**Single source of truth principle (novel to Synapse):**
+No comparable open-source Claude Code framework enforces "query your knowledge base before reading files." This is a deliberate design choice for Synapse: agents must internalize that:
+1. Synapse MCP is the primary means of tracking project progress
+2. All agents rely on it to investigate previous work
+3. Results MUST be persisted in the DB after agent work
+4. DB references (document_ids, decision_ids, task_ids) should be passed to follow-up agents for targeted retrieval
 
-**Claude Agent SDK hook system (HIGH confidence — verified against official docs):**
+This principle should appear as a named section ("## Synapse MCP as Single Source of Truth") in every agent prompt.
 
-Available hooks relevant to quality gates:
-- `PreToolUse` — fires before any tool call; can `deny`, `allow`, or `ask`; can modify tool input via `updatedInput`; can inject system message context
-- `PostToolUse` — fires after tool completes; can append `additionalContext` to tool result; used for audit logging
-- `PostToolUseFailure` — fires on tool error; used for error tracking and recovery logic
-- `PermissionRequest` — custom handling for permission dialogs; replaces default Claude Code permission UI
-- `SubagentStart` / `SubagentStop` — track subagent lifecycle; used for wave completion detection and result aggregation
-- `Stop` — agent execution complete; used for session cleanup
+**Mode-aware behavior (HIGH confidence from gap analysis, novel implementation):**
+The current `product-strategist.md` and `architect.md` describe co-pilot/autopilot/advisor behavior inline. But no startup hook delivers the active mode to agents. The fix is:
+1. Startup hook reads `[domains]` section from `trust.toml`
+2. Injects the active mode for each domain as named context: "Domain mode for ui: co-pilot"
+3. Agent prompts reference "your configured domain mode" rather than embedding mode-specific logic in the prompt
 
-Hook enforcement hierarchy (official): `deny` > `ask` > `allow`. If any hook returns `deny`, the operation is blocked regardless of other hooks. Multiple hooks chain in array order.
+### 5. Skill System Completion
 
-**Hook patterns for quality gates:**
-1. **Tier enforcement**: `PreToolUse` on any Synapse MCP write tool (`mcp__synapse__store_decision`, `mcp__synapse__store_document`) — check which agent is calling, what tier that agent is, whether the operation is in-tier
-2. **Precedent checking**: `PreToolUse` on store_decision and store_document — call `check_precedent` synchronously; if conflict found, return `deny` with precedent as reason
-3. **Audit trail**: `PostToolUse` async hook — write to activity_log table without blocking execution
-4. **Wave completion**: `SubagentStop` — track which subagents have completed; trigger next wave when all current-wave subagents stop
+**Dynamic injection architecture (HIGH confidence — Claude Code subagents docs):**
 
-**Confidence:** HIGH. Hook system fully documented at official Anthropic platform docs.
+Official Claude Code documentation confirms: subagent `skills` field injects full skill content at startup. The correct Synapse approach:
+1. `synapse.toml` declares project stack: `[project] skills = ["typescript", "bun", "vitest"]`
+2. Startup hook maps declared skills to SKILL.md files in `packages/framework/skills/`
+3. Startup hook reads the matching SKILL.md files and injects their content into `additionalContext`
+4. `agents.toml` per-agent skill overrides remain for exceptional cases
 
-### 6. Plan-Execute-Validate Workflows
+This removes hardcoded `skills = ["typescript", "bun"]` from individual agent configs, making the framework language-agnostic.
 
-**How PEV loops work in multi-agent systems:**
-PEV is the dominant pattern in production multi-agent systems (confirmed across Azure Architecture Center, PromptLayer, skywork.ai, and framework docs). The canonical structure:
+**Thin skills that must be fleshed out:**
+- `tailwind/SKILL.md` — stub; needs Tailwind v4 conventions, component patterns, utility first principles
+- `python/SKILL.md` — stub; needs Python 3.12+ conventions, type annotation patterns, pytest patterns
+- `sql/SKILL.md` — stub; needs SQL query patterns, index-aware query design, LanceDB-specific SQL dialect
 
-1. **Plan phase**: Dedicated planning agent (Plan Reviewer) creates task tree from high-level objective. Output is a structured task tree in the tasks table, not a prose document.
-2. **Execute phase**: Wave-based parallel execution of tasks. Each task assigned to appropriate specialized agent. Wave N+1 starts when wave N is complete.
-3. **Validate phase**: Dedicated validation agent (Validator) checks task outputs against success_criteria. Failures trigger a second Plan-Execute-Validate iteration.
-4. **Iteration limit**: 3 iterations maximum (confirmed as best practice across GSD and research sources). After 3 failures, escalate to human (PermissionRequest hook).
+Source from established community standards (official framework docs, community style guides) rather than writing conventions from scratch.
 
-**What prevents infinite loops:**
-- Hard iteration counter tracked by orchestrator (not agents — agents can't be trusted to count)
-- Iteration counter stored in task metadata, not agent memory
-- On iteration 3 failure: `permissionDecision: ask` fires; human sees the failure reason and decides whether to continue, modify the task, or abandon
+**Missing generic skills to add:**
+- `brainstorming` — ideation protocols, how to generate and evaluate options systematically
+- `testing-strategy` — testing pyramid, coverage criteria, test naming conventions (language-agnostic)
+- `architecture-design` — component boundary principles, separation of concerns, ADR format
 
-**Sequential vs wave parallel:**
-Sequential orchestration (Azure Architecture Center pattern) is appropriate for dependent tasks (Plan Reviewer → Executor → Validator). Wave parallel is appropriate for independent tasks within the same granularity level (multiple Executor agents handling different Tasks in the same Feature simultaneously). Synapse uses both: sequential for the PEV phases, wave parallel within the Execute phase.
+### 6. E2E Workflow Validation
 
-**Confidence:** MEDIUM-HIGH. PEV loop is well-documented in the ecosystem. The specific iteration count of 3 and the wave-based execution model are validated by multiple independent sources.
+**What must be true before validation is attempted:**
+- MCP server starts and responds to all 24 tool calls
+- At least one agent can be spawned via Claude Code's Task tool
+- Startup hook injects project_id into session context
+- At least one skill is loaded and visible to the agent
+
+**Validation sequence (derived from gap analysis + PEV workflow):**
+1. Run `/synapse:init` on a test project; verify DB initializes, project_id stored
+2. Run `/synapse:map`; verify code chunks appear in LanceDB
+3. Run `/synapse:plan "add a TypeScript utility function"`; verify epic created
+4. Observe decomposer spawn (via Claude Code Task tool); verify feature/task tree created
+5. Observe executor spawn; verify task marked in_progress, then done
+6. Observe validator spawn; verify validation finding stored
+7. Check `/synapse:status` output matches task tree state
+
+**What is likely to break (from gap analysis + architecture knowledge):**
+- Hooks firing before MCP server is ready (race condition in startup hook)
+- project_id not available when first tool call fires (timing)
+- Decomposer creating tasks without context_refs (needs prompt update first)
+- Validator overwriting task description (needs prompt rules first)
+- Ollama timing out on first large indexing run (error handling)
+
+### 7. Progress Visibility
+
+**Ecosystem patterns (MEDIUM confidence):**
+GSD implements a statusline hook that shows current phase and token usage. Claude Code's `settings.json` supports a `statusLine.command` that runs a script and outputs a status string. This is the correct implementation surface for Synapse task/wave progress.
+
+**What to display:**
+- Active epic title (truncated to ~30 chars)
+- Current wave: `Wave N/M`
+- Task completion: `X/Y tasks`
+- Blocked indicator if any tasks are blocked
+
+**Why this is P2, not P1:**
+The statusline requires a working task tree with live updates. It is only useful after E2E validation confirms the task tree is being updated correctly. Building it before that creates a display for an unreliable data source.
 
 ---
 
-## Synapse-Specific: Existing v1.0 Capabilities That Power v2.0
+## Competitor / Comparable Feature Analysis
 
-This section maps v2.0 features to v1.0 infrastructure already built, to avoid duplicating work.
+| Feature | GSD Framework | Claude Code built-in | Synapse v3.0 Plan |
+|---------|---------------|----------------------|-------------------|
+| Install experience | `npx get-shit-done-cc@latest`, interactive prompt | `claude mcp add ...` CLI | Bun install script; equivalent one-command setup |
+| Project initialization | `/gsd:new-project` guided flow | `/init` (writes CLAUDE.md) | `/synapse:init`: synapse.toml + init_project + CLAUDE.md amendment |
+| Codebase mapping | `/gsd:map-codebase` | N/A (no built-in code indexing) | `/synapse:map`: triggers index_codebase with progress feedback |
+| Goal/task entry | `/gsd:new-project` / `/gsd:execute-phase` | Native conversation | `/synapse:plan`: PEV workflow trigger |
+| Status visibility | `/gsd:progress` + statusline hook | Subagent transcript files | `/synapse:status` (exists) + statusline hook (P2) |
+| Agent specialization | 6 specialized research agents | Built-in Explore/Plan/general-purpose | 10 specialized agents with tool allowlists + skill injection |
+| Knowledge persistence | Planning files in `.planning/` | CLAUDE.md memory | Synapse MCP DB (semantic search, 24 tools) |
+| Workflow enforcement | Phase-gated execution | None (user-driven) | Hooks: tier enforcement, precedent checking, audit trail |
+| Skill system | Prompt files in `.claude/` | Skills via `.claude/skills/` | Synapse skills: project-declared in synapse.toml, auto-injected |
 
-| v2.0 Feature Need | v1.0 Capability Used | Gap to Fill |
-|-------------------|---------------------|-------------|
-| Decision semantic search | `semantic_search` tool over documents table | New: `decisions` table, `store_decision` and `query_decisions` tools that route to the same embedding pipeline |
-| Precedent checking | `semantic_search` + `query_documents` with category filter | New: `check_precedent` as a named MCP tool with precedent-specific result format |
-| Activity audit log | `activity_log` table already exists with all fields needed | New: systematic PostToolUse hook that writes to it |
-| Task parent-child structure | `parent_id` and `depth` columns in documents table schema | New: dedicated `tasks` table with status, assigned_agent, success_criteria, wave_number, estimated_tokens |
-| Task embeddings for search | Ollama nomic-embed-text pipeline (768-dim) | New: embed `task_description + success_criteria` concatenation |
-| Project-scoped isolation | `project_id` on all tables | No gap — tasks table inherits same pattern |
-| Knowledge retrieval for agents | `get_smart_context`, `semantic_search`, `search_code` | No gap — agents use these directly via MCP |
+**Key differentiation from GSD:** GSD stores project knowledge in markdown files that Claude reads. Synapse stores everything in a vector-searchable DB that agents query semantically. This enables cross-session recall and strategic context delivery — GSD files grow unbounded and become context-window burdens; Synapse chunks and retrieves precisely what's needed.
 
 ---
 
 ## Sources
 
-- Claude Agent SDK hooks documentation (official): https://platform.claude.com/docs/en/agent-sdk/hooks — PreToolUse, PostToolUse, SubagentStart/Stop, PermissionRequest (HIGH confidence)
-- Claude Agent Skills architecture: https://leehanchung.github.io/blogs/2025/10/26/claude-skills-deep-dive/ — SKILL.md format, injection mechanism, meta-tool pattern (MEDIUM confidence, verified against official SDK docs)
-- Azure Architecture Center — AI Agent Orchestration Patterns: https://learn.microsoft.com/en-us/azure/architecture/ai-ml/guide/ai-agent-design-patterns — sequential, concurrent, group chat patterns (HIGH confidence, official Microsoft docs)
-- Agno guardrails documentation: https://www.agno.com/blog/guardrails-for-ai-agents — pre/post hook quality gate patterns (MEDIUM confidence)
-- Task decomposition for coding agents (atoms.dev): https://atoms.dev/insights/task-decomposition-for-coding-agents-architectures-advancements-and-future-directions/a95f933f2c6541fc9e1fb352b429da15 — HTN patterns, primitive vs compound tasks (MEDIUM confidence)
-- dag-executor skill (lobehub): https://lobehub.com/skills/erichowens-some_claude_skills-dag-executor — wave-based parallel execution pattern (MEDIUM confidence)
-- Claude Agent SDK GitHub: https://github.com/anthropics/claude-agent-sdk-python — SDK overview (HIGH confidence)
-- Agent Skills prompt injection risks: https://arxiv.org/abs/2510.26328 — security considerations for skill loading (MEDIUM confidence, academic paper)
-- Task status rollup patterns: https://docs.temporal.io/child-workflows — Temporal child workflow status propagation (MEDIUM confidence)
-- Multi-agent trust-autonomy framework: https://cloudsecurityalliance.org/blog/2025/12/16/enhancing-the-agentic-ai-security-scoping-matrix-a-multi-dimensional-approach — autonomy levels and per-domain controls (MEDIUM confidence)
-- LangGraph orchestration patterns: https://latenode.com/blog/ai-frameworks-technical-infrastructure/langgraph-multi-agent-orchestration/ — DAG-based orchestration (MEDIUM confidence)
-- WebSearch: "Claude Agent SDK hooks before_tool_call after_tool_call anthropic 2025" — confirmed SDK hook names (MEDIUM confidence, verified against official docs)
-- WebSearch: "wave based parallel agent execution dependencies task graph DAG orchestrator 2025" — wave execution pattern confirmed in multiple independent sources (MEDIUM confidence)
+- Claude Code MCP documentation (official, HIGH confidence): https://code.claude.com/docs/en/mcp — MCP installation scopes, `.mcp.json` format, env var expansion
+- Claude Code skills documentation (official, HIGH confidence): https://code.claude.com/docs/en/skills — SKILL.md format, frontmatter fields, dynamic injection, subagent preloading
+- Claude Code subagents documentation (official, HIGH confidence): https://code.claude.com/docs/en/sub-agents — `skills` field for subagent preloading, frontmatter reference, scope hierarchy
+- GSD framework GitHub (MEDIUM confidence, community source): https://github.com/gsd-build/get-shit-done — command patterns, install experience, statusline hook
+- GitHub MCP server install guide (MEDIUM confidence): https://github.com/github/github-mcp-server/blob/main/docs/installation-guides/install-claude.md — one-command install pattern
+- PROTO_GAP_ANALYSIS.md (HIGH confidence, primary source): project-specific gap analysis defining v3.0 scope
+- `packages/framework/settings.template.json` (HIGH confidence, first-party): existing hook configuration template
+- Claude Code community UX patterns: https://www.humanlayer.dev/blog/writing-a-good-claude-md — CLAUDE.md as onboarding manual pattern
 
 ---
 
-*Feature research for: Synapse v2.0 Agentic Coordination Layer*
-*Researched: 2026-03-01*
+*Feature research for: Synapse v3.0 Working Prototype*
+*Researched: 2026-03-03*

@@ -1,8 +1,24 @@
 # Architecture Research
 
-**Domain:** Agentic coordination layer — orchestrator + specialized agents + MCP client/server integration (Synapse v2.0)
-**Researched:** 2026-03-01
-**Confidence:** HIGH (Claude Agent SDK patterns verified via official docs at platform.claude.com; hook API confirmed; MCP subprocess config confirmed)
+**Domain:** Claude Code native framework integration — wiring existing Synapse components into an end-to-end usable product (v3.0 Working Prototype)
+**Researched:** 2026-03-03
+**Confidence:** HIGH for Claude Code integration mechanics (verified against existing .claude/ directory in this repo, settings.template.json, and agent frontmatter conventions); MEDIUM for install script patterns (derived from existing structure and Claude Code conventions); HIGH for dynamic skill injection (extends existing skills.ts infrastructure)
+
+---
+
+## Context: What v2.0 Built vs What v3.0 Wires Together
+
+The v2.0 architecture research (earlier in this file) described an Agent SDK orchestrator pattern (`orchestrator/` package with TypeScript classes wrapping `query()`). What was **actually built** for v2.0 is different — and simpler:
+
+**Actual v2.0 architecture (Claude Code native):**
+- `packages/framework/agents/` — 11 markdown files with YAML frontmatter (`name`, `description`, `tools`, `skills`, `model`, `color`)
+- `packages/framework/hooks/` — 6 JavaScript scripts invoked via `node hooks/X.js` from Claude Code's `settings.json` hooks config
+- `packages/framework/config/` — 3 TOML files (synapse.toml, trust.toml, agents.toml) + secrets template
+- `packages/framework/skills/` — 7 skill directories, each with a `SKILL.md` file
+- `packages/framework/workflows/pev-workflow.md` — the PEV workflow document read by the orchestrator agent
+- `packages/framework/settings.template.json` — a Claude Code `settings.json` template defining MCP server + hooks
+
+**What v3.0 must add** is the wiring layer: the install script that copies framework files into a user's `.claude/` directory, the user-facing slash commands, project_id injection, dynamic skill selection, and end-to-end E2E validation.
 
 ---
 
@@ -12,789 +28,784 @@
 
 ```
 ┌─────────────────────────────────────────────────────────────────────┐
-│  User / Claude Code                                                  │
-│  (launches orchestrator, passes prompts)                             │
-└──────────────────────────────────┬──────────────────────────────────┘
-                                   │
-                                   ▼
-┌─────────────────────────────────────────────────────────────────────┐
-│  Orchestrator Process  (orchestrator/src/)                           │
-│  Runtime: Bun + TypeScript — @anthropic-ai/claude-agent-sdk          │
+│  User's Project Repository                                           │
 │                                                                      │
-│  ┌─────────────────────────────────────────────────────────────┐     │
-│  │  query() ── main Agent SDK entry point                       │     │
-│  │  options: systemPrompt, allowedTools, agents, hooks,         │     │
-│  │           mcpServers, model, maxTurns                         │     │
-│  └───────────────────────┬─────────────────────────────────────┘     │
-│                          │ tool invocations                           │
-│  ┌───────────┐  ┌────────┴───────┐  ┌──────────────┐                │
-│  │ Planner   │  │   Executor     │  │  Validator    │                │
-│  │ (opus)    │  │   (sonnet)     │  │  (sonnet)     │                │
-│  │           │  │                │  │               │                │
-│  │ tiers 1-3 │  │  tier 3 only  │  │  tiers 2-3   │                │
-│  │ create_task│ │ update_task   │  │ check_prec.  │                 │
-│  │ store_dec  │ │ store_doc     │  │ query_dec.   │                 │
-│  └─────┬─────┘  └───────┬────────┘  └──────┬───────┘                │
-│        │                │                  │                         │
-│  ┌─────▼────────────────▼──────────────────▼──────────────────┐     │
-│  │  Hook Layer (orchestrator/src/hooks/)                        │     │
-│  │                                                              │     │
-│  │  PreToolUse:  tier-enforcement.ts  precedent-gate.ts         │     │
-│  │              user-approval.ts                                │     │
-│  │  PostToolUse: tool-audit.ts                                  │     │
-│  └──────────────────────────┬───────────────────────────────────┘    │
-│                             │ MCP tool calls (mcp__synapse__*)        │
-└─────────────────────────────┼───────────────────────────────────────┘
-                              │ stdio subprocess
-                              │ (Agent SDK spawns via mcpServers config)
-┌─────────────────────────────▼───────────────────────────────────────┐
-│  Synapse MCP Server  (src/)                                          │
-│  Runtime: Bun + TypeScript — @modelcontextprotocol/sdk               │
-│  Transport: StdioServerTransport                                      │
+│  .claude/                   (wired by install script)               │
+│  ├── settings.json          ← MCP server config + hook registrations│
+│  ├── agents/                ← copies of framework agent .md files   │
+│  │   ├── synapse-orchestrator.md                                     │
+│  │   ├── executor.md                                                 │
+│  │   └── ... (10 agents)                                             │
+│  ├── commands/synapse/      ← user-facing slash commands             │
+│  │   ├── init.md            ← /synapse:init                          │
+│  │   ├── map.md             ← /synapse:map                           │
+│  │   └── plan.md            ← /synapse:plan                          │
+│  └── hooks/                 ← copies of framework hook .js files    │
+│      ├── synapse-startup.js                                          │
+│      ├── tier-gate.js                                                │
+│      ├── tool-allowlist.js                                           │
+│      ├── precedent-gate.js                                           │
+│      ├── audit-log.js                                                │
+│      └── synapse-audit.js                                            │
 │                                                                      │
-│  18 existing tools + 6 new tools (Phase 8-9):                        │
-│  store_decision, query_decisions, check_precedent                    │
-│  create_task, update_task, get_task_tree                             │
-│                                                                      │
-│  Embedding: Ollama nomic-embed-text (768-dim)                        │
-└──────────────────────────────┬──────────────────────────────────────┘
-                               │
-                               ▼
-┌─────────────────────────────────────────────────────────────────────┐
-│  LanceDB (embedded, Lance format)                                    │
-│                                                                      │
-│  Existing (v1):              New (v2, Phase 8-9):                    │
-│  ┌──────────────┐           ┌───────────┐  ┌───────────┐            │
-│  │  documents   │           │ decisions │  │  tasks    │            │
-│  │  doc_chunks  │           │ (vector)  │  │ (vector)  │            │
-│  │  code_chunks │           └───────────┘  └───────────┘            │
-│  │  relationships│                                                   │
-│  │  project_meta│                                                    │
-│  │  activity_log│                                                    │
-│  └──────────────┘                                                    │
-│  Storage: ./.synapse/ (configurable --db flag)                       │
+│  .synapse/                  (created by /synapse:init)              │
+│  ├── config/                ← user-specific config (git-ignored)     │
+│  │   ├── synapse.toml       ← db path, ollama url (filled in)        │
+│  │   ├── trust.toml         ← autonomy levels (copied from defaults) │
+│  │   ├── agents.toml        ← agent config (populated dynamically)   │
+│  │   └── project.toml       ← NEW: project_id + active skills        │
+│  └── skills/                ← project-specific skill overrides       │
+│      └── project/SKILL.md   ← optional project-specific skill        │
 └─────────────────────────────────────────────────────────────────────┘
+                                   │
+                        MCP stdio subprocess
+                                   │
+┌─────────────────────────────────▼───────────────────────────────────┐
+│  Synapse MCP Server (packages/server/)                               │
+│  Launched via: bun run packages/server/src/index.ts --db <path>      │
+│                                                                      │
+│  21 tools (18 existing + store_decision + query_decisions +          │
+│             check_precedent + create_task + update_task +            │
+│             get_task_tree)                                           │
+│                                                                      │
+│  All tools accept project_id (injected by startup hook)             │
+└──────────────────────────────────────────────────────────────────────┘
+                                   │
+                                   │
+┌─────────────────────────────────▼───────────────────────────────────┐
+│  LanceDB (embedded)                                                  │
+│  Path: configured in synapse.toml or SYNAPSE_DB_PATH env var        │
+│  6 tables: documents, doc_chunks, code_chunks, relationships,        │
+│            project_meta, activity_log, + decisions, + tasks          │
+└──────────────────────────────────────────────────────────────────────┘
 ```
 
 ### Component Responsibilities
 
 | Component | Responsibility | Communicates With |
 |-----------|----------------|-------------------|
-| `orchestrator/src/orchestrator.ts` | Core class — wraps `query()`, manages session lifecycle, exposes `run(prompt, mode)` | Agent SDK `query()`, config, agent definitions, hooks |
-| `orchestrator/src/synapse-connection.ts` | Builds `mcpServers` config pointing to Synapse subprocess | Consumed by orchestrator's `query()` options |
-| `orchestrator/src/config.ts` | Zod-validated config (synapse path, project_id, model, API key) | Loaded at startup; passed to orchestrator |
-| `orchestrator/src/agents/` | AgentDefinition objects — system prompts, tool lists, model choice, tier authority | Passed to `query()` options as `agents: {}` |
-| `orchestrator/src/prompts/` | System prompt templates with precedent-check instructions | Imported by agent definitions |
-| `orchestrator/src/hooks/` | PreToolUse/PostToolUse callbacks for tier enforcement, precedent gates, audit log | Passed to `query()` options as `hooks: {}` |
-| `orchestrator/src/workflows/plan-execute-validate.ts` | Full PEV loop — sequences Planner → checkpoint → Executor → Validator | Calls orchestrator `run()` with different modes |
-| `orchestrator/src/skill-registry.ts` | Loads skill files, maps project attributes to skill bundles | Injects skill content into agent system prompts at construction time |
-| `orchestrator/src/decision-tiers.ts` | Authority matrix — maps agent names to allowed tier numbers | Imported by tier-enforcement hook |
-| `src/db/schema.ts` | Arrow schemas + Zod row schemas for `decisions` and `tasks` tables | Modified in Phase 8-9; no orchestrator dependency |
-| `src/tools/store-decision.ts` etc. | New MCP tools following existing registerXTool pattern | Called by orchestrator via MCP protocol |
+| Install script (`packages/framework/install.sh` or `install.ts`) | Copies framework files into user's `.claude/`, generates settings.json, creates `.synapse/config/` skeleton | User's filesystem; reads framework files; writes to `.claude/` and `.synapse/` |
+| `/synapse:init` command | First-run setup: gather db path, run init_project, index codebase, prompt for project name | MCP tools: `init_project`, `index_codebase`; writes `.synapse/config/project.toml` |
+| `/synapse:map` command | Index/re-index the codebase | MCP tool: `index_codebase`, `get_index_status` |
+| `/synapse:plan` command | Trigger PEV workflow for a goal | Delegates to `synapse-orchestrator` agent |
+| `synapse-startup.js` hook | SessionStart: inject project_id context + status overview | Reads `.synapse/config/project.toml`; injects via `additionalContext` |
+| `tool-allowlist.js` hook | PreToolUse: gate Synapse MCP tools to per-agent allowlists | Reads `agents.toml`; denies on violation |
+| `tier-gate.js` hook | PreToolUse: enforce tier authority on `store_decision` | Reads `trust.toml`; denies unauthorized tiers |
+| `precedent-gate.js` hook | PreToolUse: inject precedent check reminder before `store_decision` | Advisory only; injects `additionalContext` |
+| `audit-log.js` hook | PostToolUse: log all tool calls | Writes to stderr or audit file |
+| Agent `.md` files | System prompts for specialized agents; read by Claude Code at spawn | Injected by Claude Code when agent is invoked |
+| `skills.ts` (framework src) | Load SKILL.md files; estimate tokens; warn on unreferenced skills | Called programmatically or read directly by agents |
+| `project.toml` | NEW: canonical project_id + skill assignments for active project | Read by `synapse-startup.js` for session injection |
 
 ---
 
 ## Recommended Project Structure
 
-### Synapse MCP Server (existing — src/)
+### Framework Package (packages/framework/) — Existing + New
 
 ```
-src/
-├── index.ts                         # Entry point (unchanged)
-├── server.ts                        # McpServer + tool registrations (add 6 new tools)
-├── config.ts                        # CLI arg parsing (unchanged)
+packages/framework/
+├── agents/
+│   ├── synapse-orchestrator.md      # existing — wired into .claude/agents/
+│   ├── executor.md                   # existing
+│   ├── decomposer.md                 # existing
+│   ├── validator.md                  # existing
+│   └── ... (8 more agent .md files)  # existing
 │
-├── db/
-│   ├── connection.ts                # connectDb() helper (unchanged)
-│   └── schema.ts                   # ADD: DECISIONS_SCHEMA, TASKS_SCHEMA,
-│                                   #      DecisionRowSchema, TaskRowSchema
+├── commands/                         # NEW DIRECTORY
+│   └── synapse/
+│       ├── init.md                   # NEW: /synapse:init command
+│       ├── map.md                    # NEW: /synapse:map command
+│       └── plan.md                   # NEW: /synapse:plan command
 │
-├── tools/
-│   ├── ...existing 18 tools...
-│   ├── store-decision.ts            # NEW: Phase 8
-│   ├── query-decisions.ts           # NEW: Phase 8
-│   ├── check-precedent.ts           # NEW: Phase 8
-│   ├── create-task.ts               # NEW: Phase 9
-│   ├── update-task.ts               # NEW: Phase 9
-│   └── get-task-tree.ts             # NEW: Phase 9
+├── hooks/
+│   ├── synapse-startup.js            # MODIFY: add project_id injection
+│   ├── tier-gate.js                  # existing
+│   ├── tool-allowlist.js             # existing
+│   ├── precedent-gate.js             # existing
+│   ├── audit-log.js                  # existing
+│   └── synapse-audit.js              # existing
 │
-└── ...existing services...
-```
-
-### Orchestrator (new — orchestrator/)
-
-```
-orchestrator/
-├── package.json                     # Separate package: @anthropic-ai/claude-agent-sdk
-├── tsconfig.json                    # Extends root or standalone
+├── config/
+│   ├── agents.toml                   # MODIFY: add dynamic skills support
+│   ├── synapse.toml                  # existing
+│   ├── trust.toml                    # existing
+│   └── secrets.toml.template         # existing
+│
+├── skills/
+│   ├── typescript/SKILL.md           # existing
+│   ├── react/SKILL.md                # existing (stub — flesh out)
+│   ├── python/SKILL.md               # existing (stub — flesh out)
+│   ├── vitest/SKILL.md               # existing (stub — flesh out)
+│   ├── sql/SKILL.md                  # existing (stub — flesh out)
+│   ├── bun/SKILL.md                  # existing (stub — flesh out)
+│   ├── tailwind/SKILL.md             # existing (stub — flesh out)
+│   └── project/
+│       └── SKILL.md                  # NEW: template for project-specific skills
+│
+├── workflows/
+│   └── pev-workflow.md               # existing
+│
+├── settings.template.json            # MODIFY: update paths for installed layout
+│
 ├── src/
-│   ├── index.ts                     # Entry point: parse args, run PEV workflow
-│   ├── orchestrator.ts              # Core class: run(prompt, mode) wrapping query()
-│   ├── config.ts                    # Zod config: synapsePath, projectId, model, apiKey
-│   ├── synapse-connection.ts        # buildSynapseConfig() -> McpServerConfig
-│   ├── decision-tiers.ts            # TIER_AUTHORITY: Record<AgentName, number[]>
-│   ├── skill-registry.ts            # loadSkills(projectAttrs) -> SkillBundle
-│   │
+│   ├── config.ts                     # existing — TOML loaders
+│   └── skills.ts                     # existing — skill file loader
+│
+├── install.sh                        # NEW: install script (or install.ts)
+└── package.json                      # existing
+```
+
+### User Project After Install
+
+```
+<user-project>/
+├── .claude/
+│   ├── settings.json                 # Generated by install script
 │   ├── agents/
-│   │   ├── types.ts                 # AgentDefinition factory type
-│   │   ├── planner.ts               # Planner AgentDefinition (opus, tiers 1-3)
-│   │   ├── executor.ts              # Executor AgentDefinition (sonnet, tier 3)
-│   │   ├── validator.ts             # Validator AgentDefinition (sonnet, tiers 2-3)
-│   │   └── index.ts                 # buildAgents(config, skills) -> agents record
-│   │
-│   ├── prompts/
-│   │   ├── planner.md               # Planner system prompt template
-│   │   ├── executor.md              # Executor system prompt template
-│   │   └── validator.md             # Validator system prompt template
-│   │
-│   ├── hooks/
-│   │   ├── tier-enforcement.ts      # PreToolUse: block store_decision by tier
-│   │   ├── precedent-gate.ts        # PreToolUse: inject "check precedent" context
-│   │   ├── user-approval.ts         # PreToolUse: return "ask" for tier 0 decisions
-│   │   └── tool-audit.ts            # PostToolUse: log all MCP tool calls
-│   │
-│   ├── workflows/
-│   │   └── plan-execute-validate.ts # PEV loop: plan -> checkpoint -> execute -> validate
-│   │
-│   └── skills/
-│       ├── registry.ts              # Skill file loading and project attribute mapping
-│       └── examples/
-│           ├── typescript-web.md    # Example skill bundle for TS web projects
-│           └── data-science.md      # Example skill bundle for data science projects
+│   │   └── <all 11 agent .md files>  # Copied by install script
+│   ├── commands/
+│   │   └── synapse/
+│   │       ├── init.md               # Copied by install script
+│   │       ├── map.md                # Copied by install script
+│   │       └── plan.md               # Copied by install script
+│   └── hooks/
+│       └── <all 6 hook .js files>    # Copied by install script
+│
+└── .synapse/
+    ├── config/
+    │   ├── synapse.toml              # Generated by install; filled by /synapse:init
+    │   ├── trust.toml                # Copied default; user-editable
+    │   ├── agents.toml               # Generated; updated by /synapse:init
+    │   └── project.toml              # NEW: created by /synapse:init
+    └── skills/
+        └── project/SKILL.md          # Optional; user-created
 ```
 
 ### Structure Rationale
 
-- **`orchestrator/` as separate package:** Keeps runtime dependencies isolated (Agent SDK only in orchestrator). Synapse stays independent — it does not know the orchestrator exists. Each can be versioned separately.
-- **`agents/` as factory functions, not singletons:** Agent definitions are built at runtime from config + loaded skills. This allows injecting project-specific skill content into system prompts without hardcoding.
-- **`prompts/` as separate .md files:** System prompts are large and change frequently. Markdown files are more readable than template literal strings in code. Loaded at runtime via `fs.readFile`.
-- **`hooks/` as single-responsibility modules:** Each hook file handles exactly one concern. Hooks are chained in `query()` options — ordering matters (tier enforcement before precedent gate before audit).
-- **`skills/` inside orchestrator:** Skill files are orchestrator concerns (they shape agent behavior), not Synapse concerns (Synapse is data-layer only).
-- **No shared types package:** The boundary between orchestrator and Synapse is the MCP protocol. Orchestrator never imports from `src/`. All typing at the boundary comes from the MCP client SDK types or JSON.
+- **`.claude/` contains copies, not symlinks:** Claude Code reads `.claude/` from the project directory. Symlinks would break when the framework is installed as a package dependency. Copies are reliable; re-run install to update.
+- **`.synapse/` is separate from `.claude/`:** `.claude/` is Claude Code plumbing (controlled by the framework). `.synapse/` is Synapse-specific config and data (controlled by the user). The separation is intentional: users edit `.synapse/config/trust.toml` to adjust autonomy; they don't touch `.claude/`.
+- **`commands/synapse/` as a subdirectory:** Claude Code slash commands are loaded from `.claude/commands/`. The `synapse/` subdirectory creates the `/synapse:` namespace, preventing collisions with other slash commands (GSD, custom user commands).
+- **`project.toml` as the project_id source of truth:** Rather than requiring users to pass `project_id` on every tool call, a single config file captures it. The `synapse-startup.js` hook reads it and injects it into every session via `additionalContext`. Agents learn the project_id at session start and include it on all MCP calls.
+- **Hooks as copied `.js` files (not Bun TypeScript):** Claude Code hooks run via the command string in `settings.json`. The existing hooks are plain `node` scripts. This remains correct for v3.0 — no compilation step required, `node` is universally available, and `bun` is not guaranteed to be in the user's PATH unless configured.
 
 ---
 
 ## Architectural Patterns
 
-### Pattern 1: MCP Subprocess Configuration
+### Pattern 1: Install Script — Copy-Based Framework Wiring
 
-**What:** The Agent SDK spawns Synapse as a stdio subprocess. The orchestrator provides the `mcpServers` config object to `query()` — the SDK handles spawn, lifecycle, and protocol.
+**What:** A shell script (or Bun TypeScript script) that copies the framework's agents, hooks, and commands into the user's `.claude/` directory, then generates a `settings.json` and creates the `.synapse/config/` skeleton.
 
-**When to use:** Any `query()` call that needs Synapse tools. Built in `synapse-connection.ts` and passed through to all agent queries.
+**When to use:** One-time setup per project. Re-run to update when the framework is updated.
 
-**How the SDK manages lifecycle:** The SDK spawns the subprocess per `query()` session. Health check information arrives in the `system/init` message (`message.mcp_servers` field with status). Reconnect is available programmatically via `query.reconnectMcpServer(name)`. The 60-second default connection timeout applies — Synapse starts fast (no heavy initialization), so this is not a concern.
+**Trade-offs:** Copies diverge from the source if the framework is updated. A re-run is required to pull updates. This is acceptable — users know they need to update.
 
-**Trade-offs:** No direct import possible. All data exchange is via MCP tool calls. This is the correct constraint — it enforces the data-layer/control-layer boundary. Startup cost is ~100ms per `query()` session (subprocess spawn + MCP handshake).
+**What install does:**
+1. Detect project root (look for `package.json`, `Cargo.toml`, `pyproject.toml`, or `.git`)
+2. Create `.claude/agents/`, `.claude/commands/synapse/`, `.claude/hooks/`
+3. Copy all files from `packages/framework/agents/` → `.claude/agents/`
+4. Copy all files from `packages/framework/commands/synapse/` → `.claude/commands/synapse/`
+5. Copy all files from `packages/framework/hooks/` → `.claude/hooks/`
+6. Generate `.claude/settings.json` from `settings.template.json` — substitute absolute path to Synapse server
+7. Create `.synapse/config/` directory
+8. Copy `packages/framework/config/trust.toml` → `.synapse/config/trust.toml`
+9. Copy `packages/framework/config/agents.toml` → `.synapse/config/agents.toml`
+10. Create `.synapse/config/synapse.toml` with placeholder db path (user completes with `/synapse:init`)
+11. Print "Run `/synapse:init` in Claude Code to complete setup"
 
-```typescript
-// orchestrator/src/synapse-connection.ts
-import type { Options } from "@anthropic-ai/claude-agent-sdk";
-import type { SynapseOrchestratorConfig } from "./config.js";
+**Key constraint:** Hooks in `settings.json` reference paths relative to the project root. The generated `settings.json` must use paths like `.claude/hooks/synapse-startup.js`, not absolute paths, to remain portable if the project moves.
 
-export type McpStdioServerConfig = {
-  command: string;
-  args?: string[];
-  env?: Record<string, string>;
-};
-
-export function buildSynapseConfig(
-  config: SynapseOrchestratorConfig,
-): Record<string, McpStdioServerConfig> {
-  return {
-    synapse: {
-      command: "bun",
-      args: ["run", config.synapsePath, "--db", config.dbPath],
-      env: {
-        OLLAMA_URL: config.ollamaUrl ?? "http://localhost:11434",
-        EMBED_MODEL: "nomic-embed-text",
-      },
-    },
-  };
+```json
+// Generated .claude/settings.json (from settings.template.json)
+{
+  "mcpServers": {
+    "synapse": {
+      "command": "bun",
+      "args": [
+        "run",
+        "/absolute/path/to/synapse/packages/server/src/index.ts"
+      ],
+      "env": {
+        "OLLAMA_URL": "http://localhost:11434",
+        "EMBED_MODEL": "nomic-embed-text",
+        "SYNAPSE_DB_PATH": ""
+      }
+    }
+  },
+  "hooks": {
+    "SessionStart": [
+      { "hooks": [{ "type": "command", "command": "node .claude/hooks/synapse-startup.js" }] }
+    ],
+    "PreToolUse": [
+      { "matcher": "mcp__synapse__store_decision", "hooks": [
+        { "type": "command", "command": "node .claude/hooks/tier-gate.js" },
+        { "type": "command", "command": "node .claude/hooks/precedent-gate.js" }
+      ]},
+      { "matcher": "mcp__synapse__.*", "hooks": [
+        { "type": "command", "command": "node .claude/hooks/tool-allowlist.js" }
+      ]}
+    ],
+    "PostToolUse": [
+      { "hooks": [{ "type": "command", "command": "node .claude/hooks/audit-log.js" }] }
+    ]
+  }
 }
 ```
 
-**MCP tool naming in orchestrator:** All Synapse tools are referenced as `mcp__synapse__<tool_name>` in hook matchers and `allowedTools`. Example: `mcp__synapse__store_decision`, `mcp__synapse__check_precedent`.
+---
+
+### Pattern 2: project_id Injection via SessionStart Hook
+
+**What:** The `synapse-startup.js` hook reads `.synapse/config/project.toml` at session start and injects the `project_id` into `additionalContext`. Every agent starts each session knowing the project_id without the user specifying it.
+
+**When to use:** Every session. This is the core mechanism for making project_id seamless.
+
+**Why this approach:** MCP tool calls require `project_id` on every call. Without injection, agents must either discover it (a tool call that costs time and tokens) or the user must specify it manually. The SessionStart hook's `additionalContext` is injected before the first agent turn, making project_id available immediately.
+
+**Trade-offs:** If `project.toml` does not exist (project not initialized), the hook must degrade gracefully — it cannot block session start. It should inject an instruction telling the agent to run `/synapse:init` before using Synapse tools.
+
+```javascript
+// packages/framework/hooks/synapse-startup.js — key modification for v3.0
+
+// Read project.toml for project_id
+let projectId = null;
+let activeSkills = [];
+try {
+  const projectToml = fs.readFileSync('.synapse/config/project.toml', 'utf8');
+  const config = parseToml(projectToml);
+  projectId = config.project?.id || null;
+  activeSkills = config.project?.skills || [];
+} catch {
+  // project.toml missing — first-run state
+}
+
+let projectContext = '';
+if (projectId) {
+  projectContext = [
+    '',
+    '## Active Project',
+    '',
+    `project_id: "${projectId}"`,
+    '',
+    'Include this project_id on ALL Synapse MCP tool calls.',
+    `Active skills: [${activeSkills.join(', ')}]`,
+  ].join('\n');
+} else {
+  projectContext = [
+    '',
+    '## Synapse Not Initialized',
+    '',
+    'No project found. Run `/synapse:init` to initialize this project before using Synapse tools.',
+  ].join('\n');
+}
+```
+
+**project.toml format (new file):**
+
+```toml
+# .synapse/config/project.toml
+# Created by /synapse:init — do not edit manually
+
+[project]
+id = "my-project-abc123"
+name = "My Project"
+skills = ["typescript", "bun", "vitest"]
+created_at = "2026-03-03T00:00:00Z"
+```
 
 ---
 
-### Pattern 2: AgentDefinition as TypeScript Configuration Objects
+### Pattern 3: Slash Commands as Agent Dispatch Files
 
-**What:** Agents are plain TypeScript objects conforming to the SDK's `AgentDefinition` type. They declare `description` (when to invoke), `prompt` (system prompt), `tools` (allowlist), `model`, and optional `maxTurns`.
+**What:** Claude Code slash commands are `.md` files in `.claude/commands/<namespace>/`. When invoked, Claude Code reads the file and executes it as instructions. Commands can spawn agents, call MCP tools, or provide structured prompts.
 
-**When to use:** Every specialized agent. Build at runtime via factory functions that inject loaded skills into the prompt.
+**When to use:** User-facing entry points into Synapse functionality. Three commands cover the core user journey: init → map → plan.
 
-**Trade-offs:** No code execution in agents — they are pure configuration. The `prompt` is the only customization knob beyond tool lists. Skills are injected as prompt content, not code plugins.
+**Trade-offs:** Commands are markdown instructions, not code. They are executed by Claude, not by a script runtime. This means they are flexible but also dependent on Claude's interpretation. Keep commands procedural and explicit — list steps, not goals.
 
-```typescript
-// orchestrator/src/agents/planner.ts
-import type { AgentDefinition } from "@anthropic-ai/claude-agent-sdk";
-import type { SkillBundle } from "../skill-registry.js";
+**`/synapse:init` — first-run setup:**
 
-// Tier 0 decisions always go to user approval — Planner can only store tiers 1-3.
-// Enforced by tier-enforcement hook, not by tool list (store_decision exists in all agents).
-const PLANNER_BASE_TOOLS = [
-  "mcp__synapse__get_smart_context",
-  "mcp__synapse__query_documents",
-  "mcp__synapse__check_precedent",
-  "mcp__synapse__query_decisions",
-  "mcp__synapse__create_task",
-  "mcp__synapse__store_decision",
-  "mcp__synapse__get_task_tree",
+```markdown
+# /synapse:init
+
+Initialize this project with Synapse.
+
+## Steps
+
+1. Check if `.synapse/config/project.toml` exists. If it does, ask the user whether to reinitialize.
+
+2. Ask the user:
+   - "What is this project called?" (project name)
+   - "Where should Synapse store its database?" (default: `.synapse/synapse.db`)
+
+3. Call `mcp__synapse__init_project` with:
+   - `name`: the user-provided project name
+   - A generated `project_id` (use a short slug from the name + timestamp)
+
+4. Write `.synapse/config/project.toml` with the project_id, name, and detected skills.
+
+5. Detect project skills automatically:
+   - Look for `package.json` → add "typescript", "bun" if bun.lockb exists
+   - Look for `bun.lockb` → add "bun"
+   - Look for `vitest.config.*` → add "vitest"
+   - Look for `tailwind.config.*` → add "tailwind"
+   - Look for `pyproject.toml` or `requirements.txt` → add "python"
+
+6. Update `.synapse/config/synapse.toml` with the db path.
+
+7. Update `.claude/settings.json` to set `SYNAPSE_DB_PATH` env var to the db path.
+
+8. Confirm: "Project '[name]' initialized. Skills detected: [list]. Run `/synapse:map` to index your codebase."
+```
+
+**`/synapse:map` — codebase indexing:**
+
+```markdown
+# /synapse:map
+
+Index or re-index this project's codebase in Synapse.
+
+## Steps
+
+1. Read project_id from `.synapse/config/project.toml`.
+
+2. Call `mcp__synapse__index_codebase` with:
+   - `project_id`: from project.toml
+   - `root_path`: current working directory (or user-specified path)
+
+3. Call `mcp__synapse__get_index_status` to confirm index completion.
+
+4. Report: files indexed, languages detected, time taken.
+```
+
+**`/synapse:plan` — trigger PEV workflow:**
+
+```markdown
+# /synapse:plan
+
+Plan and execute a goal using the Synapse PEV workflow.
+
+## Steps
+
+1. Read project_id from `.synapse/config/project.toml`.
+2. Spawn the `synapse-orchestrator` agent with:
+   - The user's goal (passed as argument or ask if missing)
+   - project_id injected as context
+3. The orchestrator handles the full PEV workflow per `@packages/framework/workflows/pev-workflow.md`.
+```
+
+---
+
+### Pattern 4: Dynamic Skill Injection via agents.toml
+
+**What:** Instead of hardcoding skill lists in `agents.toml` per agent, skills are determined at session start by reading `project.toml` and dynamically constructing each agent's skill context. The `synapse-startup.js` hook already injects the active skill list. Agents read this injected context and include the relevant skills in their system prompt priming.
+
+**When to use:** When a user sets up a project with different technologies than the defaults. A Python project should not load TypeScript skills into the Executor.
+
+**Current state:** `agents.toml` has hardcoded skill lists (`skills = ["typescript", "bun"]` for executor). This works for the default stack but doesn't adapt to the project.
+
+**Target state:** A `project.toml` field `skills = [...]` drives which skills are loaded. The orchestrator agent reads these from the injected session context and mentions them in prompts to spawned subagents.
+
+**Implementation approach (v3.0):**
+- Keep `agents.toml` skill assignments as *defaults* (what to use when project.toml doesn't specify)
+- `synapse-startup.js` hook reads `project.toml` skills and injects them as additional context
+- Agent prompts (especially orchestrator) learn from the session context which skills apply and reference them when spawning subagents
+- Full dynamic programmatic injection (loading skill content into agent system prompts at spawn time) is a later refinement — for v3.0, injecting skill names + project context via SessionStart is the pragmatic path
+
+**agents.toml change:**
+
+```toml
+# Before (hardcoded)
+[agents.executor]
+skills = ["typescript", "bun"]
+
+# After (default skills — overridden by project.toml at runtime)
+[agents.executor]
+skills = ["typescript", "bun"]  # default; project.toml overrides these at runtime
+```
+
+---
+
+### Pattern 5: Progress Visibility via Status Line + Wave Checkpoints
+
+**What:** Two mechanisms provide progress visibility within Claude Code:
+
+1. **Status line** (`statusLine` in `settings.json`): A command that Claude Code calls to display a persistent status line. Can show active epic + task progress.
+2. **Wave checkpoint blocks**: The `synapse-orchestrator` agent emits structured status blocks after each wave (already in the orchestrator agent prompt). These appear in the Claude Code conversation and are the primary progress signal.
+
+**When to use:** Always active once project is initialized.
+
+**Status line implementation:**
+
+```javascript
+// packages/framework/hooks/synapse-statusline.js (NEW)
+// Called by Claude Code to populate the status bar
+
+const { execSync } = require('node:child_process');
+const fs = require('node:fs');
+const path = require('node:path');
+
+try {
+  // Read project.toml to get project_id
+  const projectToml = fs.readFileSync('.synapse/config/project.toml', 'utf8');
+  // Parse minimally (avoid smol-toml dependency in status line)
+  const match = projectToml.match(/id\s*=\s*"([^"]+)"/);
+  const projectId = match?.[1];
+
+  if (!projectId) {
+    process.stdout.write('Synapse: not initialized');
+    process.exit(0);
+  }
+
+  // Output static project name — dynamic task query is too slow for status line
+  const nameMatch = projectToml.match(/name\s*=\s*"([^"]+)"/);
+  const projectName = nameMatch?.[1] || projectId;
+  process.stdout.write(`Synapse: ${projectName}`);
+} catch {
+  process.stdout.write('Synapse: not initialized');
+}
+```
+
+**settings.json addition:**
+
+```json
+{
+  "statusLine": {
+    "type": "command",
+    "command": "node .claude/hooks/synapse-statusline.js"
+  }
+}
+```
+
+**Wave checkpoint blocks** (existing in orchestrator agent prompt — no change needed):
+
+```
+## Wave {N} Complete — Feature: {feature_title} ({done}/{total} tasks)
+
+| Task | Status | Agent | Notes |
+|------|--------|-------|-------|
+| {task_title} | done | executor | {brief summary} |
+
+Integration check: PASSED/FAILED
+Next: {next_feature_or_epic_integration} ({task_count} tasks ready)
+```
+
+---
+
+### Pattern 6: Hook Path Resolution — Relative vs Absolute
+
+**What:** Hooks in `settings.json` use command strings like `node .claude/hooks/tier-gate.js`. These paths are resolved relative to the project root (where `settings.json` lives). The hooks themselves use `process.cwd()` to find config files.
+
+**Current issue:** Existing hooks use `path.join(process.cwd(), 'packages/framework/config/trust.toml')` — paths that only work when running from the Synapse monorepo root. After install to a user project, the hooks need to find config at `.synapse/config/trust.toml`.
+
+**Fix pattern:** Update hooks to search multiple config locations:
+
+```javascript
+// Updated path resolution in tier-gate.js and tool-allowlist.js
+const cwd = process.cwd();
+const possibleConfigDirs = [
+  path.join(cwd, '.synapse', 'config'),          // installed in user project
+  path.join(cwd, 'packages', 'framework', 'config'), // monorepo dev
+  path.join(cwd, 'config'),                       // flat layout
 ];
 
-export function buildPlannerAgent(
-  promptTemplate: string,
-  skills: SkillBundle,
-): AgentDefinition {
-  const skillSection = skills.content.length > 0
-    ? `\n\n## Project-Specific Skills\n${skills.content}`
-    : "";
-
-  return {
-    description:
-      "Strategic planner. Use for decomposing user requests into task trees, " +
-      "making architecture and design decisions (tiers 1-3), and checking precedents " +
-      "before starting work.",
-    prompt: promptTemplate + skillSection,
-    tools: PLANNER_BASE_TOOLS,
-    model: "opus",
-    maxTurns: 30,
-  };
-}
-```
-
----
-
-### Pattern 3: Hook-Based Tier Enforcement
-
-**What:** A `PreToolUse` hook intercepts `mcp__synapse__store_decision` calls and checks the tier value in the tool input against the calling agent's authority. If the agent lacks authority, the hook returns `permissionDecision: "deny"`.
-
-**When to use:** Required for every `store_decision` call. Chained with `precedent-gate.ts` and `user-approval.ts`.
-
-**How to identify the calling agent:** The hook input includes `session_id`. The orchestrator tracks which agent is currently running via `parent_tool_use_id` on messages. Alternative: pass the current agent name into the hook closure at construction time — simpler and reliable because each agent's `query()` call has its own hook instance.
-
-**Trade-offs:** Hooks run synchronously in the hot path. Keep them fast — no DB calls, no HTTP requests. Read authority from the in-memory `TIER_AUTHORITY` map, not from Synapse.
-
-```typescript
-// orchestrator/src/hooks/tier-enforcement.ts
-import type { HookCallback, PreToolUseHookInput } from "@anthropic-ai/claude-agent-sdk";
-import { TIER_AUTHORITY } from "../decision-tiers.js";
-
-export function buildTierEnforcementHook(agentName: string): HookCallback {
-  const allowedTiers: number[] = TIER_AUTHORITY[agentName] ?? [];
-
-  return async (input) => {
-    if (input.hook_event_name !== "PreToolUse") return {};
-
-    const preInput = input as PreToolUseHookInput;
-    if (!preInput.tool_name.endsWith("store_decision")) return {};
-
-    const toolInput = preInput.tool_input as Record<string, unknown>;
-    const requestedTier = Number(toolInput.tier);
-
-    if (!allowedTiers.includes(requestedTier)) {
-      return {
-        hookSpecificOutput: {
-          hookEventName: "PreToolUse",
-          permissionDecision: "deny",
-          permissionDecisionReason:
-            `Agent '${agentName}' cannot store tier-${requestedTier} decisions. ` +
-            `Allowed tiers: [${allowedTiers.join(", ")}]. ` +
-            `Tier 0 (Product Strategy) always requires user approval.`,
-        },
-      };
-    }
-
-    return {};
-  };
-}
-```
-
----
-
-### Pattern 4: Tier 0 User Approval via Hook
-
-**What:** A `PreToolUse` hook intercepts `store_decision` calls with `tier: 0` and returns `permissionDecision: "ask"` instead of "deny". This surfaces a user prompt before executing.
-
-**When to use:** Tier 0 (Product Strategy) decisions. No agent can decide these autonomously.
-
-**Trade-offs:** `permissionDecision: "ask"` is only useful in interactive mode. In batch/CI mode, this effectively blocks execution. Consider a config flag to fail-fast vs. block on tier 0 depending on run context.
-
-```typescript
-// orchestrator/src/hooks/user-approval.ts
-import type { HookCallback, PreToolUseHookInput } from "@anthropic-ai/claude-agent-sdk";
-
-export const userApprovalHook: HookCallback = async (input) => {
-  if (input.hook_event_name !== "PreToolUse") return {};
-
-  const preInput = input as PreToolUseHookInput;
-  if (!preInput.tool_name.endsWith("store_decision")) return {};
-
-  const toolInput = preInput.tool_input as Record<string, unknown>;
-  if (Number(toolInput.tier) !== 0) return {};
-
-  return {
-    hookSpecificOutput: {
-      hookEventName: "PreToolUse",
-      permissionDecision: "ask",
-      permissionDecisionReason:
-        "Tier 0 (Product Strategy) decisions require user approval. " +
-        `Subject: "${toolInput.subject}". Choice: "${toolInput.choice}".`,
-    },
-  };
-};
-```
-
----
-
-### Pattern 5: Async Tool Audit Logging
-
-**What:** A `PostToolUse` hook fires after every MCP tool call and logs tool name, input summary, result, and timestamp. Because logging is a side effect with no need to influence agent behavior, the hook returns `{ async: true }` so the agent proceeds without waiting.
-
-**When to use:** All `mcp__synapse__*` tool calls. Provides full audit trail for traceability.
-
-**Trade-offs:** Async mode means failed log writes do not surface to the agent. Acceptable — audit log loss is preferable to blocking the agent. Log to a file (not Synapse's `activity_log` — that creates circular dependency and adds latency).
-
-```typescript
-// orchestrator/src/hooks/tool-audit.ts
-import { appendFile } from "node:fs/promises";
-import type { HookCallback, PostToolUseHookInput } from "@anthropic-ai/claude-agent-sdk";
-
-export const toolAuditHook: HookCallback = async (input) => {
-  if (input.hook_event_name !== "PostToolUse") return {};
-
-  const postInput = input as PostToolUseHookInput;
-  if (!postInput.tool_name.startsWith("mcp__synapse__")) return {};
-
-  // Fire-and-forget — do not await
-  appendFile(
-    "./orchestrator-audit.log",
-    JSON.stringify({
-      ts: new Date().toISOString(),
-      tool: postInput.tool_name,
-      session: postInput.session_id,
-    }) + "\n",
-  ).catch(() => { /* ignore */ });
-
-  return { async: true, asyncTimeout: 5000 };
-};
-```
-
----
-
-### Pattern 6: Skill Registry — File-Based, Injected at Prompt Construction
-
-**What:** Skills are Markdown files in `orchestrator/src/skills/`. Each skill file contains domain knowledge, quality criteria, and vocabulary. The registry maps project attributes (language, domain, framework) to skill file names. At agent construction time, matched skill files are concatenated and injected as a section of the system prompt.
-
-**When to use:** Always — even a minimal project has at least a default skill. Project-specific skills are injected based on config attributes.
-
-**Why files, not code:** Skills are text content, not executable logic. Markdown files are readable, diffable, and editable without TypeScript knowledge. No dynamic code loading required.
-
-**Trade-offs:** Skill content inflates system prompts. Keep individual skill files under 500 tokens. Do not inject all skills into all agents — Executor does not need architecture knowledge; Planner does not need test-execution syntax.
-
-```typescript
-// orchestrator/src/skill-registry.ts
-import { readFile } from "node:fs/promises";
-import { join } from "node:path";
-
-export interface SkillBundle {
-  content: string;  // Concatenated markdown content
-  names: string[];  // Skill names loaded
-}
-
-export interface ProjectAttributes {
-  language: string;       // "typescript", "python", "rust"
-  domain: string;         // "web-api", "data-science", "cli-tool"
-  framework?: string;     // "express", "fastapi", "axum"
-}
-
-const SKILL_MAP: Record<string, string[]> = {
-  "typescript": ["typescript-patterns.md"],
-  "python": ["python-patterns.md"],
-  "web-api": ["api-design.md", "rest-conventions.md"],
-  "data-science": ["data-pipelines.md", "ml-patterns.md"],
-};
-
-const SKILLS_DIR = join(import.meta.dirname, "skills");
-
-export async function loadSkills(
-  attrs: ProjectAttributes,
-  agentName: string,
-): Promise<SkillBundle> {
-  const skillFiles = new Set<string>();
-
-  // Map project attributes to skill files
-  for (const [key, files] of Object.entries(SKILL_MAP)) {
-    const attrValues = [attrs.language, attrs.domain, attrs.framework].filter(Boolean);
-    if (attrValues.includes(key)) {
-      files.forEach((f) => skillFiles.add(f));
-    }
+let trustTomlPath = null;
+for (const dir of possibleConfigDirs) {
+  const candidate = path.join(dir, 'trust.toml');
+  if (fs.existsSync(candidate)) {
+    trustTomlPath = candidate;
+    break;
   }
-
-  const contents: string[] = [];
-  const loaded: string[] = [];
-
-  for (const file of skillFiles) {
-    try {
-      const content = await readFile(join(SKILLS_DIR, file), "utf-8");
-      contents.push(content);
-      loaded.push(file);
-    } catch {
-      // Skill file missing — skip silently, log warning
-    }
-  }
-
-  return {
-    content: contents.join("\n\n---\n\n"),
-    names: loaded,
-  };
 }
-```
 
----
-
-### Pattern 7: New LanceDB Tables — decisions and tasks
-
-**What:** Two new Arrow schemas added to `src/db/schema.ts`, following the exact same pattern as existing schemas.
-
-**Decisions table — vector search on semantic precedent:**
-The `vector` field embeds `subject + ": " + rationale`. Query with `check_precedent` calls `nearestTo(queryVector).where("is_precedent = 'true' AND status = 'active'").limit(5)`. No recursive queries needed — flat table with semantic search.
-
-**Tasks table — recursive parent_id hierarchy:**
-LanceDB does not support recursive CTEs or graph traversal. Hierarchy is assembled on the JavaScript side in `get_task_tree`: fetch all tasks for a project, group by `parent_id`, build the tree in memory. Same pattern as `get_related_documents` (v1). This is efficient because task counts are bounded (hundreds, not millions).
-
-**Utf8 boolean pattern:** LanceDB has no native boolean type. Follow existing convention: `is_precedent: Utf8` storing `"true"` or `"false"`. Filter with `WHERE is_precedent = 'true'`.
-
-**JSON arrays pattern:** `depends_on` and `decision_ids` on tasks are stored as JSON strings (`JSON.stringify(["id1", "id2"])`). Deserialized in the tool handler after fetch. Same pattern as existing `tags` fields.
-
-```typescript
-// src/db/schema.ts — additions for Phase 8
-
-export const DECISIONS_SCHEMA = new Schema([
-  new Field("decision_id", new Utf8(), false),
-  new Field("project_id", new Utf8(), false),
-  new Field("tier", new Int32(), false),          // 0-3
-  new Field("subject", new Utf8(), false),
-  new Field("choice", new Utf8(), false),
-  new Field("rationale", new Utf8(), false),
-  new Field("is_precedent", new Utf8(), false),   // "true" | "false"
-  new Field("status", new Utf8(), false),          // "active" | "superseded" | "revoked"
-  new Field("source_task_id", new Utf8(), true),
-  new Field("tags", new Utf8(), false),            // pipe-separated
-  new Field("created_at", new Utf8(), false),
-  new Field("vector", new FixedSizeList(768, new Field("item", new Float32(), true)), false),
-]);
-
-// src/db/schema.ts — additions for Phase 9
-
-export const TASKS_SCHEMA = new Schema([
-  new Field("task_id", new Utf8(), false),
-  new Field("project_id", new Utf8(), false),
-  new Field("parent_id", new Utf8(), true),        // null = Epic root
-  new Field("depth", new Int32(), false),          // 0=Epic, 1=Feature, 2=Component, 3=Task
-  new Field("title", new Utf8(), false),
-  new Field("description", new Utf8(), false),
-  new Field("status", new Utf8(), false),
-  new Field("task_type", new Utf8(), false),       // "epic"|"feature"|"component"|"task"
-  new Field("depends_on", new Utf8(), false),      // JSON array of task_ids
-  new Field("assigned_agent", new Utf8(), true),
-  new Field("decision_ids", new Utf8(), false),    // JSON array of decision_ids
-  new Field("tags", new Utf8(), false),
-  new Field("priority", new Int32(), true),
-  new Field("created_at", new Utf8(), false),
-  new Field("updated_at", new Utf8(), false),
-  new Field("vector", new FixedSizeList(768, new Field("item", new Float32(), true)), false),
-]);
+if (!trustTomlPath) {
+  // fail-closed: can't find config
+  process.stdout.write(denyOutput('DENIED: trust.toml not found in any config location.'));
+  process.exit(0);
+}
 ```
 
 ---
 
 ## Data Flow
 
-### Orchestrator Initialization Flow
+### User Journey: Install to First Workflow
 
 ```
-User runs: bun run orchestrator/src/index.ts --project myapp "Build auth module"
+Developer runs: npx synapse-install (or: bun run install.ts)
     │
     ▼
-config.ts: loadConfig() → validate env vars + CLI args → SynapseOrchestratorConfig
+install.sh/ts:
+  - Copy agents/ → .claude/agents/
+  - Copy hooks/ → .claude/hooks/
+  - Copy commands/synapse/ → .claude/commands/synapse/
+  - Generate .claude/settings.json (with absolute path to Synapse server)
+  - Create .synapse/config/ skeleton
     │
     ▼
-synapse-connection.ts: buildSynapseConfig() → { synapse: { command, args, env } }
+User opens project in Claude Code
     │
     ▼
-skill-registry.ts: loadSkills(projectAttrs, agentName) → SkillBundle per agent
+SessionStart hook fires: synapse-startup.js
+  - Reads .synapse/config/project.toml → NOT FOUND
+  - Injects: "Run /synapse:init to initialize"
     │
     ▼
-agents/index.ts: buildAgents(config, skills) → { planner: AgentDef, executor: AgentDef, ... }
+User runs: /synapse:init
+  - Claude (in main session) reads init.md command
+  - Calls mcp__synapse__init_project (db created, tables initialized)
+  - Detects skills from project files
+  - Writes .synapse/config/project.toml
+  - Reports: "Initialized. Run /synapse:map to index codebase."
     │
     ▼
-hooks construction: buildTierEnforcementHook("planner"), userApprovalHook, toolAuditHook
+User runs: /synapse:map
+  - Claude reads map.md command
+  - Calls mcp__synapse__index_codebase
+  - Reports: "Indexed N files across M languages."
     │
     ▼
-orchestrator.ts: Orchestrator.run(prompt) →
-  query({
-    prompt,
-    options: {
-      mcpServers: synapseConfig,    // SDK spawns Synapse subprocess
-      agents: agentDefs,
-      hooks: { PreToolUse: [...], PostToolUse: [...] },
-      allowedTools: ["Task", "mcp__synapse__*"],
-      systemPrompt: plannerPrompt,
-      model: "claude-opus-4-6",
-      maxTurns: 50
-    }
-  })
+User says: "I want to add a JWT authentication module"
+  or
+User runs: /synapse:plan "Add JWT authentication module"
     │
     ▼
-system/init message → check mcp_servers[0].status === "connected"
+SessionStart hook re-fires (if new session):
+  - Reads .synapse/config/project.toml → project_id found
+  - Injects: project_id + active skills + "check for open work streams" instruction
     │
     ▼
-Agent loop begins → subagent Task calls route to Planner/Executor/Validator
+synapse-orchestrator agent activates:
+  - Reads injected session context (project_id, skills)
+  - Calls mcp__synapse__get_task_tree (check for open epics)
+  - Calls mcp__synapse__check_precedent (any prior auth decisions?)
+  - Creates epic via mcp__synapse__create_task
+  - Spawns decomposer subagent → feature breakdown
+  - Presents feature list for user approval (if trust.toml pev.approval_threshold = "epic")
+    │
+    ▼
+User approves feature list
+    │
+    ▼
+Orchestrator spawns executor subagents (wave-based):
+  - Wave 1: independent tasks execute in parallel
+  - After each wave: validator subagent checks output
+  - Status blocks emitted after each wave
+    │
+    ▼
+Epic complete:
+  - Integration checker validates cross-feature integration
+  - Orchestrator emits final status summary
+  - Stores completion decision via mcp__synapse__store_decision
 ```
 
-### Plan-Execute-Validate (PEV) Data Flow
+### Hook Execution Flow (per Synapse MCP tool call)
 
 ```
-User prompt: "Build a JWT authentication module"
+Agent calls mcp__synapse__store_decision(project_id="...", tier=1, actor="architect", ...)
     │
     ▼
-[PLAN phase]
-Planner subagent:
-  check_precedent("authentication framework") → finds prior decisions
-  create_task("Auth Epic", depth=0)
-  create_task("JWT library selection", depth=1, parent=Epic)
-  create_task("Token validation", depth=2, parent=Feature)
-  create_task("Implement validateToken()", depth=3, parent=Component)
-  store_decision(tier=1, "JWT library", "jose", rationale="...")
-  → Hook: tier-enforcement allows tier=1 for Planner ✓
-  get_task_tree() → returns hierarchical task structure
+PreToolUse hooks fire (matchers apply):
+  1. tier-gate.js (matcher: mcp__synapse__store_decision)
+     - Reads .synapse/config/trust.toml
+     - Checks tier_authority["architect"] contains 1 → ALLOW (exits silently)
+  2. precedent-gate.js (matcher: mcp__synapse__store_decision)
+     - Injects additionalContext: "check precedent before storing" → ALLOW with context
+  3. tool-allowlist.js (matcher: mcp__synapse__.*)
+     - Reads .synapse/config/agents.toml
+     - Checks agents["architect"].allowed_tools includes "mcp__synapse__store_decision" → ALLOW
     │
     ▼
-[CHECKPOINT — tier 0/1 decisions]
-user-approval hook triggered? → If tier 0: user reviews and approves
-    │
-    ▼
-[EXECUTE phase — leaf tasks in parallel waves]
-Executor subagent (wave 1 — no dependencies):
-  get_task_tree() → finds leaf tasks with status="validated"
-  [works on task: "Implement validateToken()"]
-  update_task(task_id, status="in_progress", assigned_agent="executor")
-  store_document(title="validateToken implementation", ...)
-  update_task(task_id, status="completed")
-    │
-    ▼
-[VALIDATE phase]
-Validator subagent:
-  get_task_tree() → checks completion status
-  query_decisions() → retrieves governing decisions
-  check_precedent("token validation approach") → confirms no contradictions
-  update_task(epic_id, status="completed") if all children validated
-    │
-    ▼
-Orchestrator: collects result messages, formats output, returns to user
-```
-
-### Hook Execution Order (per tool call)
-
-```
-Agent calls mcp__synapse__store_decision(tier=0, ...)
-    │
-    ▼
-PreToolUse hooks fire in registration order:
-  1. userApprovalHook    → tier=0, returns permissionDecision: "ask"
-     [deny takes priority over ask — but we register user-approval FIRST
-      so tier enforcement (deny for wrong tiers) fires second]
-  2. tierEnforcementHook → deny wins if agent lacks authority
-  3. precedentGateHook   → inject "check precedent" context (systemMessage)
-    │
-    ▼
-If approved: tool executes → Synapse stores decision
+MCP tool call executes: Synapse stores decision
     │
     ▼
 PostToolUse hooks fire:
-  1. toolAuditHook → async log, agent proceeds immediately
+  1. audit-log.js (no matcher — all tools)
+     - Logs tool name, timestamp, session_id to stderr
 ```
 
-**Hook priority rule (from SDK docs):** When multiple hooks apply, `deny` takes priority over `ask`, which takes priority over `allow`. Register `user-approval` (returns "ask") before `tier-enforcement` (returns "deny" for unauthorized agents) to avoid tier-0 decisions being silently denied instead of surfaced for user review. Tier-0 is a special case: no agent has tier-0 authority, so only the user-approval hook applies.
+### Skill Injection Data Flow
+
+```
+/synapse:init detects skills:
+  package.json + bun.lockb → ["typescript", "bun"]
+  vitest.config.ts found → adds "vitest"
+    │
+    ▼
+Writes .synapse/config/project.toml:
+  skills = ["typescript", "bun", "vitest"]
+    │
+    ▼
+Session starts → synapse-startup.js:
+  Reads project.toml → skills = ["typescript", "bun", "vitest"]
+  Injects into additionalContext:
+    "Active skills: [typescript, bun, vitest]
+     When spawning executor: include typescript, bun skills
+     When spawning validator: include vitest skill"
+    │
+    ▼
+Orchestrator agent reads injected context:
+  Knows which skills apply to this project
+  When constructing prompts for subagent spawning:
+    "Use typescript patterns, bun runtime, vitest for tests"
+    │
+    ▼
+[Future v3.x: orchestrator loads SKILL.md content and injects into subagent prompts]
+```
 
 ---
 
 ## Integration Points
 
-### Orchestrator → Synapse (the critical boundary)
+### New vs Modified Components
+
+| Component | Status | Location | Change |
+|-----------|--------|----------|--------|
+| `install.sh` or `install.ts` | NEW | `packages/framework/` | Copies framework files into user's `.claude/`; generates `settings.json` |
+| `/synapse:init` command | NEW | `packages/framework/commands/synapse/init.md` | First-run setup; creates `project.toml`; calls `init_project` |
+| `/synapse:map` command | NEW | `packages/framework/commands/synapse/map.md` | Triggers `index_codebase` with project_id |
+| `/synapse:plan` command | NEW | `packages/framework/commands/synapse/plan.md` | Entry point to PEV workflow |
+| `synapse-startup.js` hook | MODIFY | `packages/framework/hooks/` | Add `project.toml` read; inject `project_id` + skill list; graceful degradation if not initialized |
+| `synapse-statusline.js` hook | NEW | `packages/framework/hooks/` | Return project name for Claude Code status bar |
+| `tier-gate.js` hook | MODIFY | `packages/framework/hooks/` | Update config path resolution to find `.synapse/config/trust.toml` |
+| `tool-allowlist.js` hook | MODIFY | `packages/framework/hooks/` | Update config path resolution to find `.synapse/config/agents.toml` |
+| `precedent-gate.js` hook | MODIFY | `packages/framework/hooks/` | Update config path resolution |
+| `settings.template.json` | MODIFY | `packages/framework/` | Add `statusLine` entry; update hook paths for installed layout |
+| `project.toml` | NEW | `.synapse/config/` (per user project) | Created by `/synapse:init`; holds `project_id`, `name`, `skills` |
+| Agent `.md` files | MODIFY | `packages/framework/agents/` | Add MCP usage instructions; add `project_id` usage guidance; update skill injection instructions |
+| `agents.toml` | MODIFY | `packages/framework/config/` | Document that skill assignments are defaults; project.toml overrides at runtime |
+| `synapse.toml` | UNMODIFIED | `packages/framework/config/` | Template still correct; install fills in paths |
+| `trust.toml` | UNMODIFIED | `packages/framework/config/` | Default remains correct; user edits `.synapse/config/trust.toml` |
+| `pev-workflow.md` | MODIFY | `packages/framework/workflows/` | Add explicit `project_id` usage throughout; reference `/synapse:init` for initialization |
+| Server tools (existing) | UNMODIFIED | `packages/server/src/tools/` | All 21 tools already accept `project_id` |
+| `src/config.ts` (framework) | UNMODIFIED | `packages/framework/src/` | TOML loaders already correct |
+| `src/skills.ts` (framework) | MINOR MODIFY | `packages/framework/src/` | Update default `skillsDir` to check `.synapse/skills/` as well |
+
+### External Boundaries
 
 | Boundary | Communication | Notes |
 |----------|---------------|-------|
-| Orchestrator → Synapse | MCP protocol over stdio — NO direct imports | Agent SDK spawns Synapse as subprocess; all calls are JSON-RPC via MCP tool invocations |
-| Tool naming | `mcp__synapse__<tool_name>` | `synapse` is the key name in `mcpServers` config object |
-| Type safety | No shared types package; type tool I/O as `Record<string, unknown>` in hooks | Tool schemas are defined in Synapse's Zod schemas; orchestrator has no compile-time access |
-| Error handling | MCP tool errors surface as error result in tool call response | Hooks see `PostToolUseFailure` events; orchestrator should handle gracefully |
-
-### MCP Subprocess Lifecycle (managed by Agent SDK)
-
-| Event | SDK Behavior | Orchestrator Action |
-|-------|-------------|---------------------|
-| Session start | SDK spawns subprocess, waits for MCP handshake | Check `system/init` message for `mcp_servers[0].status` |
-| Connection failure | Server reports `status: "failed"` in init message | Abort or retry — `query.reconnectMcpServer("synapse")` |
-| Session end | SDK sends SIGTERM to subprocess | Automatic — no orchestrator cleanup needed |
-| Mid-session reconnect | Available via `query.reconnectMcpServer(name)` | Use on transient failures |
-| Timeout | 60-second default connection timeout | Synapse starts fast; unlikely to hit this |
-
-### New vs Modified Components
-
-| Component | New or Modified | Phase |
-|-----------|-----------------|-------|
-| `src/db/schema.ts` | Modified — add DECISIONS_SCHEMA, TASKS_SCHEMA | 8, 9 |
-| `src/tools/store-decision.ts` | New | 8 |
-| `src/tools/query-decisions.ts` | New | 8 |
-| `src/tools/check-precedent.ts` | New | 8 |
-| `src/tools/create-task.ts` | New | 9 |
-| `src/tools/update-task.ts` | New | 9 |
-| `src/tools/get-task-tree.ts` | New | 9 |
-| `src/tools/init-project.ts` | Modified — create decisions + tasks tables | 8, 9 |
-| `src/server.ts` | Modified — register 6 new tools | 8, 9 |
-| `orchestrator/` | New directory — entire package | 10-12 |
-| `orchestrator/package.json` | New | 10 |
-| `orchestrator/src/orchestrator.ts` | New | 10 |
-| `orchestrator/src/config.ts` | New | 10 |
-| `orchestrator/src/synapse-connection.ts` | New | 10 |
-| `orchestrator/src/agents/` | New | 11 |
-| `orchestrator/src/prompts/` | New | 11 |
-| `orchestrator/src/decision-tiers.ts` | New | 11 |
-| `orchestrator/src/hooks/` | New | 12 |
-| `orchestrator/src/workflows/plan-execute-validate.ts` | New | 12 |
-| `orchestrator/src/skill-registry.ts` | New | 11 |
+| Claude Code → hooks | `node .claude/hooks/*.js` command exec via `settings.json` | Hooks communicate via stdin (hook input JSON) and stdout (hook output JSON) |
+| Claude Code → agents | `.claude/agents/*.md` files read at agent spawn | YAML frontmatter defines name/tools/model; body is system prompt |
+| Claude Code → commands | `.claude/commands/synapse/*.md` files read on slash command invocation | Command file is executed as Claude instructions |
+| Claude Code → MCP server | stdio subprocess per session via `mcpServers` in `settings.json` | Agent SDK pattern; server spawned fresh each session |
+| Hooks → config files | `fs.readFileSync` with path search | Hooks must search `.synapse/config/` and `packages/framework/config/` |
+| `/synapse:init` → MCP server | MCP tool calls in Claude Code session | `init_project`, `index_codebase` called by Claude in the main session |
+| install script → user filesystem | File copy + template generation | Must be runnable without dependencies (pure shell or single-file Bun script) |
 
 ---
 
 ## Suggested Build Order
 
-Dependencies drive ordering. Each step is independently testable.
+Dependencies drive ordering. Each deliverable is independently testable.
 
-| Order | Component | Depends On | What You Can Test |
-|-------|-----------|------------|-------------------|
-| 1 | `src/db/schema.ts` — add DECISIONS_SCHEMA | Existing Arrow imports | Schema parses, Zod schema validates a sample row |
-| 2 | `src/tools/store-decision.ts` | schema.ts, embedder.ts, connectDb | Full round-trip: embed rationale, insert, verify vector stored |
-| 3 | `src/tools/query-decisions.ts` | schema.ts, connectDb | Filter by tier/status/is_precedent |
-| 4 | `src/tools/check-precedent.ts` | schema.ts, embedder.ts, connectDb | Vector search on decisions table |
-| 5 | `src/tools/init-project.ts` — add decisions table | schema.ts | init_project creates decisions table + indexes |
-| 6 | `src/server.ts` — register decision tools | All decision tools | `bun test` passes with 21 tools |
-| 7 | `src/db/schema.ts` — add TASKS_SCHEMA | Existing Arrow imports | Schema parses, Zod validates |
-| 8 | `src/tools/create-task.ts` | schema.ts, embedder.ts, connectDb | Validate parent/depth, embed, insert |
-| 9 | `src/tools/update-task.ts` | schema.ts, connectDb | Status transitions, field updates |
-| 10 | `src/tools/get-task-tree.ts` | schema.ts, connectDb | Fetch all tasks, assemble tree JS-side, rollup stats |
-| 11 | `src/tools/init-project.ts` — add tasks table | schema.ts | init_project creates tasks table + indexes |
-| 12 | `src/server.ts` — register task tools | All task tools | `bun test` passes with 24 tools |
-| 13 | `orchestrator/package.json`, `tsconfig.json` | npm | Package installs, TypeScript compiles |
-| 14 | `orchestrator/src/config.ts` | zod | Config loads from env/args, rejects invalid |
-| 15 | `orchestrator/src/synapse-connection.ts` | config.ts | buildSynapseConfig() returns correct McpServerConfig shape |
-| 16 | `orchestrator/src/orchestrator.ts` | config, synapse-connection, Agent SDK | query() runs, Synapse subprocess spawned, init message received |
-| 17 | `orchestrator/src/decision-tiers.ts` | Nothing | TIER_AUTHORITY map is correct (unit test) |
-| 18 | `orchestrator/src/skill-registry.ts` | fs | loadSkills() returns content for known project types |
-| 19 | `orchestrator/src/prompts/` | Nothing | Prompt files load, template interpolation works |
-| 20 | `orchestrator/src/agents/` | prompts, skill-registry, decision-tiers | AgentDefinition objects have correct tool lists |
-| 21 | `orchestrator/src/hooks/tier-enforcement.ts` | decision-tiers | Hook denies unauthorized tier, allows authorized tier |
-| 22 | `orchestrator/src/hooks/precedent-gate.ts` | Nothing | Hook injects systemMessage on check_precedent calls |
-| 23 | `orchestrator/src/hooks/user-approval.ts` | Nothing | Hook returns "ask" for tier 0 decisions |
-| 24 | `orchestrator/src/hooks/tool-audit.ts` | fs/promises | Hook writes async audit log entry |
-| 25 | `orchestrator/src/workflows/plan-execute-validate.ts` | orchestrator, agents, hooks | Full PEV loop with real Synapse subprocess |
-| 26 | End-to-end integration test | Full stack | User prompt → task tree → decisions → execution → validation |
+| Order | Deliverable | Depends On | What You Can Test |
+|-------|-------------|------------|-------------------|
+| 1 | `project.toml` schema + format documented | Nothing | Can define format without code |
+| 2 | `synapse-startup.js` — add project_id injection | `project.toml` format | Run hook with a sample project.toml; verify `additionalContext` contains project_id |
+| 3 | Hook config path resolution update (tier-gate, tool-allowlist) | Nothing | Run hooks from a non-monorepo directory; verify they find `.synapse/config/trust.toml` |
+| 4 | `project.toml` creation in `/synapse:init` command | project_id injection | Init command runs, creates file, hook reads it correctly |
+| 5 | `/synapse:init` command file (full) | `project.toml` format; MCP tools exist | Run `/synapse:init` in Claude Code; verify project_id in DB, project.toml written, skills detected |
+| 6 | `/synapse:map` command file | `init_project` must have run | Run `/synapse:map`; verify `index_codebase` called with correct project_id |
+| 7 | Install script (copy mechanism) | Files exist in `packages/framework/` | Run install; verify `.claude/agents/`, `.claude/hooks/`, `.claude/commands/` populated |
+| 8 | `settings.json` generation in install script | Framework hook paths correct | Generated settings.json has correct hook commands; hooks resolve to copied files |
+| 9 | `/synapse:plan` command file | Orchestrator agent + PEV workflow | Run `/synapse:plan "goal"`; verify orchestrator picks it up |
+| 10 | Agent prompt improvements (MCP usage, project_id, language-agnostic) | Existing agent files | Agent files are self-contained markdown — review + edit each |
+| 11 | `synapse-statusline.js` hook | `project.toml` format | Install hook, see project name in Claude Code status bar |
+| 12 | E2E PEV workflow test on a real project | Full stack wired | Run `/synapse:plan` on a real task; observe full Plan → Execute → Validate cycle |
+| 13 | Dynamic skill injection via project.toml | project.toml written by init | Change skills in project.toml; verify next session context reflects changes |
+| 14 | Tech debt resolution (escapeSQL dedup, created_at, lint) | Nothing blocking | Fix independently; run `bun test` after each |
 
-**Phase 8 MVP (decisions tooling in Synapse):** Steps 1-6
-**Phase 9 MVP (task hierarchy in Synapse):** Steps 7-12
-**Phase 10 MVP (orchestrator process up, basic query):** Steps 13-16
-**Phase 11 MVP (specialized agents):** Steps 17-20
-**Phase 12 MVP (enforcement + full PEV workflow):** Steps 21-26
+**Phase groupings:**
+- **Phase A (project_id wiring):** Steps 1-4 — the foundation for everything else
+- **Phase B (user journey commands):** Steps 5-6 — init and map commands working
+- **Phase C (install script):** Steps 7-8 — can be parallelized with Phase B
+- **Phase D (plan command + agent polish):** Steps 9-10 — depends on Phase B complete
+- **Phase E (progress visibility):** Step 11 — independent, low risk
+- **Phase F (E2E validation + dynamic skills):** Steps 12-14 — needs Phases A-D complete
 
 ---
 
 ## Anti-Patterns
 
-### Anti-Pattern 1: Direct Import from Synapse src/ into Orchestrator
+### Anti-Pattern 1: Absolute Paths in Copied Hook Files
 
-**What people do:** Import `storeDocument` or `connectDb` directly in orchestrator code to bypass MCP overhead.
+**What people do:** Write hook files that use `__dirname` or absolute paths to find config files. These work in the monorepo but break when hooks are copied to a user's project.
 
-**Why it's wrong:** Collapses the data-layer/control-layer boundary. Orchestrator becomes tightly coupled to Synapse's internal types and refactors. Two processes cannot share the same LanceDB connection (LanceDB embedded is single-process). The MCP protocol boundary is the feature — it enforces clean separation and allows Synapse to evolve independently.
+**Why it's wrong:** `__dirname` in a copied file still resolves to `.claude/hooks/` — but the config files are in `.synapse/config/`, not relative to the hooks directory. Absolute paths are machine-specific.
 
-**Do this instead:** All orchestrator → Synapse communication goes through MCP tool calls. Use `mcp__synapse__*` tool calls only. The 1-2ms MCP overhead is irrelevant at agent turn timescales.
-
----
-
-### Anti-Pattern 2: Putting Tier Authority in Synapse (as a DB table)
-
-**What people do:** Add a `user_authority_matrix` table to LanceDB. Synapse tools check authority before writing.
-
-**Why it's wrong:** Synapse is the data layer — it should not know about orchestration concepts like agents or authority levels. This creates coupling in the wrong direction (data layer enforcing control-layer policy). It also makes the authority matrix harder to inspect and change (DB query vs. config file read).
-
-**Do this instead:** Authority lives in `orchestrator/src/decision-tiers.ts` as a plain TypeScript record. Enforcement is a PreToolUse hook in the orchestrator. Synapse's `store_decision` tool is authority-agnostic — it stores any valid decision. The orchestrator is responsible for what agents are allowed to store.
+**Do this instead:** Use `process.cwd()` (which is the project root when Claude Code invokes hooks) as the anchor. Search a prioritized list of config locations: `.synapse/config/`, then `packages/framework/config/` for monorepo dev fallback.
 
 ---
 
-### Anti-Pattern 3: Injecting Skills as Code Plugins
+### Anti-Pattern 2: Storing project_id in Claude Code Session State
 
-**What people do:** Load skill files as JavaScript modules that export functions. Call those functions to extend agent behavior at runtime.
+**What people do:** Rely on agents to "remember" the project_id across turns within a conversation. Have the user tell the orchestrator the project_id once and assume it propagates.
 
-**Why it's wrong:** Dynamic code loading is a security surface and a complexity multiplier. Skills change frequently (user edits) and should not require TypeScript compilation. Skill content at its core is text that shapes the system prompt — it does not need to execute.
+**Why it's wrong:** Agent context windows compact. New subagents spawned mid-workflow start with no project_id knowledge. The hook's SessionStart injection is the only reliable delivery mechanism because it fires for every new session and subagent spawn.
 
-**Do this instead:** Skills are Markdown files. The registry reads them as strings and concatenates them into the system prompt at agent construction time. Simpler, safer, and more maintainable.
-
----
-
-### Anti-Pattern 4: Recursive CTE for Task Hierarchy in LanceDB
-
-**What people do:** Attempt a recursive SQL query or multiple table JOINs to fetch the full task tree.
-
-**Why it's wrong:** LanceDB does not support recursive CTEs. Its SQL dialect is limited (Apache DataFusion). Recursive SQL would require either multiple round-trips or features that don't exist.
-
-**Do this instead:** Fetch all tasks for a `project_id` in a single query (`WHERE project_id = 'X'`), then assemble the tree in JavaScript using a map-reduce over `parent_id`. Task counts are bounded (hundreds per project), so fetching all tasks into memory is fast and correct. Same pattern as `get_related_documents` in v1.
+**Do this instead:** Always read project_id from `project.toml` in the SessionStart hook and inject it as `additionalContext`. Every agent receives it fresh at the start of every session.
 
 ---
 
-### Anti-Pattern 5: Using `permissionMode: "bypassPermissions"` Globally
+### Anti-Pattern 3: Bun-Specific Hook Scripts
 
-**What people do:** Set `bypassPermissions` on the main `query()` call to avoid all approval prompts.
+**What people do:** Write hooks as Bun TypeScript (`.ts` files) and invoke them with `bun run .claude/hooks/tier-gate.ts`. This is natural for the monorepo but breaks on user machines where Bun may not be in the PATH expected by Claude Code.
 
-**Why it's wrong:** This propagates to all subagents, disabling the `permissionDecision: "ask"` hook output for tier 0 decisions. The user-approval hook becomes a no-op.
+**Why it's wrong:** `node` is universally available; `bun` in PATH is user-specific. Claude Code invokes hooks via the command string in `settings.json` — if `bun` is not resolved, the hook silently fails (or worse, crashes with a deny for fail-closed hooks).
 
-**Do this instead:** Use `permissionMode: "default"` (the SDK default). Tier enforcement hooks handle what agents can and cannot do. User-approval hook handles what needs user input. This preserves the safety model.
+**Do this instead:** Keep hooks as CommonJS `.js` files invoked with `node`. The existing hooks already follow this pattern. Avoid `import` / `export` syntax (use `require`). The only dependency (`smol-toml`) must be available to `node`, not just `bun` — either bundle it or limit hook dependencies to `node:fs`, `node:path`, and `node:child_process`.
 
 ---
 
-### Anti-Pattern 6: One Monolithic Agent with All Tools
+### Anti-Pattern 4: Commands That Spawn Subagents Directly
 
-**What people do:** Give the main agent access to all 24 Synapse tools. Skip subagent specialization.
+**What people do:** Write slash command `.md` files that use `Task` tool calls to spawn subagents. This seems elegant but bypasses the orchestrator agent.
 
-**Why it's wrong:** A context window stuffed with 24 tool definitions degrades tool selection quality. The agent conflates planning decisions (tier 1-3) with execution decisions (tier 3). Without tier-specific tool lists, hooks are the only enforcement layer — a single mistake in the hook logic exposes everything.
+**Why it's wrong:** Slash commands in Claude Code are executed in the main session context. The `Task` tool is not available in main session — only to agents. More importantly, routing through the orchestrator ensures hooks fire (tier-gate, tool-allowlist) before subagents make Synapse calls.
 
-**Do this instead:** Narrow tool lists per agent. Planner gets planning tools. Executor gets execution tools. Validator gets read + approval tools. Defense-in-depth: tool lists restrict what's possible; hooks enforce what's allowed within that set.
+**Do this instead:** Commands that need subagent work should spawn the `synapse-orchestrator` agent (via `@synapse-orchestrator` mention or `Task` call with agent name). The orchestrator then manages subagent spawning under hook enforcement.
+
+---
+
+### Anti-Pattern 5: Writing to .claude/settings.json from the Install Script Repeatedly
+
+**What people do:** Re-run the install script to update settings.json whenever the framework changes. Each run overwrites the file, losing any user customizations.
+
+**Why it's wrong:** Users may add their own hooks or modify MCP server config. An overwriting install destroys those customizations without warning.
+
+**Do this instead:** The install script generates `settings.json` on first run only (check for existence). For updates, either: (a) provide a `--force` flag that overwrites with a warning, or (b) install generates `settings.synapse.json` and instructs the user to merge it manually. Option (b) is safer for production use.
 
 ---
 
 ## Scaling Considerations
 
-This is a single-user, local-first tool. Scaling means "larger projects" not "more users."
+This remains a single-user, local-first tool. Scaling means "more complexity in the project" not "more users."
 
 | Scale | Architecture Adjustments |
 |-------|--------------------------|
-| Small project (< 50 tasks, < 100 decisions) | No changes. In-memory tree assembly for tasks is instant. Brute-force vector search on decisions is fast. |
-| Medium project (50-500 tasks, 100-1000 decisions) | Create BTree index on `tasks.parent_id` and `tasks.project_id`. Create IVF_HNSW_SQ on `decisions.vector`. Add BTree index on `decisions.status` + `decisions.is_precedent` for filter pushdown. |
-| Large project (500+ tasks) | Wave-based parallel execution becomes important. Orchestrator should track task waves (all tasks with no incomplete dependencies) and run Executor subagents in parallel per wave. |
-| Multiple projects | Already scoped by `project_id` in all tables. No architectural change needed. |
+| Single project, simple goal | No adjustments. The default install + init + plan flow works as-is. |
+| Multiple projects on same machine | `project.toml` holds the project_id for whichever project the user is working in. No shared state across projects — each `.synapse/` is independent. |
+| Large project (many files, deep task trees) | `index_codebase` handles incrementally. Task trees with depth 4+ may be slow to assemble in `get_task_tree` — the BFS is bounded at depth 5. |
+| Team using same Synapse DB | Not in scope for v3.0. Single-user assumption baked into `project.toml` pattern. |
+| Multiple Claude Code workspaces | Each workspace has its own `.claude/` and `.synapse/`. If pointing at the same DB, project_id scoping handles isolation. |
 
 ---
 
 ## Sources
 
-- [Claude Agent SDK Overview — Anthropic official docs](https://platform.claude.com/docs/en/agent-sdk/overview) — HIGH confidence
-- [Claude Agent SDK Hooks — Anthropic official docs](https://platform.claude.com/docs/en/agent-sdk/hooks) — HIGH confidence
-- [Claude Agent SDK MCP Integration — Anthropic official docs](https://platform.claude.com/docs/en/agent-sdk/mcp) — HIGH confidence
-- [Claude Agent SDK Subagents — Anthropic official docs](https://platform.claude.com/docs/en/agent-sdk/subagents) — HIGH confidence
-- [Claude Agent SDK TypeScript Reference — Anthropic official docs](https://platform.claude.com/docs/en/agent-sdk/typescript) — HIGH confidence (AgentDefinition type, Options type, Query object methods confirmed)
-- [Synapse v1.0 Architecture Research — .planning/research/ARCHITECTURE.md](./ARCHITECTURE.md) — HIGH confidence (existing patterns)
-- [Synapse v2.0 Milestone Plan — .planning/MILESTONE_2_PLAN.md](../MILESTONE_2_PLAN.md) — HIGH confidence (design decisions)
+- Synapse v2.0 codebase inspection (2026-03-03): `packages/framework/hooks/*.js`, `packages/framework/agents/*.md`, `packages/framework/config/*.toml`, `packages/framework/settings.template.json`, `packages/framework/src/skills.ts`, `packages/framework/src/config.ts` — HIGH confidence (direct source inspection)
+- Existing `.claude/settings.json` in this repo — HIGH confidence (shows Claude Code hook integration pattern in practice)
+- Existing `.claude/agents/*.md` (GSD agents) — HIGH confidence (shows Claude Code agent frontmatter conventions used in production)
+- `packages/framework/workflows/pev-workflow.md` — HIGH confidence (authoritative PEV workflow specification)
+- `packages/framework/agents/synapse-orchestrator.md` — HIGH confidence (shows how orchestrator reads and follows pev-workflow.md)
+- Claude Code documentation (inferred from existing `.claude/` structure and `settings.template.json` hook format) — MEDIUM confidence (direct docs not fetched; inferred from working examples in this repo)
+- `.planning/PROJECT.md` — HIGH confidence (project requirements and Active milestone list for v3.0)
+- `milestone 3 - notes and questions.md` — HIGH confidence (open questions and missing work items for v3.0)
 
 ---
 
-*Architecture research for: Synapse v2.0 — Agentic coordination layer (orchestrator + specialized agents)*
-*Researched: 2026-03-01*
+*Architecture research for: Synapse v3.0 Working Prototype — Claude Code integration, install script, dynamic skills, project_id injection, E2E workflow wiring, progress visibility*
+*Researched: 2026-03-03*

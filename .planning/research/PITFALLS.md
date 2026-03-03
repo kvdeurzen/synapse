@@ -1,300 +1,264 @@
 # Pitfalls Research
 
-**Domain:** Adding an agentic coordination layer (Claude Agent SDK, multi-agent orchestration, decision tracking, task hierarchy) to an existing MCP server (Synapse v1.0)
-**Researched:** 2026-03-01
-**Confidence:** HIGH for Agent SDK patterns (verified against official docs); MEDIUM for LanceDB tree-hierarchy limits (DataFusion lineage confirmed, CTE specifics via GitHub issue); HIGH for integration pitfalls (verified via GitHub issues and official troubleshooting docs)
+**Domain:** Wiring an existing Claude Code framework (agents, hooks, skills, MCP server, PEV workflow) into a working end-to-end product — install through E2E orchestration
+**Researched:** 2026-03-03
+**Confidence:** HIGH for Claude Code hooks and subagent mechanics (verified against official Claude Code docs and GitHub issues); MEDIUM for install script patterns (community sources, cross-verified with Ollama/Bun docs); HIGH for project-specific gaps (direct codebase inspection)
 
 ---
 
 ## Critical Pitfalls
 
-### Pitfall 1: MCP Subprocess Shows "failed" Status Silently — Orchestrator Proceeds Anyway
+### Pitfall 1: Hook Path Resolution Breaks When cwd Is Not the Repo Root
 
 **What goes wrong:**
-The Claude Agent SDK's `query()` call spawns Synapse as a stdio subprocess via `mcpServers` config. If the subprocess fails to start (wrong command, missing env vars, Bun not in PATH, wrong working directory), the Agent SDK emits a `system/init` message with the Synapse server's status set to `"failed"`. Critically, the SDK does **not** abort — the agent continues executing and simply has no MCP tools available. The orchestrator may hallucinate tool calls, produce nonsensical output, or silently do nothing, with no exception thrown.
+The `settings.template.json` uses relative paths like `node packages/framework/hooks/synapse-startup.js`. When Claude Code is launched from a directory other than the monorepo root (e.g., from inside `packages/server/`, or from a symlinked path), `process.cwd()` resolves to a different directory and the hook scripts are not found. Claude Code fails to fire hooks silently in some versions and throws `ENOENT` in others. The hooks simply don't run, and there is no obvious error — sessions start normally but tier enforcement, allowlist checks, and the audit log are all inactive.
 
 **Why it happens:**
-The SDK's MCP connection error handling is designed to be non-fatal. It reports failures in the init message and continues, on the assumption the agent may have other tools. This is correct design for general use but wrong for Synapse's two-process architecture where the orchestrator is entirely dependent on Synapse tools. Developers assume a failed subprocess = exception; it doesn't.
+Relative paths in hook `command` fields are resolved from the working directory where Claude Code was launched, not from the settings file location. This is a known bug with multiple open issues (GitHub #3583, #10367). The `$CLAUDE_PROJECT_DIR` environment variable was added to address this but requires explicit use in path strings.
 
 **How to avoid:**
-- Always check the `system/init` message at the start of every `query()` call. Parse `message.mcp_servers` and abort if any server has `status !== "connected"`:
-  ```typescript
-  for await (const message of query({ prompt, options })) {
-    if (message.type === "system" && message.subtype === "init") {
-      const failed = message.mcp_servers.filter(s => s.status !== "connected");
-      if (failed.length > 0) throw new Error(`MCP server failed: ${JSON.stringify(failed)}`);
-    }
-    // ... rest of message handling
+- Use `$CLAUDE_PROJECT_DIR` as the prefix for all hook command paths in `.claude/settings.json`:
+  ```json
+  "command": "node $CLAUDE_PROJECT_DIR/packages/framework/hooks/synapse-startup.js"
+  ```
+- The install script must write the final `.claude/settings.json` with `$CLAUDE_PROJECT_DIR`-prefixed paths, not relative paths copied verbatim from `settings.template.json`.
+- The hooks inside the scripts themselves also use `process.cwd()` to resolve config files (e.g., `tier-gate.js` reads `packages/framework/config/trust.toml` via `path.join(process.cwd(), ...)`). These must be changed to use `process.env.CLAUDE_PROJECT_DIR` or `path.dirname(new URL(import.meta.url).pathname)` to derive the project root from the hook's own location.
+- Add an explicit test: run `claude` from a subdirectory and verify hooks fire by checking `.synapse-audit.log` is written.
+
+**Warning signs:**
+- `.synapse-audit.log` is not created after tool calls.
+- Agents can call tools outside their `allowed_tools` list (tool-allowlist hook not running).
+- Tier 0 decisions are stored without user approval (tier-gate hook not running).
+
+**Phase to address:** Claude Code integration phase. Hook path resolution must be verified before any other hook behavior is tested.
+
+---
+
+### Pitfall 2: Subagents Don't Inherit MCP Servers Automatically — Each Agent Needs Explicit MCP Config
+
+**What goes wrong:**
+When the orchestrator spawns a subagent via the Task tool, the subagent starts with a fresh context. By default, subagents inherit the parent conversation's tools including MCP tools. However, this inheritance only works if the MCP server is registered in the project or user-level `settings.json`. If the Synapse MCP server is configured only in `settings.local.json` (gitignored) or in a file that doesn't reach the subagent context, the subagent gets `Tool not found: mcp__synapse__*` errors. Additionally, documented bugs (GitHub #5465, #13605) show that custom subagents defined as plugin agents or `.claude/agents/*.md` files may not receive MCP tools at all in certain versions.
+
+**Why it happens:**
+Claude Code agents load their MCP context from settings files. Subagents defined in `.claude/agents/*.md` can explicitly list `mcpServers` in their frontmatter — referencing a server name is enough if the server is already configured in `settings.json`. If the server is absent from the settings file the subagent loads, the tool namespace `mcp__synapse__*` does not exist in that agent's context.
+
+**How to avoid:**
+- Register the Synapse MCP server in `.claude/settings.json` (the project-level settings file checked into git), not `settings.local.json`. This ensures all agents in the project see it.
+- Each agent's `.md` frontmatter should include `mcpServers: ["synapse"]` to explicitly declare MCP dependency. This resolves the known custom-agent MCP inheritance bug.
+- After deploying the wired `.claude/agents/*.md` files, verify E2E with a simple smoke test: ask the orchestrator to call `mcp__synapse__project_overview` and confirm it succeeds.
+- The install script must validate MCP server connectivity before telling the user setup is complete (`curl http://localhost:11434/api/tags` for Ollama, then a synthetic `init_project` call for Synapse).
+
+**Warning signs:**
+- Subagent output includes "Tool not found: mcp__synapse__..." errors.
+- Orchestrator calls Synapse tools successfully but spawned Executor agents cannot.
+- Hook fires for orchestrator MCP calls but not for subagent MCP calls.
+
+**Phase to address:** Claude Code integration phase, specifically the agent file wiring step.
+
+---
+
+### Pitfall 3: Agents Don't Know project_id — Every MCP Tool Call Fails With Validation Error
+
+**What goes wrong:**
+Every Synapse MCP tool requires `project_id` as a mandatory parameter (regex-validated: `^[a-z0-9][a-z0-9_-]*$`). No agent prompt currently specifies where `project_id` comes from. In practice, agents will either omit it (Zod validation error: `project_id is required`), ask the user for it (terrible UX, defeats the purpose), or invent a random string (creates orphaned data under wrong project). This is a showstopper for every MCP tool call in every agent.
+
+**Why it happens:**
+The gap was identified in the gap analysis but no mechanism has been wired up. The startup hook injects tier/tool instructions but not `project_id`. The orchestrator's system prompt does not specify how to discover `project_id`. Agents don't read `synapse.toml` to extract it.
+
+**How to avoid:**
+- Store `project_id` in `packages/framework/config/synapse.toml` under `[server]` (it already has `db` and `ollama_url` — add `project_id = "my-project"`).
+- The `synapse-startup.js` SessionStart hook reads `synapse.toml` (it already tries to read config files) and injects `project_id` into the `additionalContext` it emits. Example injection:
+  ```
+  **Project ID:** my-project
+  On ALL Synapse MCP tool calls, use project_id: "my-project"
+  ```
+- All agent prompts must include a standing instruction: "The project_id for all Synapse MCP calls is available in your session context via the startup hook. Never ask the user for it. Never omit it."
+- The orchestrator must pass `project_id` explicitly when spawning subagents via Task tool, as subagents start fresh and may not have the startup hook's context.
+
+**Warning signs:**
+- Any agent produces a Zod validation error mentioning `project_id`.
+- Agent output includes the phrase "what is the project ID?" or similar.
+- Multiple project rows appearing in the database with different IDs for the same project.
+
+**Phase to address:** Agent prompt improvements phase AND install script phase (both must set project_id before anything else runs).
+
+---
+
+### Pitfall 4: Agent Prompts Describe Tool Usage Abstractly — Agents Fall Back to Filesystem Search
+
+**What goes wrong:**
+Agent prompts currently describe what each agent does at a high level but do not specify concrete MCP tool call sequences with actual parameter values. Without this, agents default to what they know from training: `Read`, `Grep`, `Glob` on the filesystem. They never call `mcp__synapse__get_smart_context` or `mcp__synapse__search_code` — even though those tools would provide better targeted context. The semantic search value is entirely bypassed. Agents re-read files that are already indexed, wasting context window.
+
+**Why it happens:**
+LLMs follow the path of least resistance in their training distribution. Reading files is deeply familiar; calling a custom MCP tool with specific parameters (valid categories, mode choices, response shape expectations) requires explicit instruction. Without concrete examples showing parameter values and expected response structure, agents won't use the tools reliably.
+
+**How to avoid:**
+- Every agent prompt must include a "Key Tool Sequences" section with literal parameter values. Example (from the Executor agent, which already has this — but most don't):
+  ```
+  1. get_smart_context(project_id: "...", mode: "overview") — see what exists
+  2. get_smart_context(project_id: "...", mode: "detailed", doc_ids: [...]) — load specifics
+  3. search_code(project_id: "...", query: "...", language: "typescript") — find related code
+  ```
+- Add response shape documentation: agents need to know `mode: "overview"` returns summaries with `doc_id` fields, and `mode: "detailed"` accepts those `doc_id` values. Without this, agents can't chain calls.
+- Add valid enum values to tool documentation in agent prompts: `category` values (`decision`, `architecture`, `requirements`, `debug_report`...), `status` values, `tier` values.
+- Add the "MCP as single source of truth" instruction to every agent: "Before reading files with `Read` or `Grep`, check Synapse MCP first. Synapse has indexed this project."
+
+**Warning signs:**
+- Agents make zero `mcp__synapse__*` calls in a session.
+- Agent output includes extensive file listing (`Glob`/`Grep` calls) before any MCP call.
+- Executor creates new decisions without checking precedent first.
+
+**Phase to address:** Agent prompt improvements phase. This must be addressed before E2E validation, or the E2E test will pass trivially (using filesystem fallback) while the core value prop is untested.
+
+---
+
+### Pitfall 5: Hook Tool Allowlist Uses Static Config Path — Fails When Deployed Outside Synapse Repo
+
+**What goes wrong:**
+`tool-allowlist.js` and `tier-gate.js` read config files using `path.join(process.cwd(), 'packages/framework/config/agents.toml')`. This hardcodes an assumption that the hooks run from the Synapse repository root. When Synapse is installed as a tool for another project (i.e., a user installs Synapse and uses it to manage their own project), hooks run from the user's project root — which is not the Synapse repo root, and `packages/framework/config/agents.toml` does not exist there.
+
+**Why it happens:**
+The hooks were written during development where the Synapse repo is the working directory. But in production, users install Synapse once and use it across multiple projects. The Synapse framework files live in the Synapse repo or a global install location; user projects are separate.
+
+**How to avoid:**
+- Config file paths in hooks must use `path.dirname(new URL(import.meta.url).pathname)` to resolve relative to the hook script's own location (ES module `__dirname` equivalent), not `process.cwd()`. This makes hooks location-independent.
+- Current `synapse-startup.js` already attempts multiple path roots (`cwd`, `cwd/packages/framework`, `dirname(__file__)`) — the other hooks need the same treatment.
+- The install script should write the absolute path to the framework config directory into the user's `synapse.toml` so hooks can read a single env variable to find their config.
+- Add a hook self-test: at startup, verify each hook can find its config file and output a `[synapse-startup] config found at: ...` message to stderr. Fail loudly, not silently.
+
+**Warning signs:**
+- Hooks fire but immediately deny all operations (fail-closed on missing config).
+- `[synapse-startup] Warning: Could not load tier config` in Claude Code startup output.
+- All `store_decision` calls are denied immediately for all agents.
+
+**Phase to address:** Claude Code integration phase (hook wiring) AND install script phase (must configure the framework base path).
+
+---
+
+### Pitfall 6: Task Tool Spawning Passes No Context — Subagents Start Blind
+
+**What goes wrong:**
+When the orchestrator spawns a subagent via the Task tool (e.g., `Task("executor", "Implement task abc-123")`), the subagent starts with only its system prompt and the task description string. It has no access to the parent orchestrator's conversation history, no knowledge of the current epic, no project_id, no relevant task context, and no document references. The Executor must spend its entire first turn re-discovering context that the orchestrator already loaded. This wastes tokens, adds latency, and frequently fails because the Executor calls `get_task_tree` without knowing which epic to look at.
+
+**Why it happens:**
+The Task tool provides `isolation` — subagents get a fresh context by design. The orchestrator must explicitly pass all required context in the task prompt. Orchestrators that forget to include task_id, project_id, relevant document IDs, and acceptance criteria make their subagents go on a scavenger hunt.
+
+**How to avoid:**
+- The orchestrator's system prompt must include a "Subagent Handoff Protocol" section that specifies exactly what to include in every Task call:
+  - `project_id` (always)
+  - `task_id` of the specific task to execute
+  - The task title and description verbatim
+  - `doc_ids` of the most relevant Synapse documents (pre-fetched via `get_smart_context`)
+  - Acceptance criteria
+  - Dependency status ("task X is complete and produced Y")
+- The orchestrator should call `get_task_tree` and `get_smart_context` before spawning, and include the results as structured context in the Task prompt.
+- Subagents must have a documented "do not start work without these" requirement list in their system prompt. If any required field is missing, they should fail fast and report it rather than guessing.
+
+**Warning signs:**
+- Executor calls `get_task_tree` without a `filter_status` — it's looking for work instead of executing a specific task.
+- Subagent asks the user clarifying questions that the orchestrator should have provided.
+- Multiple consecutive `get_smart_context` overview calls from a single subagent (re-orienting instead of executing).
+
+**Phase to address:** E2E workflow validation phase. The handoff protocol is a correctness concern that only manifests at full PEV workflow scope.
+
+---
+
+### Pitfall 7: Install Script Assumes Ollama Is Running — Silent Embedding Failures Lock Up the Server
+
+**What goes wrong:**
+The Synapse server is configured with `fail-fast on Ollama unavailability` — if `nomic-embed-text` is not accessible, any `store_document` or `store_decision` call fails with an embedding error. The install script has no step to verify Ollama is running and the model is pulled before declaring setup complete. Users who complete "install" and immediately try `init_project` get a cryptic embedding failure and assume Synapse is broken.
+
+**Why it happens:**
+The install flow and the Ollama dependency are not connected. A user can complete the Bun install, copy config files, and get a success message — then hit the Ollama wall on the very first real operation. Ollama also requires a separate model pull (`ollama pull nomic-embed-text`) that takes 274MB of download on first run.
+
+**How to avoid:**
+- The install script must verify Ollama before completing:
+  ```bash
+  curl -s http://localhost:11434/api/tags | grep -q "nomic-embed-text" || {
+    echo "Pulling nomic-embed-text model (274MB)..."
+    ollama pull nomic-embed-text
   }
   ```
-- Validate the Synapse startup command (`bun run src/index.ts`) resolves correctly from the orchestrator's cwd before passing it to `mcpServers`.
-- In tests, assert that the init message shows `"connected"` status before asserting agent behavior.
+- Add a `synapse doctor` command (or `bun run setup --check`) that verifies all prerequisites: Bun version, Ollama running, model available, DB path writable, config files present.
+- The first-run experience should run a smoke test: `init_project` with a test project ID, verify it succeeds, delete the test data. This validates the full stack (Ollama → embeddings → LanceDB → MCP) before the user's real data touches it.
+- Include clear error messages in the Synapse server when Ollama is down: `"Embedding service unavailable. Start Ollama and ensure nomic-embed-text is pulled: ollama pull nomic-embed-text"`.
 
 **Warning signs:**
-- Orchestrator produces output without making any `mcp__synapse__*` tool calls.
-- Agent SDK does not throw — output looks plausible but Synapse data is not queried.
-- MCP server list in `system/init` shows `status: "failed"` or `status: "timeout"`.
+- Synapse server starts but all write tool calls return embedding errors.
+- `ollama list` shows no models despite Ollama being installed.
+- Error message in tool response is raw internal error text instead of a user-facing message.
 
-**Phase to address:** Orchestrator bootstrap phase. The init-check guard must be the very first piece of orchestrator infrastructure built.
+**Phase to address:** Installation and setup phase.
 
 ---
 
-### Pitfall 2: stdio Buffer Deadlock — Orchestrator Hangs After Long MCP Tool Responses
+### Pitfall 8: Dynamic Skill Injection Has No Runtime Mechanism — Skills Remain Static
 
 **What goes wrong:**
-When Synapse returns a large MCP tool response (e.g., `get_smart_context` with 50 chunks, `search_code` returning many results), the JSON-RPC response payload can exceed the OS stdio pipe buffer (~64KB on Linux). If the orchestrator's Agent SDK does not drain the pipe fast enough, the subprocess's write blocks, the orchestrator's read also blocks waiting for the subprocess to send `EOF`, and both sides deadlock. The SDK hangs indefinitely with no timeout.
+The current design hardcodes skills per agent in `agents.toml`. The goal for v3.0 is dynamic skill injection: read project stack from `synapse.toml`, inject relevant skills at session start. But there is no mechanism to do this today. The startup hook (`synapse-startup.js`) already reads config and injects context — but it doesn't load skill content. If the dynamic injection is deferred or partially implemented, agents run in v2.0 static mode with hardcoded TypeScript/Bun skills even for Python or React projects.
 
 **Why it happens:**
-This is a classic subprocess communication deadlock. The Agent SDK spawns Synapse via `anyio.open_process()` (Python) or Node.js `child_process.spawn()`. Stdio pipes have finite OS buffers. When the MCP response is large and the consumer is slow, the producer blocks. This has been confirmed in `claude-agent-sdk-python` issue #145 as a real hang scenario for long-running tool responses.
+Dynamic skill injection requires: (1) a field in `synapse.toml` for project skills, (2) the startup hook reading that field, (3) the startup hook reading and injecting SKILL.md content into `additionalContext`, (4) agent prompts that reference "your loaded skills" rather than naming specific skills. These four steps span install script, config format, hook logic, and agent prompts. Any partial implementation produces inconsistent behavior.
 
 **How to avoid:**
-- Keep Synapse MCP tool responses under 32KB where possible. For `get_smart_context`, enforce `max_tokens` limits on the returned bundle; for `query_decisions`, paginate rather than returning all records.
-- Add a per-tool `limit` parameter to all Synapse tools that return variable-length result sets. Default limits: `query_decisions` max 20, `get_task_tree` max depth 4.
-- The orchestrator should set a `max_turns` limit and a wall-clock timeout per `query()` call to prevent indefinite hangs.
-- For the SDK: use the TypeScript SDK's async generator pattern — iterate the generator as soon as messages arrive rather than buffering all messages before processing.
+- Define the complete contract in one phase: `synapse.toml` gets `[project] skills = ["typescript", "bun"]`, the startup hook reads it and injects skill content, agent prompts reference injected skills generically.
+- Implement the feature atomically — do not ship the config field without the hook reading it, or the hook without agent prompts referencing it.
+- The install script's `/synapse:init` command must ask the user which skills to enable and write them to `synapse.toml`. This is the only time skills are configured; subsequent sessions read from config automatically.
+- Test: add `skills = ["python"]` to `synapse.toml`, start a new session, verify Python skill content appears in the startup context and Executor references Python patterns in its work.
 
 **Warning signs:**
-- `query()` hangs indefinitely after a large MCP result.
-- No new messages arrive from the generator for > 30 seconds with no error.
-- The Synapse process shows high CPU (blocked write syscall) in `ps` output while the orchestrator shows low CPU (blocked read).
+- Executor uses `bun test` in a Python project (hardcoded skill active, dynamic injection not working).
+- Startup hook output doesn't include any skill content.
+- `synapse.toml` has a `skills` field that is never read by any code.
 
-**Phase to address:** Orchestrator bootstrap + MCP tool design phase. Set response size limits on all Synapse tools before integration testing.
+**Phase to address:** Skill system phase, specifically the dynamic injection sub-task.
 
 ---
 
-### Pitfall 3: LanceDB Has No Recursive CTE — Task Tree Traversal Requires Application-Level Recursion
+### Pitfall 9: Validator Overwrites Task Descriptions — Original Spec Lost
 
 **What goes wrong:**
-The task hierarchy (Epic → Feature → Component → Task) requires querying all descendants of a given parent, which is naturally expressed as a recursive CTE (`WITH RECURSIVE`). LanceDB uses Apache DataFusion as its SQL engine. DataFusion added experimental recursive CTE support (enabled via `execution.enable_recursive_ctes`), but LanceDB's Node.js client does not expose the `execution` config option, and recursive CTEs are not enabled in LanceDB's default configuration. Attempting `WITH RECURSIVE` in a LanceDB filter will fail with a parse error.
+The MCP tool `update_task` does full field replacement. When the Validator agent calls `update_task(task_id, description: "VALIDATION FINDING: passed/failed with details")`, it overwrites the original task spec that the Executor used to do the work. Future agents looking at that task (e.g., the Integration Checker, or the Debugger on retry) see only the validation result, not the original requirements. They cannot verify whether the implementation matches the spec because the spec is gone.
 
 **Why it happens:**
-LanceDB's SQL filtering is a subset of DataFusion SQL. DataFusion's recursive CTEs are opt-in and considered experimental (they can buffer unbounded data). LanceDB does not expose the config toggle. This means tree traversal must be done in application code via iterative queries.
+The Validator's system prompt instructs it to update the task with validation findings but does not specify that the original description must be preserved. Full-replacement semantics in `update_task` make this a data loss risk for any agent that writes to `description`.
 
 **How to avoid:**
-- Implement `getTaskTree(rootId, maxDepth)` as an iterative BFS in TypeScript: query `parent_id = rootId` at depth 1, collect task IDs, query `parent_id IN (...)` for depth 2, etc. Limit to `maxDepth` (default: 5) to prevent runaway iteration.
-- Store a `depth` field (already planned in schema foundations) to enable depth-scoped queries without recursion: `WHERE depth <= :maxDepth AND root_id = :epicId`.
-- Store a `root_id` field on every task (denormalized reference to the Epic ancestor). This enables a single flat query for all descendants: `WHERE root_id = :epicId`. Update `root_id` whenever a task is reparented.
-- The `get_task_tree` MCP tool should cap at 200 tasks returned and warn if truncated. Log if BFS reaches `maxDepth` without exhausting the tree.
+- Add a `notes` or `validation_result` append-only field to the task schema in LanceDB. Validators write to `notes`, not `description`.
+- If schema change is deferred: add an explicit rule to the Validator prompt — "When calling `update_task`, prepend your findings to the existing description, never replace it: `description: "[VALIDATION FINDING: ...]\n\nOriginal spec: {existing_description}"`".
+- Add a "write your findings as a document" instruction to Validator: call `store_document(category: "validation_report")` + `link_documents(task_id, report_id)`. This is queryable by future agents.
+- Integration Checker and Plan Reviewer have the same problem — all agents that call `update_task` must be audited.
 
 **Warning signs:**
-- `WITH RECURSIVE` SQL error in LanceDB filter expressions.
-- `get_task_tree` stalls on deep task hierarchies (unbounded BFS).
-- Task trees with depth > 5 cause N+1 query patterns (one DB round-trip per level).
+- Task descriptions in the database only contain validation text, not original specs.
+- Debugger cannot determine what was supposed to be built when investigating a failure.
+- Integration Checker produces reports that don't reference the original acceptance criteria.
 
-**Phase to address:** Task hierarchy schema phase. The `root_id` denormalized field and `depth` field must be in the schema from day one, before any task data is written.
+**Phase to address:** Agent prompt improvements phase (immediate rule addition) AND tech debt resolution phase (schema change for append-only validation field).
 
 ---
 
-### Pitfall 4: Subagents Cannot Spawn Subagents — 10-Agent Design Must Be Flat
+### Pitfall 10: E2E PEV Loop Has Never Run — Unknown Failure Modes in Wave Execution
 
 **What goes wrong:**
-The Claude Agent SDK explicitly prohibits subagents from spawning their own subagents. The `Task` tool must not be included in a subagent's `tools` array. If included (or inherited via omitting the `tools` field), the SDK silently ignores subagent-spawning attempts or throws. This means the orchestrator's architecture must be a single-level star: Orchestrator (main agent) → 10 leaf agents. Any design requiring Agent A to spawn Agent B fails.
+The PEV workflow is fully specified and the agent prompts are written, but the full loop (decompose → plan review → wave execution → validation → integration check → merge) has never been executed end-to-end. Unknown failure modes include: the orchestrator losing track of wave state when a subagent returns an unexpectedly long result, git worktree creation failing when the repo has uncommitted changes, branch merge order being wrong (task branches merged in wrong order create rebase conflicts), and the context window filling before the orchestrator finishes a full feature execution.
 
 **Why it happens:**
-The SDK enforces a two-level hierarchy by design. The SDK docs state: "Subagents cannot spawn their own subagents. Don't include `Task` in a subagent's `tools` array."
+Spec-driven development produces coherent documents that may have gaps only visible under real execution conditions. The complexity of PEV — spawning 3-5 parallel executors, awaiting all results, branching sequencing — means paper correctness does not guarantee runtime correctness.
 
 **How to avoid:**
-- All 10 agents are invoked directly from the Orchestrator (main agent). No agent-to-agent invocation.
-- The Orchestrator is the sole task router. It decides which agent handles what and sequences calls.
-- Wave-based parallelism is implemented by the Orchestrator spawning multiple agents for the same turn (the SDK supports concurrent subagent execution within a single orchestrator turn).
-- Subagent `tools` fields must be explicitly set. Never omit them — the default inherits all tools including `Task`.
+- Run the E2E PEV validation phase on the Synapse project itself (dogfooding). Choose a small, well-defined feature (e.g., "fix the escapeSQL duplication tech debt") as the first PEV run.
+- Run with `max_parallel_executors: 1` first (serial execution) to isolate orchestration bugs from parallelism bugs. Increase to 3 only after serial mode is confirmed correct.
+- Pre-create a clean git branch state before the E2E test. PEV assumes a clean working tree for worktree creation; uncommitted changes cause `git worktree add` to fail.
+- Add explicit logging to the orchestrator: after each wave, emit the checkpoint format defined in pev-workflow.md. The presence or absence of these checkpoints during the E2E test shows exactly where the workflow stalled.
+- Monitor context window usage. The orchestrator managing 5 parallel executors accumulates results from all of them. If each returns 8K tokens of results, one wave consumes 40K tokens of context.
 
 **Warning signs:**
-- A subagent's prompt mentions delegating to another agent.
-- A subagent's `tools` array is omitted (will inherit `Task` if parent has it, causing undefined behavior).
-- Architecture diagram shows agent chains deeper than Orchestrator → Agent.
+- Orchestrator stops emitting checkpoints mid-workflow.
+- Git worktree errors (`fatal: ...is not a working tree`) from any executor subagent.
+- Wave N+1 starts before all validations from Wave N have been confirmed (sync discipline broken).
 
-**Phase to address:** Agent architecture phase. The flat hierarchy constraint must be documented and enforced in agent definitions from the first agent built.
-
----
-
-### Pitfall 5: Hook Errors Terminate the Agent — Unhandled Exceptions in Hooks Are Fatal
-
-**What goes wrong:**
-Any unhandled exception thrown inside a hook callback causes the agent's `query()` generator to throw. This is unlike MCP tool failures (which the agent can recover from). A bug in a tier-enforcement hook (e.g., a null pointer when accessing `tool_input.decision_tier`) crashes the entire orchestrator run. All work done in that turn is lost with no graceful degradation.
-
-**Why it happens:**
-SDK hooks run synchronously in the agent loop. Unlike async tool execution (which has error isolation), hook exceptions propagate directly. The SDK documentation shows that hooks returning `{}` are safe, but does not warn that thrown exceptions are fatal.
-
-**How to avoid:**
-- Wrap every hook callback body in a top-level `try/catch`. In the catch block, log the error to stderr and return `{}` (allow the operation) or `{ hookSpecificOutput: { permissionDecision: "deny" } }` (deny defensively).
-- Add a hook test harness that calls each hook with malformed/null inputs and asserts it never throws.
-- For tier-enforcement hooks: fail **open** (allow) on hook errors during development; fail **closed** (deny with reason) in production where security matters more than availability.
-- Use `async: true` with `asyncTimeout` for side-effect-only hooks (logging, telemetry) so a slow logging call doesn't block the agent.
-
-**Warning signs:**
-- Orchestrator `query()` throws unexpectedly mid-run.
-- Stack trace points to hook callback code, not Synapse tool code.
-- An exception in a hook callback causes the entire task to be aborted rather than just that tool call.
-
-**Phase to address:** Hook implementation phase. The try/catch wrapper pattern must be established before any hooks are written.
-
----
-
-### Pitfall 6: Semantic Drift in Precedent Matching — check_precedent Returns False Positives
-
-**What goes wrong:**
-The `check_precedent` tool searches for decisions semantically similar to a proposed action. If the similarity threshold is too low, it returns decisions that are superficially related but not actually applicable (e.g., a decision about "database schema versioning" matching a query about "agent tool versioning"). Agents may incorrectly treat these as binding constraints, refusing to take actions that are actually permitted — or worse, claiming precedent support for something that is not actually covered.
-
-**Why it happens:**
-Short rationale text (50-200 tokens) produces low-quality embeddings with nomic-embed-text. Vector similarity in this dimension range is noisy — 0.75 cosine similarity between two 768-dim vectors for short text may not mean what it means for document-length text. The boundary between "same domain" and "semantically related" is ambiguous in embedding space.
-
-**How to avoid:**
-- Use a higher similarity threshold for precedent queries: 0.85+ minimum, not the 0.70 default used for document search.
-- Store decision `decision_type` (architectural, security, process, etc.) as a structured field and always pre-filter by type before vector search. Semantic search within a type-scoped result set is far more precise.
-- Require `check_precedent` to return a structured result with: `matches`, `confidence`, and `requires_review_if_above` threshold. Agents must never treat LOW confidence matches as binding.
-- Include a mandatory `scope` field in decisions (e.g., `scope: "embedding-pipeline"`) and require exact scope match before applying precedent.
-- Add integration tests: store 5 decisions with distinct domains, query with a string from a different domain, assert zero matches above 0.85 threshold.
-
-**Warning signs:**
-- `check_precedent` returns matches for clearly unrelated queries.
-- Agents reject actions citing decisions from a different subsystem.
-- High false-positive rate in integration tests of precedent matching with cross-domain queries.
-
-**Phase to address:** Decision tracking phase. Threshold calibration and `decision_type` pre-filtering must be designed before the first decision is stored.
-
----
-
-### Pitfall 7: Skill Injection Inflates Every Prompt — Context Budget Exhausted Before Work Begins
-
-**What goes wrong:**
-The skill loading system injects project-specific prompt content into agent system prompts at runtime. If 10 agents each load 5 skills averaging 2,000 tokens each, that's 100,000 tokens of system prompt overhead before any task context or user prompt. With a 200K context window, this leaves ~100K tokens for actual work — adequate for some tasks but catastrophic for agents that need to load detailed Synapse search results. In practice: Executor agent + 5 skills + task context + Synapse results = context window exhausted mid-task.
-
-**Why it happens:**
-Developers add skills incrementally without tracking cumulative token cost. Each skill seems reasonable in isolation. The 2025 research on skill injection confirms that "10 skills at 2,000 tokens each = 20,000 tokens per request" and this "reduces the effective context window available for actual reasoning." The problem multiplies across 10 agents running in parallel.
-
-**How to avoid:**
-- Implement a three-stage progressive loading pattern (matching official Agent SDK skills design):
-  1. Stage 1: Inject only skill names and 1-line descriptions (~50 tokens per skill) into all agent system prompts.
-  2. Stage 2: Inject full skill body only when the agent explicitly requests it via a `load_skill(name)` tool call.
-  3. Stage 3: Supplementary files only on demand.
-- Hard cap: each skill body must be under 2,000 tokens. Skills exceeding this are split or summarized.
-- The skill registry tool must track token usage per skill load and warn when cumulative prompt length exceeds 30% of the model's context window.
-- Per-agent skill budget: each agent has a maximum skill load (e.g., Executor: 3 skills max, Architect: 5 skills max).
-
-**Warning signs:**
-- Agent errors mentioning context window exceeded appear before the agent has done substantial work.
-- Skill loading causes `query()` token usage to exceed 100K tokens on the first turn.
-- An agent pauses to request compaction immediately after receiving its system prompt.
-
-**Phase to address:** Skill loading phase. Token budgeting must be built into the skill registry before the first skill is loaded into production agents.
-
----
-
-### Pitfall 8: Skill Files Are a Prompt Injection Attack Surface
-
-**What goes wrong:**
-Skills loaded from the file system or a registry into agent system prompts are a known injection vector. Research (arXiv 2510.26328, 2601.17548) confirms that malicious content in skill markdown files can steer agents away from their stated intent, bypass guardrails ("the 'Don't ask again' approval can carry over to related harmful actions"), and exfiltrate data from files the agent has read. In Synapse's context, a poisoned skill could instruct the Executor agent to write malicious code or escalate its tier authority.
-
-**Why it happens:**
-Skills are markdown files trusted implicitly because they live on the file system. But skill files can be modified by any process with write access to the skills directory. The LLM cannot distinguish skill content from adversarial instructions embedded in that content — it is all system prompt.
-
-**How to avoid:**
-- Skill files must be version-controlled and their content hash stored in the skill registry alongside the skill. Before loading, verify content hash matches the registered hash.
-- The skill registry should be read-only after initialization. Skills cannot be added or modified at runtime without an explicit admin operation.
-- Add a skill content policy: skills may not contain instructions to modify tier authority, bypass quality gates, or access files outside the project scope. Validate this via a simple linter that scans for banned phrases.
-- Orchestrator hooks (`PreToolUse`) must enforce tier authority regardless of what skills say. Skill content cannot override hook-level constraints.
-
-**Warning signs:**
-- A skill file references external URLs or instructs agents to fetch content from the web.
-- Skill content includes phrases like "ignore previous instructions" or escalates authority.
-- An agent calls tools outside its defined authority after loading a new skill.
-
-**Phase to address:** Skill loading + hook implementation phases. Content validation must precede first skill load in the orchestrator.
-
----
-
-## Moderate Pitfalls
-
-### Pitfall 9: Orphaned Tasks After Partial Failure — Status Never Propagates Up
-
-**What goes wrong:**
-In the Epic → Feature → Component → Task hierarchy, if a task fails and the orchestrator crashes (or the agent's turn exceeds `max_turns`), the task remains in `"in_progress"` status permanently. Its parent Feature does not know it failed. On the next orchestrator run, the Feature's status remains `"in_progress"` even though it cannot complete, because one child task is stuck. Cascading stale status percolates all the way to the Epic, making the entire hierarchy unreliable.
-
-**Why it happens:**
-Hierarchical status propagation requires parent tasks to poll or subscribe to child status changes. LanceDB has no triggers or reactive queries. The orchestrator must proactively walk the tree after any task status change and propagate. If the orchestrator crashes mid-propagation, the tree is left inconsistent.
-
-**How to avoid:**
-- `update_task` must accept a `cascade_to_parent` option (default true) that walks up the hierarchy and recalculates parent status based on all children: if any child is `"failed"`, parent becomes `"blocked"`; if all children are `"done"`, parent becomes `"done"`.
-- Implement a `reconcile_task_tree(epic_id)` tool that does a full tree-walk and repairs inconsistent statuses. Run it at orchestrator startup as a health check.
-- Store `last_updated_at` on every task. A task in `"in_progress"` for > 2 hours without update is treated as `"stalled"` by the reconciler.
-- Task status changes must be atomic with their log entries: write to `activity_log` and update the task row in the same logical operation. If either fails, the orchestrator retries the update before continuing.
-
-**Warning signs:**
-- Task statuses diverge from actual work completed after an orchestrator restart.
-- Parent task shows `"in_progress"` when all children show `"done"` or `"failed"`.
-- Orchestrator repeatedly picks up the same task because it cannot determine if it is truly complete.
-
-**Phase to address:** Task hierarchy phase. The cascade propagation logic must be built into `update_task` from the start, not retrofitted.
-
----
-
-### Pitfall 10: Context Window Accumulation in Long Orchestrator Sessions — Automatic Compaction Loses Decision History
-
-**What goes wrong:**
-The Claude Agent SDK includes automatic context compaction: when the context window approaches its limit, the SDK summarizes older messages. For the orchestrator, this means the full history of MCP tool calls (which decisions were checked, which tasks were created, what code was analyzed) gets summarized into a compressed narrative. The summary is lossy — specific task IDs, decision IDs, and Synapse query results are not preserved verbatim. After compaction, the orchestrator may re-check the same decisions, re-create already-existing tasks, or lose track of where in the PEV workflow it was.
-
-**Why it happens:**
-The orchestrator's context grows because each MCP tool call adds both the tool input and the full tool response to the conversation. A `get_smart_context` response can be 10K+ tokens. 20 tool calls = 200K+ tokens. Compaction is automatic and lossy.
-
-**How to avoid:**
-- Use the `PreCompact` hook to archive the full transcript before compaction: write the transcript to a Synapse document (`store_document` with category `"orchestration_log"`). After compaction, the orchestrator can reference this log via `query_documents`.
-- Register a `PreCompact` hook that explicitly extracts: active task IDs, decisions applied in this session, current workflow stage (Plan/Execute/Validate). Store these as structured state in `project_meta` before compaction occurs.
-- The orchestrator's system prompt must include: "At the start of each turn, check `project_meta` for the current session state before taking any action."
-- Use subagents for bounded subtasks: a subagent's context is isolated and compacted independently from the orchestrator's context. Use them for token-intensive research tasks.
-
-**Warning signs:**
-- Orchestrator creates duplicate tasks after a long session.
-- Orchestrator re-queries decisions already applied earlier in the same session.
-- `query()` usage shows sudden token count reset (compaction occurred) followed by repetitive behavior.
-
-**Phase to address:** Orchestrator architecture phase. Session state persistence via `project_meta` and the `PreCompact` hook must be wired before multi-turn orchestration is tested.
-
----
-
-### Pitfall 11: LanceDB Concurrent Write Corruption From Parallel Agents
-
-**What goes wrong:**
-Multiple subagents run in parallel in wave-based execution. If two agents call Synapse tools that write to the same LanceDB table simultaneously (e.g., two Executor agents writing `activity_log` entries, or Decomposer and Executor both writing `tasks`), LanceDB's embedded embedded mode has limited concurrent write isolation. On the local filesystem (non-S3), LanceDB uses file-level locking, but concurrent `add()` operations can leave the table in a partially written state if the process is killed mid-write, and the Node.js side does not expose retry logic.
-
-**Why it happens:**
-LanceDB's Lance format is append-optimized but not MVCC-safe for concurrent writes from multiple OS processes. Synapse is a single process — but if the orchestrator spawns Synapse once and multiple agents call it rapidly in parallel (all channeled through the single stdio MCP connection), write ordering is serialized through the MCP layer. The actual risk is the orchestrator having multiple `query()` calls open simultaneously that each talk to the same Synapse subprocess — which is not supported; one subprocess cannot handle two simultaneous MCP connections.
-
-**How to avoid:**
-- Enforce a single Synapse MCP connection for the orchestrator. Do not spawn multiple Synapse processes. All agent tool calls route through the single `mcpServers` connection, which MCP serializes at the stdio level.
-- Write operations in Synapse tools must be wrapped in a write queue (in-process mutex in Synapse's server.ts) to serialize concurrent writes even if multiple MCP requests arrive quickly.
-- `activity_log` writes are the highest-frequency write; use batched inserts: collect multiple log entries and flush every 500ms rather than inserting one row per event.
-- Never call `query()` concurrently on the same orchestrator session for different agents. Use one `query()` call with subagents defined in `agents` — the SDK handles parallelism internally and routes through the same connection.
-
-**Warning signs:**
-- LanceDB table corruption errors (`cannot open file for writing`) on high-frequency write workloads.
-- Multiple orchestrator processes launched accidentally, each trying to write to the same `.synapse/` directory.
-- Activity log has missing entries after a parallel wave execution.
-
-**Phase to address:** Orchestrator architecture + task execution phase. Single-connection enforcement must be an architectural invariant, not a runtime assumption.
-
----
-
-### Pitfall 12: Stale Decision Cache — Agent Uses Outdated Precedent After Schema or Policy Change
-
-**What goes wrong:**
-The decision tracking system embeds decision rationale for semantic search. If the project schema changes significantly (new tables, new tool names, new tier definitions), existing decisions may still be returned by `check_precedent` as applicable even though they reference an obsolete context. An agent following a stale decision may make incorrect architectural choices or reject valid actions based on superseded policy.
-
-**Why it happens:**
-Decisions are stored as append-only rows with no invalidation mechanism. Unlike document versioning (which supports `status: "superseded"`), decisions don't automatically expire. A decision written in Phase 1 ("always embed before inserting") remains fully valid to the precedent search in Phase 10 even if the rule has been modified.
-
-**How to avoid:**
-- Apply the same versioning model to decisions as to documents: decisions support `status` field with values `"active"`, `"superseded"`, `"archived"`. All `check_precedent` queries must filter `status = "active"`.
-- When a decision is updated, the old decision row gets `status = "superseded"` and a new row is inserted — preserving history but removing the old decision from precedent search.
-- Store `applies_to_phase` or `scope` on decisions. Precedent queries can optionally scope by phase.
-- Implement a `supersede_decision(old_id, new_rationale)` tool that atomically marks old as superseded and creates the replacement.
-
-**Warning signs:**
-- `check_precedent` returns decisions that reference tools or schema that no longer exist.
-- Agents cite superseded policies as justification for blocking valid actions.
-- The decision table has no `superseded` status rows after multiple milestone iterations.
-
-**Phase to address:** Decision tracking phase. Status field and supersede operation must be designed alongside `store_decision`.
+**Phase to address:** E2E workflow validation phase. This phase exists precisely because this pitfall is expected.
 
 ---
 
@@ -302,14 +266,14 @@ Decisions are stored as append-only rows with no invalidation mechanism. Unlike 
 
 | Shortcut | Immediate Benefit | Long-term Cost | When Acceptable |
 |----------|-------------------|----------------|-----------------|
-| No init-message MCP status check | Faster orchestrator startup code | Orchestrator silently does nothing when Synapse fails to start | Never — always check init message |
-| Omitting `tools` field on subagents | Fewer lines of code | Subagents inherit `Task` tool, enabling accidental recursive spawning | Never — always specify tools explicitly |
-| No `root_id` denormalized field on tasks | Simpler schema | Every tree query requires N BFS iterations; no single-query ancestry lookup | Acceptable only if max hierarchy depth is 2 |
-| Skill injection without token budget | Simpler skill loader | Context exhaustion mid-task; expensive compaction on every agent turn | Never — track tokens per skill from day one |
-| No `PreCompact` hook for session state | Fewer hooks to implement | Orchestrator loses task/decision context after compaction | Never for production sessions |
-| Single hardcoded precedent threshold (0.75) | Simple implementation | False positives in cross-domain precedent matching | Never — parameterize per decision_type |
-| Hook without try/catch | Faster prototyping | A null pointer in hook code crashes the entire orchestrator run | Never in production code path |
-| Large get_smart_context response with no token cap | More information per call | stdio buffer deadlock risk; context window consumed in one tool call | Never — always cap at 8K tokens per response |
+| Relative hook paths in settings.json | Works in dev (always run from repo root) | Hooks silently fail when Claude Code launched from any subdirectory | Never — use $CLAUDE_PROJECT_DIR from day one |
+| Omitting project_id from startup hook context | Simpler hook code | Every agent must discover or ask for project_id, breaking UX | Never — inject project_id at session start |
+| Full field replacement in update_task for validation results | Simpler API design | Validator overwrites original task spec; history lost | Never — design append semantics before first production run |
+| Hardcoding TypeScript skill in agent prompts | Works for this project | Skill injection is language-specific; breaks for Python/React users | Never — skill content must be dynamically injected |
+| No MCP connectivity check in install script | Simpler installer | Users hit embedding errors on first real operation | Never — validate the full stack during setup |
+| Static config paths in hook scripts (process.cwd()) | Easier development | Hooks fail when installed outside Synapse repo root | Never for distributed tool — always use __dirname-relative paths |
+| Skipping E2E validation until "later" | Ships faster | Spec bugs in PEV workflow only discoverable at runtime | Never — first real run is the validation phase |
+| Subagent Task calls with minimal prompt context | Less orchestrator complexity | Subagents can't execute without context; wasted turns re-orienting | Never — define the handoff protocol before first orchestrator test |
 
 ---
 
@@ -317,15 +281,14 @@ Decisions are stored as append-only rows with no invalidation mechanism. Unlike 
 
 | Integration | Common Mistake | Correct Approach |
 |-------------|----------------|------------------|
-| Agent SDK `mcpServers` | Passing `command: "bun"` without validating Bun is in PATH | Verify Bun is accessible from orchestrator's process environment; use absolute path if needed |
-| Agent SDK `allowedTools` | Omitting `mcp__synapse__*` wildcard | Every Synapse tool must be explicitly whitelisted or use wildcard; SDK blocks tool calls by default |
-| Agent SDK `agents` field | Including `Task` in a subagent's `tools` | Subagents cannot spawn subagents; `Task` must be absent from all 10 agent tool lists |
-| Hook `hookSpecificOutput` | Returning `permissionDecision: "allow"` without `hookEventName` | `hookEventName` is required in `hookSpecificOutput` for `PreToolUse` hooks; omitting it is silently ignored |
-| Hook input modification | Mutating `tool_input` in place | Always return a new object in `updatedInput`; also requires `permissionDecision: "allow"` to take effect |
-| LanceDB task queries | Using `WITH RECURSIVE` SQL | Use application-level BFS with `parent_id IN (...)` queries; DataFusion recursive CTEs not enabled in LanceDB |
-| Skill loading | Loading full skill body for all agents at startup | Use progressive disclosure: names only at init, full body only when agent requests it via `load_skill` tool |
-| Decision embedding | Using the same similarity threshold as document search (0.70) | Decisions need 0.85+ threshold; short rationale text produces noisier embeddings than full documents |
-| MCP `mcp__synapse__*` tool naming | Hard-coding tool names without the `mcp__<server-name>__` prefix | Tool names in hooks and `allowedTools` must match `mcp__synapse__store_decision`, not `store_decision` |
+| `.claude/settings.json` MCP server config | Specifying `bun run packages/server/src/index.ts` without `--db` arg — config not connected to db path | Pass db path via `--db $SYNAPSE_DB_PATH` arg or `SYNAPSE_DB` env var; the server reads `--db` via argv |
+| Claude Code hooks | Returning `permissionDecision` without the matching `hookEventName` field in `hookSpecificOutput` | Both fields are required; missing `hookEventName` causes silent hook failure per official docs |
+| Claude Code hook commands | Using relative paths like `node packages/framework/hooks/...` in hook command strings | Use `node $CLAUDE_PROJECT_DIR/packages/framework/hooks/...`; relative paths fail when cwd differs from repo root (documented bug) |
+| Subagent MCP access | Relying on implicit MCP inheritance in custom `.claude/agents/*.md` agents | Add `mcpServers: ["synapse"]` to each agent's frontmatter to explicitly declare MCP dependency; documented custom-agent MCP inheritance bug (#13605) |
+| Startup hook `additionalContext` | Generating > 2000 tokens of context from TOML config dump | Keep injected context under 500 tokens; inject only facts agents need (project_id, tier summary, active skills) |
+| `tool-allowlist.js` actor matching | Agents calling tools with no `actor` field or wrong actor name | Agent prompts must specify exact actor name matching agents.toml key; unknown actors are fail-closed denied |
+| Task Tool prompt | Passing task description only, omitting project_id and doc_ids | Subagents start fresh; pass `project_id`, `task_id`, acceptance criteria, and relevant `doc_ids` explicitly in every Task call |
+| Git worktree creation | Running PEV with uncommitted changes in working tree | Always commit or stash changes before PEV execution; `git worktree add` fails on dirty trees |
 
 ---
 
@@ -333,82 +296,39 @@ Decisions are stored as append-only rows with no invalidation mechanism. Unlike 
 
 | Trap | Symptoms | Prevention | When It Breaks |
 |------|----------|------------|----------------|
-| BFS task tree traversal without depth limit | `get_task_tree` hangs on malformed hierarchy with cycles | Always cap BFS at `maxDepth=5` and check for visited IDs | Trees with depth > 5 or cycles |
-| Embedding short decision rationale (< 20 tokens) | `check_precedent` returns high-similarity matches for unrelated queries | Enforce minimum rationale length of 50 tokens; block store_decision with shorter rationale | From the first decision stored |
-| Parallel subagents all calling `store_document` or `create_task` | LanceDB fragment accumulation from N rapid sequential inserts | Synapse write queue: batch rapid writes; the MCP stdio layer serializes calls but batching reduces fragment count | > 5 parallel agents writing simultaneously |
-| Skill loading full skill bodies at agent init | 20K+ tokens consumed before first task | Progressive loading; skill bodies only loaded on demand | > 3 skills with > 2K token bodies each |
-| No response size cap on MCP tool results | stdio pipe buffer fills; orchestrator hangs | Enforce per-tool token limits on all Synapse tool responses | Response bodies > 64KB |
-| Re-checking `check_precedent` on every tool call | Redundant semantic searches; 10x embedding cost | Cache precedent results within a single agent turn; only re-check when decision domain changes | Agents with > 20 tool calls per turn |
+| Startup hook injects full skill bodies for all agents | Session start takes > 30 seconds; first context window already > 50% used | Inject skill name + 1-line summary only; agent requests full body via tool call or explicit prompt | > 3 skills x > 1000 tokens each |
+| Orchestrator awaits all wave executors before reading results | Context window fills with accumulated executor results | Read each executor result as it arrives; summarize before appending to conversation | > 3 parallel executors x > 8K tokens each |
+| `get_task_tree` called without `filter_status` at session start | Returns all tasks ever created; orchestrator spends 10K tokens reading completed work | Always filter: `status: "in_progress"` or `status: "pending"` at session start | Projects with > 50 total historical tasks |
+| Audit log hook runs synchronously on every tool call | Hook overhead adds 200ms latency to every single tool call | Audit hook already exits fast via `appendFileSync`; ensure it stays sync-but-fast | > 100 tool calls per session |
+| Each agent agent re-calls `get_smart_context` overview from scratch | N agents x M overview calls = M redundant DB scans | Orchestrator fetches overview once and passes relevant doc_ids in each Task prompt | > 5 parallel agents in same feature wave |
 
 ---
 
-## Security Mistakes
+## UX Pitfalls
 
-| Mistake | Risk | Prevention |
-|---------|------|------------|
-| Skill files without content hash validation | Poisoned skills redirect agents, bypass guardrails, or exfiltrate data | Store content hash in skill registry; verify hash before loading skill into prompt |
-| `permissionMode: "bypassPermissions"` in production | Bypasses all safety prompts including for destructive operations; propagates to subagents | Use `"acceptEdits"` for production; `"bypassPermissions"` only in sandboxed test environments |
-| Tier authority enforcement only in agent prompts | A skilled LLM can be persuaded to exceed its tier by adversarial task content | Enforce tier authority in `PreToolUse` hooks, not just system prompts; hooks cannot be overridden by prompt content |
-| Storing full decision rationale with project-confidential information | Decision rationale is stored as searchable text; `query_decisions` with no auth | Synapse is local-only; document that decisions are not encrypted; do not store passwords or secrets in rationale |
-| Agent SDK `systemMessage` in hook output visible to model | Hook-injected context can be observed by malicious skill content and used to craft better injection | Avoid injecting sensitive operational data (API keys, internal file paths) via `systemMessage`; log to stderr instead |
-
----
-
-## Testing Pitfalls — Orchestrator-Specific
-
-### Pitfall T1: No Mocking Strategy = Every Test Burns API Tokens
-
-**What goes wrong:**
-Developers write integration tests that call `query()` directly. Each test turn costs real API tokens. Running the full orchestrator test suite (10 agents × multiple turns × multiple test cases) becomes prohibitively expensive and slow. Tests become brittle because they depend on LLM non-determinism.
-
-**How to avoid:**
-- **Layer 1 — Pure unit tests (no API cost):** Test hook callback functions, skill loading logic, task tree BFS, status propagation, and precedent threshold logic independently. These are pure TypeScript functions that don't need the SDK.
-- **Layer 2 — MCP tool tests (no orchestrator cost):** Use the existing Synapse test harness to test `store_decision`, `create_task`, `check_precedent` etc. These already exist and run without API calls.
-- **Layer 3 — Mock orchestrator (minimal API cost):** For orchestrator integration tests, mock the `query()` function to return pre-recorded message sequences. Record a golden test session once, then replay it. This is standard practice for agentic system testing.
-- **Layer 4 — Live smoke tests (real API cost):** Run against real API only in CI on merge to main. One smoke test per milestone phase, not per test case.
-- Use a `.env.test` flag to switch between mock and live orchestrator. Default to mock.
-
-**Warning signs:**
-- Orchestrator test suite costs > $5 per run.
-- Tests pass non-deterministically (sometimes pass, sometimes fail based on LLM output).
-- Developers avoid running tests because they're too expensive.
-
-**Phase to address:** Orchestrator architecture phase. The mock/record/replay harness must be built before the first orchestrator integration test is written.
-
----
-
-### Pitfall T2: Testing Hooks in Isolation Misses Ordering Bugs
-
-**What goes wrong:**
-Hook unit tests call individual hook callbacks with hand-crafted inputs and assert the return value. This misses bugs caused by hook ordering: multiple `PreToolUse` hooks chained together, where Hook A's `systemMessage` output interacts unexpectedly with Hook B's `permissionDecision`. The first hook to return `deny` wins (SDK precedence rule), so a hook ordering bug can silently allow operations that should be denied (wrong hook runs first) or deny ones that should be allowed (a broad hook catches a specific case before a narrow hook can allow it).
-
-**How to avoid:**
-- Write hook chain integration tests that simulate the full hook execution sequence using the SDK's actual hook runner. The Agent SDK processes hooks in the order they appear in the array — test with at least three hooks chained.
-- The tier enforcement hook must always be the **first** hook in `PreToolUse` (fastest deny path). Quality gate hooks run after. Logging hooks run last.
-- Test hook ordering explicitly: register a deny hook for `mcp__synapse__store_decision`, then an allow hook — verify deny wins. Register the same in reverse — verify allow wins (because no deny is present in this ordering).
-
-**Warning signs:**
-- A Tier 0 agent successfully calls a Tier 3 tool that should be blocked.
-- Audit log hook fires for denied operations (should not log what wasn't executed).
-- Hook ordering is implicit (array position) but not documented or tested.
-
-**Phase to address:** Hook implementation phase. Ordering tests must exist alongside each hook.
+| Pitfall | User Impact | Better Approach |
+|---------|-------------|-----------------|
+| No CLAUDE.md amendment during init | Users don't know Synapse is available; can't invoke orchestrator | `/synapse:init` must offer to append Synapse-specific instructions to CLAUDE.md (opt-in, never silent) |
+| Asking user for project_id on every session | Users interrupted from flow; defeats automation promise | project_id injected by startup hook from synapse.toml; user never types it |
+| Progress is invisible until E2E completes | Long PEV runs feel like they've frozen | Orchestrator emits wave checkpoint blocks after each wave; use Claude Code status line to show active epic/feature |
+| Install script fails silently | User has no working system but no error message | Every install step echoes status; any failure prints exact fix command |
+| No `/synapse:init` command | New users have no entry point; must read docs to discover how to start | `/synapse:init` is the single documented entry point; it walks the user through each setup step |
+| Commands `/synapse:map` and `/synapse:plan` missing | Users can't invoke core workflows without reading agent internals | These commands must exist and be documented before any user tries Synapse on their own project |
 
 ---
 
 ## "Looks Done But Isn't" Checklist
 
-- [ ] **MCP init status checked:** The first message from `query()` is parsed for server connection status. If Synapse shows `status !== "connected"`, the orchestrator throws before attempting any agent work.
-- [ ] **Subagent `tools` arrays are explicit:** Every agent definition has an explicit `tools` array. None rely on inheritance. `Task` is absent from all 10 subagent definitions.
-- [ ] **Hook callbacks never throw:** Each hook has a top-level try/catch. Call each hook with `null` and `undefined` inputs; assert it returns `{}` not an exception.
-- [ ] **`root_id` field populates on task creation:** Create a 3-level task hierarchy (Epic → Feature → Task). Verify all three rows have the same `root_id` equal to the Epic's task_id.
-- [ ] **`get_task_tree` depth is capped:** Create a 10-level chain of tasks. Call `get_task_tree`; verify it returns no more than 5 levels and includes a `truncated: true` indicator.
-- [ ] **Precedent threshold calibrated:** Store 5 decisions across 5 distinct domains. Query each domain with a string from a different domain. Verify zero results with similarity > 0.85.
-- [ ] **`PreCompact` hook archives session state:** Run an orchestrator session to 80% of context limit. Verify `project_meta` contains current task IDs and workflow stage before compaction fires.
-- [ ] **Skill token budget enforced:** Load 10 skills simultaneously for one agent. Verify combined system prompt token count remains under 30% of context window. Verify stage-2 bodies load only on demand.
-- [ ] **Skill content hash validated:** Modify a skill file after the registry is initialized. Verify `load_skill` rejects the modified file with a hash mismatch error.
-- [ ] **Stale status reconciler runs at startup:** Kill the orchestrator mid-execution (leaving tasks in `"in_progress"`). Restart. Verify `reconcile_task_tree` runs automatically and marks stalled tasks appropriately.
-- [ ] **Decision `status = "active"` filter enforced:** Supersede a decision. Call `check_precedent` with a query that matches it. Verify zero results (superseded decision not returned).
+- [ ] **Hook files are wired:** `.claude/settings.json` references all 5 hook scripts via `$CLAUDE_PROJECT_DIR` paths, not relative paths. Verify by grepping the installed `settings.json` for `$CLAUDE_PROJECT_DIR`.
+- [ ] **Hooks actually fire:** After a Claude Code session with a Synapse MCP tool call, `.synapse-audit.log` exists and has an entry. This is the simplest E2E hook verification.
+- [ ] **project_id flows to all agents:** Ask the orchestrator to call `mcp__synapse__project_overview`. It should succeed without asking for project_id. Then spawn an executor subagent and verify it also calls Synapse tools with the correct project_id.
+- [ ] **Subagent MCP access confirmed:** A custom `.claude/agents/executor.md` agent must be able to call `mcp__synapse__get_task_tree`. Test this directly before running any PEV workflow.
+- [ ] **Validator writes to notes, not description:** Create a task, have an agent call `update_task` with new description content, verify original description is preserved (either in notes field or prefixed in description).
+- [ ] **Skill injection is dynamic:** Add `skills = ["python"]` to `synapse.toml`. Start a new Claude Code session. Verify the startup hook's `additionalContext` includes Python skill content. Change back to `["typescript"]`. Verify TypeScript content on next session.
+- [ ] **Install script passes full-stack smoke test:** Run the install script on a clean machine (or clean Docker container). Verify the smoke test (init_project → store_document → semantic_search) completes without errors.
+- [ ] **Ollama validation in setup:** The install script or `/synapse:init` command verifies Ollama is running and `nomic-embed-text` is pulled before exiting. It does not exit with success if Ollama is unavailable.
+- [ ] **PEV E2E runs to completion:** At least one full PEV cycle (decompose → plan review → execute → validate → integration check) runs on a real task and completes successfully. Document what broke and what was fixed.
+- [ ] **Config paths in hooks are location-independent:** Copy the hook scripts to a directory outside the Synapse repo. Run them standalone with mock input. They must either find their config or fail with a clear `[synapse] Config not found at: ...` message, not an unhandled exception.
 
 ---
 
@@ -416,14 +336,14 @@ Hook unit tests call individual hook callbacks with hand-crafted inputs and asse
 
 | Pitfall | Recovery Cost | Recovery Steps |
 |---------|---------------|----------------|
-| Synapse MCP subprocess fails to connect | LOW | Check Bun PATH, verify stdio transport config, check `.mcp.json` server name matches `allowedTools` prefix |
-| stdio deadlock — orchestrator hung | LOW | Kill orchestrator; reduce response size limits on offending Synapse tool; restart |
-| Task tree inconsistent after orchestrator crash | LOW | Run `reconcile_task_tree(epic_id)`; script marks stalled tasks; orchestrator picks up from last known good state |
-| Skill causes unexpected agent behavior | MEDIUM | Remove/quarantine skill file; verify skill content hash in registry; re-run with skills disabled to confirm normal behavior |
-| Precedent false positives blocking valid actions | MEDIUM | Raise similarity threshold; add `decision_type` filter; manually supersede incorrectly matched decisions |
-| Context compaction loses task state | MEDIUM | Retrieve archived session log from Synapse documents; resume from `project_meta` session state snapshot |
-| Hook exception crashes orchestrator | LOW | Identify offending hook from stack trace; add try/catch; re-run — the hook now returns `{}` on error |
-| LanceDB `tasks` or `decisions` table has orphaned records | MEDIUM | Run reconciler; manually update status via a one-off Synapse tool call; no table rebuild needed |
+| Hooks not firing (path resolution) | LOW | Find `.claude/settings.json`; replace relative paths with `$CLAUDE_PROJECT_DIR/...`; restart Claude Code |
+| Subagent MCP tool access denied | LOW | Add `mcpServers: ["synapse"]` to each agent `.md` frontmatter; verify Synapse is in project-level `settings.json` |
+| project_id not available to agents | LOW | Add `project_id` to `synapse.toml`; update startup hook to inject it into `additionalContext` |
+| Task description overwritten by validator | MEDIUM | Restore from git history if available; redesign update_task call in validator prompt to prepend instead of replace |
+| Skill injection not working dynamically | LOW | Verify `synapse.toml` has `[project] skills = [...]`; trace startup hook execution; ensure hook reads the correct config file |
+| PEV workflow stalls mid-execution | MEDIUM | Check orchestrator checkpoint output to find last completed wave; resume manually by invoking orchestrator with specific task_id; clear stalled tasks with `update_task(status: "pending")` |
+| Ollama unavailable after install | LOW | Run `ollama serve`; run `ollama pull nomic-embed-text`; re-run Synapse smoke test |
+| Git worktree creation fails in PEV | LOW | Commit or stash uncommitted changes; delete stale worktrees (`git worktree list`; `git worktree remove`); re-run PEV |
 
 ---
 
@@ -431,43 +351,36 @@ Hook unit tests call individual hook callbacks with hand-crafted inputs and asse
 
 | Pitfall | Prevention Phase | Verification |
 |---------|------------------|--------------|
-| Synapse MCP silent failure | Orchestrator bootstrap | Init message parsed; status check throws if not `"connected"` |
-| stdio buffer deadlock | MCP tool design + orchestrator bootstrap | Load test with `get_smart_context` returning max token response; no hang |
-| No recursive CTE for task hierarchy | Task hierarchy schema | `get_task_tree` returns correct tree via BFS; `WITH RECURSIVE` never used in Synapse code |
-| Subagents spawning subagents | Agent architecture | All 10 agent definitions have explicit `tools` arrays; `Task` absent from all |
-| Hook exception terminates orchestrator | Hook implementation | Each hook called with null inputs; assert no throw |
-| Semantic drift in precedent matching | Decision tracking | Cross-domain query returns 0 matches at 0.85 threshold |
-| Skill token budget exhaustion | Skill loading | 10 skills loaded; combined system prompt < 30% of context window |
-| Skill injection attack surface | Skill loading | Tampered skill rejected by hash check |
-| Orphaned tasks after crash | Task hierarchy | Kill orchestrator mid-run; reconciler repairs tree on restart |
-| Context compaction loses session state | Orchestrator architecture | `PreCompact` hook verified; session state in `project_meta` after compaction |
-| Parallel agent write conflicts | Orchestrator architecture | No second Synapse process spawned; in-process write queue serializes rapid writes |
-| Stale decisions | Decision tracking | `status = "active"` filter on all precedent queries; `supersede_decision` tested |
-| No mock strategy for agent tests | Orchestrator architecture | Test suite runs offline (mock mode); zero API tokens consumed in unit tests |
-| Hook ordering bugs | Hook implementation | Ordering integration tests exist; deny-before-allow chain verified |
+| Hook path resolution breaks outside repo root | Claude Code integration phase | `.synapse-audit.log` written after tool call when launched from subdirectory |
+| Subagents don't inherit MCP servers | Claude Code integration phase | Executor subagent calls `get_task_tree` without error |
+| Agents don't know project_id | Agent prompt improvements + install script | Orchestrator calls `project_overview` without asking user; startup hook context includes project_id |
+| Agents ignore MCP, use filesystem instead | Agent prompt improvements phase | Zero-MCP-call sessions should not occur; first tool call in any session must be a Synapse MCP call |
+| Hook config paths break outside Synapse repo | Claude Code integration phase + install script | Hooks self-test at startup; config-not-found produces human-readable error |
+| No context passed to subagents via Task tool | E2E workflow validation phase | Executor subagents do not call `get_task_tree` without task_id context in prompt |
+| Ollama unavailable locks up server | Installation and setup phase | Install script smoke test passes before user sees "setup complete" |
+| Dynamic skill injection not wired | Skill system phase | Changing `synapse.toml` skills changes what agents see next session |
+| Validator overwrites task descriptions | Agent prompt improvements phase | Task description unchanged after validator runs; findings in notes/document |
+| PEV loop unknown failures | E2E workflow validation phase (this is the point of the phase) | Serial PEV run on real task completes without manual intervention |
 
 ---
 
 ## Sources
 
-- [Claude Agent SDK — Official Overview](https://platform.claude.com/docs/en/agent-sdk/overview) — HIGH confidence (official docs)
-- [Claude Agent SDK — Hooks Reference](https://platform.claude.com/docs/en/agent-sdk/hooks) — HIGH confidence (official docs)
-- [Claude Agent SDK — MCP Integration](https://platform.claude.com/docs/en/agent-sdk/mcp) — HIGH confidence (official docs)
-- [Claude Agent SDK — Subagents Guide](https://platform.claude.com/docs/en/agent-sdk/subagents) — HIGH confidence (official docs)
-- [claude-agent-sdk-python Issue #145 — SDK hangs after MCP tool execution](https://github.com/anthropics/claude-agent-sdk-python/issues/145) — HIGH confidence (official issue tracker)
-- [claude-agent-sdk-python Issue #207 — MCP servers show "failed" status](https://github.com/anthropics/claude-agent-sdk-python/issues/207) — HIGH confidence (official issue tracker)
-- [claude-agent-sdk-python Issue #208 — SDK hangs on Windows during init](https://github.com/anthropics/claude-agent-sdk-python/issues/208) — HIGH confidence (official issue tracker)
-- [Claude Code Issue #7718 — SIGABRT during shutdown due to MCP server termination failure](https://github.com/anthropics/claude-code/issues/7718) — MEDIUM confidence (product issue, patterns applicable to SDK)
-- [DataFusion Issue #9554 — Enable recursive CTE by default](https://github.com/apache/datafusion/issues/9554) — HIGH confidence (official upstream issue; LanceDB uses DataFusion)
-- [Agent Skills Prompt Injection — arXiv 2510.26328](https://arxiv.org/abs/2510.26328) — HIGH confidence (peer-reviewed, October 2025)
-- [Prompt Injection Attacks on Agentic Coding Assistants — arXiv 2601.17548](https://arxiv.org/html/2601.17548v1) — HIGH confidence (peer-reviewed, 2026)
-- [SkillJect: Stealthy Skill-Based Prompt Injection — arXiv 2602.14211](https://arxiv.org/html/2602.14211) — MEDIUM confidence (peer-reviewed, 2026; adversarial context)
-- [Stop Stuffing Your System Prompt — Medium 2026](https://pessini.medium.com/stop-stuffing-your-system-prompt-build-scalable-agent-skills-in-langgraph-a9856378e8f6) — MEDIUM confidence (practitioner blog, aligns with official SDK design)
-- [LanceDB Agent SDK Subagent — "agents cannot spawn subagents"](https://platform.claude.com/docs/en/agent-sdk/subagents) — HIGH confidence (official docs; explicitly stated)
-- [Agentic orchestration state synchronization pitfalls — N-ix observability guide](https://www.n-ix.com/ai-agent-observability/) — MEDIUM confidence (practitioner analysis)
-- [How We Are Testing Our Agents in Dev — Towards Data Science](https://towardsdatascience.com/how-we-are-testing-our-agents-in-dev/) — MEDIUM confidence (practitioner article, patterns align with official guidance)
-- [LanceDB v1.0 PITFALLS.md (Synapse project)](../.planning/research/PITFALLS.md) — HIGH confidence (project-specific, already validated in v1.0 build)
+- [Claude Code Hooks Reference — Official Docs](https://code.claude.com/docs/en/hooks) — HIGH confidence (official documentation)
+- [Claude Code Sub-Agents Reference — Official Docs](https://code.claude.com/docs/en/sub-agents) — HIGH confidence (official documentation)
+- [Claude Code Issue #3583 — Relative hook paths fail when cwd changes](https://github.com/anthropics/claude-code/issues/3583) — HIGH confidence (official issue tracker)
+- [Claude Code Issue #10367 — Hooks non-functional in subdirectories](https://github.com/anthropics/claude-code/issues/10367) — HIGH confidence (official issue tracker)
+- [Claude Code Issue #5465 — Task subagents fail to inherit permissions in MCP server mode](https://github.com/anthropics/claude-code/issues/5465) — HIGH confidence (official issue tracker)
+- [Claude Code Issue #13605 — Custom plugin subagents cannot access MCP tools](https://github.com/anthropics/claude-code/issues/13605) — HIGH confidence (official issue tracker)
+- [Claude Code Issue #14496 — Task tool subagents fail to access MCP tools with complex prompts](https://github.com/anthropics/claude-code/issues/14496) — MEDIUM confidence (recent report, not yet resolved)
+- [Synapse PROTO_GAP_ANALYSIS.md](../../PROTO_GAP_ANALYSIS.md) — HIGH confidence (direct project analysis, first-party)
+- [Synapse `milestone 3 - notes and questions.md`](../../milestone%203%20-%20notes%20and%20questions.md) — HIGH confidence (direct project author notes)
+- [Synapse packages/framework/hooks/*.js — codebase inspection](../../packages/framework/hooks/) — HIGH confidence (direct code review)
+- [Synapse packages/framework/config/agents.toml](../../packages/framework/config/agents.toml) — HIGH confidence (direct code review)
+- [Git worktrees for parallel AI agents — Upsun Developer Center](https://devcenter.upsun.com/posts/git-worktrees-for-parallel-ai-coding-agents/) — MEDIUM confidence (practitioner article, patterns verified against official git docs)
+- [AI Agent Orchestration common failures — builder.io](https://www.builder.io/blog/ai-agent-orchestration) — MEDIUM confidence (practitioner article, patterns observed in comparable systems)
+- [Best practices for Claude Code subagents — PubNub](https://www.pubnub.com/blog/best-practices-for-claude-code-sub-agents/) — MEDIUM confidence (practitioner article, consistent with official docs)
 
 ---
-*Pitfalls research for: Adding agentic coordination layer (Claude Agent SDK, decision tracking, task hierarchy, skill loading) to existing Synapse MCP server — v2.0 milestone*
-*Researched: 2026-03-01*
+*Pitfalls research for: Wiring Claude Code framework + MCP server into a working end-to-end prototype (v3.0 milestone)*
+*Researched: 2026-03-03*

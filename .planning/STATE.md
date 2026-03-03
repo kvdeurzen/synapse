@@ -2,13 +2,16 @@
 gsd_state_version: 1.0
 milestone: v3.0
 milestone_name: Working Prototype
-status: roadmap
-last_updated: "2026-03-03T00:00:00Z"
+status: planning
+stopped_at: Roadmap created — ready to plan Phase 15
+last_updated: "2026-03-03T15:44:19.458Z"
+last_activity: 2026-03-03 — Roadmap created for v3.0
 progress:
   total_phases: 8
   completed_phases: 0
-  total_plans: 16
-  completed_plans: 0
+  total_plans: 2
+  completed_plans: 1
+  percent: 0
 ---
 
 # Project State
@@ -24,11 +27,11 @@ See: .planning/PROJECT.md (updated 2026-03-03)
 ## Current Position
 
 Phase: 15 of 22 (Foundation)
-Plan: 0 of 2 in current phase
-Status: Ready to plan
-Last activity: 2026-03-03 — Roadmap created for v3.0
+Plan: 1 of 2 in current phase
+Status: In progress
+Last activity: 2026-03-03 — Completed 15-01 (resolveConfig utility + project context injection)
 
-Progress: [░░░░░░░░░░] 0%
+Progress: [█████░░░░░] 50%
 
 ## Performance Metrics
 
@@ -55,6 +58,10 @@ Key decisions affecting v3.0:
 - `$CLAUDE_PROJECT_DIR`-prefixed hook paths — required to fix silent hook failures outside repo root
 - `.synapse/config/project.toml` as single source of truth — startup hook reads it; agents never ask user for project_id
 - Phase 16 and Phase 17 can proceed in parallel — install script has no dependency on command file content
+- Project context block prepended before baseInstructions in additionalContext — project_id is first thing agents see
+- Hard fail on missing project.toml uses process.exit(0) — never block session with non-zero exit; error surfaces via additionalContext
+- Skills validation is warn-only — misconfigured skills never block session start
+- resolveConfig() is canonical pattern for all .synapse/config/ lookups — replaces ad-hoc possibleRoots loops
 
 ### Blockers/Concerns
 
@@ -69,5 +76,5 @@ None.
 ## Session Continuity
 
 Last session: 2026-03-03
-Stopped at: Roadmap created — ready to plan Phase 15
+Stopped at: Completed 15-01-PLAN.md (resolveConfig utility + synapse-startup.js project context injection)
 Resume file: None

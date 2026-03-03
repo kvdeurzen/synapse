@@ -63,11 +63,11 @@ See [v2.0 Archive](milestones/v2.0-ROADMAP.md) for full details.
   2. After session start, agents receive `project_id` in their context without being asked to look it up or enter it manually
   3. Hooks fire correctly when Claude Code is launched from a subdirectory — `.synapse-audit.log` is written after any tool call regardless of launch directory
   4. `tier-gate.js`, `tool-allowlist.js`, and `precedent-gate.js` resolve their config from `.synapse/config/` when present, falling back to `packages/framework/config/` for monorepo dev
-**Plans**: TBD
+**Plans**: 2 plans
 
 Plans:
-- [ ] 15-01: Define project.toml schema and update synapse-startup.js to read it and inject project_id + skills + domain modes
-- [ ] 15-02: Update hook command paths to use $CLAUDE_PROJECT_DIR and update hook config resolution order
+- [ ] 15-01: Create resolveConfig() utility, update synapse-startup.js to read project.toml and inject project_id + skills (FOUND-01, FOUND-02)
+- [ ] 15-02: Update gate hooks to use resolveConfig(), register Synapse hooks in settings.json with $CLAUDE_PROJECT_DIR (FOUND-03, FOUND-04)
 
 ### Phase 16: User Journey Commands
 **Goal**: A new user has a clear, documented path from zero to running their first PEV workflow — three slash commands cover every step

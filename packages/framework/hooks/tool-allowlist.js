@@ -8,6 +8,7 @@
 import { parse } from 'smol-toml';
 import fs from 'node:fs';
 import path from 'node:path';
+import { resolveConfig } from './lib/resolve-config.js';
 
 function denyOutput(reason) {
   return JSON.stringify({
@@ -46,7 +47,13 @@ process.stdin.on('end', () => {
     const actor = toolInput.actor || '';
 
     // Load agents.toml — fail-closed on missing or unparseable file
-    const agentsTomlPath = path.join(process.cwd(), 'packages/framework/config/agents.toml');
+    const agentsTomlPath = resolveConfig('agents.toml');
+    if (!agentsTomlPath) {
+      process.stdout.write(
+        denyOutput('DENIED: agents.toml not found. Denying as fail-closed precaution.'),
+      );
+      process.exit(0);
+    }
     let agentsConfig;
     try {
       const tomlContent = fs.readFileSync(agentsTomlPath, 'utf8');

@@ -8,6 +8,7 @@
 import { parse } from 'smol-toml';
 import fs from 'node:fs';
 import path from 'node:path';
+import { resolveConfig } from './lib/resolve-config.js';
 
 function denyOutput(reason) {
   return JSON.stringify({
@@ -65,7 +66,13 @@ process.stdin.on('end', () => {
     }
 
     // Load trust.toml — fail-closed on missing or unparseable file
-    const trustTomlPath = path.join(process.cwd(), 'packages/framework/config/trust.toml');
+    const trustTomlPath = resolveConfig('trust.toml');
+    if (!trustTomlPath) {
+      process.stdout.write(
+        denyOutput('DENIED: trust.toml not found. Denying as fail-closed precaution.'),
+      );
+      process.exit(0);
+    }
     let trustConfig;
     try {
       const tomlContent = fs.readFileSync(trustTomlPath, 'utf8');

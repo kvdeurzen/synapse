@@ -197,7 +197,7 @@ Note: Phase 16 and Phase 17 can proceed in parallel (no dependency between them)
 | 13. Agent Specialization, Skill Loading, and Trust | v2.0 | 5/5 | Complete | 2026-03-02 |
 | 13.1 Move Separate Modules into a Single Repo | v2.0 | 2/2 | Complete | 2026-03-02 |
 | 14. Quality Gates and PEV Workflow | v2.0 | 4/4 | Complete | 2026-03-02 |
-| 15. Foundation | 2/2 | Complete   | 2026-03-03 | - |
+| 15. Foundation | 2/2 | Complete    | 2026-03-03 | - |
 | 16. User Journey Commands | v3.0 | 0/2 | Not started | - |
 | 17. Install Script | v3.0 | 0/2 | Not started | - |
 | 18. Agent Prompt Improvements | v3.0 | 0/3 | Not started | - |

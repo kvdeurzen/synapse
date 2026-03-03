@@ -11,8 +11,8 @@ Requirements for Working Prototype milestone. Each maps to roadmap phases.
 
 - [x] **FOUND-01**: project.toml schema defined with project_id, name, skills, and created_at fields
 - [x] **FOUND-02**: synapse-startup.js reads project.toml and injects project_id into session context
-- [ ] **FOUND-03**: All hook command paths use `$CLAUDE_PROJECT_DIR` prefix instead of relative paths
-- [ ] **FOUND-04**: tier-gate.js, tool-allowlist.js, and precedent-gate.js resolve config from `.synapse/config/` first with monorepo fallback
+- [x] **FOUND-03**: All hook command paths use `$CLAUDE_PROJECT_DIR` prefix instead of relative paths
+- [x] **FOUND-04**: tier-gate.js, tool-allowlist.js, and precedent-gate.js resolve config from `.synapse/config/` first with monorepo fallback
 
 ### Commands
 
@@ -111,8 +111,8 @@ Which phases cover which requirements. Updated during roadmap creation.
 |-------------|-------|--------|
 | FOUND-01 | Phase 15 | Complete |
 | FOUND-02 | Phase 15 | Complete |
-| FOUND-03 | Phase 15 | Pending |
-| FOUND-04 | Phase 15 | Pending |
+| FOUND-03 | Phase 15 | Complete |
+| FOUND-04 | Phase 15 | Complete |
 | CMD-01 | Phase 16 | Pending |
 | CMD-02 | Phase 16 | Pending |
 | CMD-03 | Phase 16 | Pending |

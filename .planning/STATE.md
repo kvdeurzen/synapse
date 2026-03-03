@@ -2,16 +2,16 @@
 gsd_state_version: 1.0
 milestone: v3.0
 milestone_name: Working Prototype
-status: planning
-stopped_at: Roadmap created — ready to plan Phase 15
-last_updated: "2026-03-03T15:44:19.458Z"
-last_activity: 2026-03-03 — Roadmap created for v3.0
+status: executing
+stopped_at: Completed 15-02-PLAN.md (hook portable config resolution + settings.json Synapse hook registration)
+last_updated: "2026-03-03T15:49:11.425Z"
+last_activity: 2026-03-03 — Completed 15-01 (resolveConfig utility + project context injection)
 progress:
   total_phases: 8
-  completed_phases: 0
+  completed_phases: 1
   total_plans: 2
-  completed_plans: 1
-  percent: 0
+  completed_plans: 2
+  percent: 50
 ---
 
 # Project State
@@ -46,6 +46,7 @@ Progress: [█████░░░░░] 50%
 | - | - | - | - |
 
 *Updated after each plan completion*
+| Phase 15-foundation P02 | 2 | 2 tasks | 4 files |
 
 ## Accumulated Context
 
@@ -62,6 +63,9 @@ Key decisions affecting v3.0:
 - Hard fail on missing project.toml uses process.exit(0) — never block session with non-zero exit; error surfaces via additionalContext
 - Skills validation is warn-only — misconfigured skills never block session start
 - resolveConfig() is canonical pattern for all .synapse/config/ lookups — replaces ad-hoc possibleRoots loops
+- [Phase 15-02]: Explicit null guard for resolveConfig() return ensures fail-closed with clear message vs ENOENT in tier-gate and tool-allowlist
+- [Phase 15-02]: audit-log.js fallback to CLAUDE_PROJECT_DIR||cwd when project.toml missing — best-effort log path during pre-init sessions
+- [Phase 15-02]: precedent-gate.js left unmodified — reads no config files, advisory-only hook
 
 ### Blockers/Concerns
 
@@ -75,6 +79,6 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-03-03
-Stopped at: Completed 15-01-PLAN.md (resolveConfig utility + synapse-startup.js project context injection)
+Last session: 2026-03-03T15:49:11.421Z
+Stopped at: Completed 15-02-PLAN.md (hook portable config resolution + settings.json Synapse hook registration)
 Resume file: None

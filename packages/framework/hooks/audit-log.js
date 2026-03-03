@@ -6,6 +6,7 @@
 
 import fs from 'node:fs';
 import path from 'node:path';
+import { resolveConfig } from './lib/resolve-config.js';
 
 // Token estimation: Math.ceil(chars / 4) -- matches estimateTokens pattern in skills.ts
 const tokenEstimate = (str) => Math.ceil((str || '').length / 4);
@@ -32,7 +33,11 @@ process.stdin.on('end', () => {
       input_keys: Object.keys(toolInput),
     };
 
-    const logPath = path.join(process.cwd(), '.synapse-audit.log');
+    const projectTomlPath = resolveConfig('project.toml');
+    const projectRoot = projectTomlPath
+      ? path.dirname(path.dirname(path.dirname(projectTomlPath)))  // .synapse/config/project.toml -> project root
+      : (process.env.CLAUDE_PROJECT_DIR || process.cwd());          // fallback for pre-init state
+    const logPath = path.join(projectRoot, '.synapse-audit.log');
     fs.appendFileSync(logPath, JSON.stringify(logEntry) + '\n');
     process.exit(0);
   } catch (e) {

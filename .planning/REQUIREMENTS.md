@@ -109,51 +109,51 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| FOUND-01 | — | Pending |
-| FOUND-02 | — | Pending |
-| FOUND-03 | — | Pending |
-| FOUND-04 | — | Pending |
-| CMD-01 | — | Pending |
-| CMD-02 | — | Pending |
-| CMD-03 | — | Pending |
-| CMD-04 | — | Pending |
-| INST-01 | — | Pending |
-| INST-02 | — | Pending |
-| INST-03 | — | Pending |
-| INST-04 | — | Pending |
-| AGENT-01 | — | Pending |
-| AGENT-02 | — | Pending |
-| AGENT-03 | — | Pending |
-| AGENT-04 | — | Pending |
-| AGENT-05 | — | Pending |
-| AGENT-06 | — | Pending |
-| AGENT-07 | — | Pending |
-| AGENT-08 | — | Pending |
-| AGENT-09 | — | Pending |
-| AGENT-10 | — | Pending |
-| AGENT-11 | — | Pending |
-| SKILL-01 | — | Pending |
-| SKILL-02 | — | Pending |
-| SKILL-03 | — | Pending |
-| SKILL-04 | — | Pending |
-| SKILL-05 | — | Pending |
-| E2E-01 | — | Pending |
-| E2E-02 | — | Pending |
-| E2E-03 | — | Pending |
-| E2E-04 | — | Pending |
-| DEBT-01 | — | Pending |
-| DEBT-02 | — | Pending |
-| DEBT-03 | — | Pending |
-| DEBT-04 | — | Pending |
-| DEBT-05 | — | Pending |
-| VIS-01 | — | Pending |
-| VIS-02 | — | Pending |
+| FOUND-01 | Phase 15 | Pending |
+| FOUND-02 | Phase 15 | Pending |
+| FOUND-03 | Phase 15 | Pending |
+| FOUND-04 | Phase 15 | Pending |
+| CMD-01 | Phase 16 | Pending |
+| CMD-02 | Phase 16 | Pending |
+| CMD-03 | Phase 16 | Pending |
+| CMD-04 | Phase 16 | Pending |
+| INST-01 | Phase 17 | Pending |
+| INST-02 | Phase 17 | Pending |
+| INST-03 | Phase 17 | Pending |
+| INST-04 | Phase 17 | Pending |
+| AGENT-01 | Phase 18 | Pending |
+| AGENT-02 | Phase 18 | Pending |
+| AGENT-03 | Phase 18 | Pending |
+| AGENT-04 | Phase 18 | Pending |
+| AGENT-05 | Phase 18 | Pending |
+| AGENT-06 | Phase 18 | Pending |
+| AGENT-07 | Phase 18 | Pending |
+| AGENT-08 | Phase 18 | Pending |
+| AGENT-09 | Phase 18 | Pending |
+| AGENT-10 | Phase 18 | Pending |
+| AGENT-11 | Phase 18 | Pending |
+| SKILL-01 | Phase 19 | Pending |
+| SKILL-02 | Phase 19 | Pending |
+| SKILL-03 | Phase 19 | Pending |
+| SKILL-04 | Phase 19 | Pending |
+| SKILL-05 | Phase 19 | Pending |
+| DEBT-01 | Phase 20 | Pending |
+| DEBT-02 | Phase 20 | Pending |
+| DEBT-03 | Phase 20 | Pending |
+| DEBT-04 | Phase 20 | Pending |
+| DEBT-05 | Phase 20 | Pending |
+| E2E-01 | Phase 21 | Pending |
+| E2E-02 | Phase 21 | Pending |
+| E2E-03 | Phase 21 | Pending |
+| E2E-04 | Phase 21 | Pending |
+| VIS-01 | Phase 22 | Pending |
+| VIS-02 | Phase 22 | Pending |
 
 **Coverage:**
-- v3.0 requirements: 33 total
-- Mapped to phases: 0
-- Unmapped: 33 ⚠️
+- v3.0 requirements: 39 total
+- Mapped to phases: 39
+- Unmapped: 0 ✓
 
 ---
 *Requirements defined: 2026-03-03*
-*Last updated: 2026-03-03 after initial definition*
+*Last updated: 2026-03-03 after roadmap creation (traceability complete)*

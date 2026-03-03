@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 // SessionStart hook -- inject startup instructions for Synapse work stream detection
 // and agent tier identity from trust.toml + agents.toml (GATE-06).
+// Also reads .synapse/config/project.toml to inject project_id and context.
 // CRITICAL: This hook runs BEFORE MCP servers are available to the agent.
 // It CANNOT call Synapse tools directly. Instead, it injects instructions
 // via additionalContext that the agent executes in its first turn.
@@ -8,6 +9,20 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { parse as parseToml } from 'smol-toml';
+import { resolveConfig } from './lib/resolve-config.js';
+
+const PROJECT_ID_REGEX = /^[a-z0-9][a-z0-9_-]*$/;
+
+function validateProjectId(id) {
+  if (!id || typeof id !== 'string') {
+    throw new Error('project_id is required in [project] section of project.toml');
+  }
+  if (!PROJECT_ID_REGEX.test(id)) {
+    throw new Error(
+      `project_id must be a lowercase slug (letters, numbers, hyphens, underscores, must start with alphanumeric). Got: "${id}"`
+    );
+  }
+}
 
 let input = '';
 process.stdin.setEncoding('utf8');
@@ -34,29 +49,67 @@ process.stdin.on('end', () => {
       '- This enables full audit trail of which agent performed each operation.',
     ].join('\n');
 
-    // Attempt to inject tier identity context from config files (GATE-06)
+    // --- Project context from .synapse/config/project.toml ---
+    let projectContext = '';
+    const projectTomlPath = resolveConfig('project.toml');
+
+    if (!projectTomlPath) {
+      // Hard fail: project.toml not found — user must run /synapse:init
+      process.stderr.write(
+        '[synapse-startup] ERROR: .synapse/config/project.toml not found. Run /synapse:init to set up this project.\n'
+      );
+      const output = {
+        hookSpecificOutput: {
+          hookEventName: 'SessionStart',
+          additionalContext:
+            'ERROR: Synapse project not initialized. Run /synapse:init to create project.toml before using Synapse MCP tools.',
+        },
+      };
+      process.stdout.write(JSON.stringify(output));
+      process.exit(0);
+    }
+
+    const projectToml = parseToml(fs.readFileSync(projectTomlPath, 'utf8'));
+    const project = projectToml.project || {};
+    const { project_id, name, skills = [], created_at } = project;
+
+    // Validate project_id — throws on malformed IDs, caught by outer try/catch
+    validateProjectId(project_id);
+
+    // Validate skills against existing SKILL.md files (warn, do not fail)
+    // Derive project root from project.toml path: .synapse/config/project.toml -> project root
+    const projectRoot = path.dirname(path.dirname(path.dirname(projectTomlPath)));
+    for (const skill of skills) {
+      const skillMd = path.join(projectRoot, '.claude', 'skills', skill, 'SKILL.md');
+      if (!fs.existsSync(skillMd)) {
+        process.stderr.write(
+          `[synapse-startup] Warning: skill "${skill}" listed in project.toml but no SKILL.md found at ${skillMd}\n`
+        );
+      }
+    }
+
+    const skillsDisplay = skills.length > 0 ? skills.join(', ') : '(none)';
+    projectContext = [
+      '─── SYNAPSE PROJECT CONTEXT ───',
+      `project_id: ${project_id}`,
+      `name: ${name || '(unnamed)'}`,
+      `skills: ${skillsDisplay}`,
+      '────────────────────────────────',
+      `IMPORTANT: Always include project_id: "${project_id}" in every Synapse MCP tool call.`,
+    ].join('\n');
+
+    // --- Tier context from trust.toml + agents.toml ---
     let tierContext = '';
     try {
-      // Resolve config paths relative to the framework package directory
-      // Try monorepo root first, then fall back to relative paths
-      const cwd = process.cwd();
-      const possibleRoots = [
-        cwd,
-        path.join(cwd, 'packages', 'framework'),
-        path.join(path.dirname(new URL(import.meta.url).pathname), '..'),
-      ];
+      const trustPath = resolveConfig('trust.toml');
+      const agentsPath = resolveConfig('agents.toml');
 
       let trustToml = null;
       let agentsToml = null;
 
-      for (const root of possibleRoots) {
-        const trustPath = path.join(root, 'config', 'trust.toml');
-        const agentsPath = path.join(root, 'config', 'agents.toml');
-        if (fs.existsSync(trustPath) && fs.existsSync(agentsPath)) {
-          trustToml = parseToml(fs.readFileSync(trustPath, 'utf8'));
-          agentsToml = parseToml(fs.readFileSync(agentsPath, 'utf8'));
-          break;
-        }
+      if (trustPath && agentsPath) {
+        trustToml = parseToml(fs.readFileSync(trustPath, 'utf8'));
+        agentsToml = parseToml(fs.readFileSync(agentsPath, 'utf8'));
       }
 
       if (trustToml && agentsToml) {
@@ -103,9 +156,12 @@ process.stdin.on('end', () => {
       process.stderr.write(`[synapse-startup] Warning: Could not load tier config: ${configErr.message}\n`);
     }
 
-    const additionalContext = tierContext
-      ? baseInstructions + '\n' + tierContext
-      : baseInstructions;
+    // Build final additionalContext: project context first, then base instructions, then tier context
+    const contextParts = [projectContext, baseInstructions];
+    if (tierContext) {
+      contextParts.push(tierContext);
+    }
+    const additionalContext = contextParts.join('\n\n');
 
     const output = {
       hookSpecificOutput: {
@@ -116,6 +172,7 @@ process.stdin.on('end', () => {
     process.stdout.write(JSON.stringify(output));
   } catch (e) {
     // Silent fail -- never block session start
+    process.stderr.write(`[synapse-startup] Unexpected error: ${e.message}\n`);
     process.exit(0);
   }
 });

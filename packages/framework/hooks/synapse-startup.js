@@ -54,7 +54,14 @@ process.stdin.on('end', () => {
     const projectTomlPath = resolveConfig('project.toml');
 
     if (!projectTomlPath) {
-      // Hard fail: project.toml not found — user must run /synapse:init
+      // Check if .synapse/ directory exists (local install indicator)
+      const projectDir = process.env.CLAUDE_PROJECT_DIR || process.cwd();
+      const synapseDir = path.join(projectDir, '.synapse');
+      if (!fs.existsSync(synapseDir)) {
+        // Not a Synapse project — exit silently
+        process.exit(0);
+      }
+      // Local install but missing project.toml — user must run /synapse:init
       process.stderr.write(
         '[synapse-startup] ERROR: .synapse/config/project.toml not found. Run /synapse:init to set up this project.\n'
       );
@@ -73,8 +80,20 @@ process.stdin.on('end', () => {
     const project = projectToml.project || {};
     const { project_id, name, skills = [], created_at } = project;
 
-    // Validate project_id — throws on malformed IDs, caught by outer try/catch
-    validateProjectId(project_id);
+    // Validate project_id — surface error via additionalContext so AI can guide the user
+    try {
+      validateProjectId(project_id);
+    } catch (validationErr) {
+      process.stderr.write(`[synapse-startup] ${validationErr.message}\n`);
+      const output = {
+        hookSpecificOutput: {
+          hookEventName: 'SessionStart',
+          additionalContext: `ERROR: Invalid project_id in project.toml — ${validationErr.message}`,
+        },
+      };
+      process.stdout.write(JSON.stringify(output));
+      process.exit(0);
+    }
 
     // Validate skills against existing SKILL.md files (warn, do not fail)
     // Derive project root from project.toml path: .synapse/config/project.toml -> project root

@@ -3,9 +3,9 @@ gsd_state_version: 1.0
 milestone: v3.0
 milestone_name: Working Prototype
 status: Not started
-stopped_at: Completed 18-02-PLAN.md (RPEV Orchestration Engine)
-last_updated: "2026-03-05T15:55:45Z"
-last_activity: 2026-03-05 — Completed Phase 18-02 (RPEV Workflow + Orchestrator Update)
+stopped_at: Completed 18-03-PLAN.md (RPEV User-Facing Surface)
+last_updated: "2026-03-05T16:03:30Z"
+last_activity: 2026-03-05 — Completed Phase 18-03 (RPEV User Commands + Agent Permissions)
 progress:
   total_phases: 10
   completed_phases: 3
@@ -26,10 +26,10 @@ See: .planning/PROJECT.md (updated 2026-03-03)
 
 ## Current Position
 
-Phase: 18 of 24 (RPEV Orchestration) — in progress
-Plan: 2 of 3 in current phase
-Status: In progress
-Last activity: 2026-03-05 — Completed Phase 18-02 (RPEV Workflow + Orchestrator Update)
+Phase: 18 of 24 (RPEV Orchestration) — complete
+Plan: 3 of 3 in current phase (phase complete)
+Status: Phase complete, ready for Phase 19
+Last activity: 2026-03-05 — Completed Phase 18-03 (RPEV User Commands + Agent Permissions)
 
 Progress: [██░░░░░░░░] 20%
 
@@ -53,6 +53,7 @@ Progress: [██░░░░░░░░] 20%
 | Phase 17-tech-debt P01 | 5 | 2 tasks | 7 files |
 | Phase 17-tech-debt P02 | 5min | 2 tasks | 64 files |
 | Phase 18-rpev-orchestration P02 | 4min | 2 tasks | 2 files |
+| Phase 18-rpev-orchestration P03 | 3min | 2 tasks | 4 files |
 
 ## Accumulated Context
 
@@ -90,6 +91,9 @@ Key decisions affecting v3.0:
 - [Phase 18-02]: Stage document schema: fixed doc_id rpev-stage-[task_id] enables store_document upsert versioning (not duplicate creation); pending_approval flag is /synapse:status query key
 - [Phase 18-02]: Involvement mode strictness: drives(5)>co-pilot(4)>reviews(3)>monitors(2)>autopilot(1) — domain overrides always take strictest; prevents silent override failures
 - [Phase 18-02]: Subagent handoff always includes project_id + rpev_stage_doc_id — subagents do NOT inherit session context, must receive explicit handoff
+- [Phase 18-03]: Two-tier approval UX in /synapse:focus: summary-first (Tier 1) for quick triage, discuss-deeper (Tier 2) for conversational review — mirrors how users evaluate plans
+- [Phase 18-03]: Stage document is more authoritative than task tree status for RPEV stage display in /synapse:status — avoids stale status mismatch
+- [Phase 18-03]: store_document and link_documents granted to 4 specialist agents (plan-reviewer, integration-checker, executor, validator) as Phase 19 AGENT-05/06/07 prep — permissions expanded now, behaviors added in Phase 19
 
 ### Blockers/Concerns
 
@@ -103,6 +107,6 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-03-05T15:55:45Z
-Stopped at: Completed 18-02-PLAN.md (RPEV Orchestration Engine)
-Resume file: .planning/phases/18-rpev-orchestration/18-02-SUMMARY.md
+Last session: 2026-03-05T16:03:30Z
+Stopped at: Completed 18-03-PLAN.md (RPEV User-Facing Surface)
+Resume file: .planning/phases/18-rpev-orchestration/18-03-SUMMARY.md

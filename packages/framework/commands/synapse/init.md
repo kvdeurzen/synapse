@@ -1,0 +1,139 @@
+---
+name: synapse:init
+description: Initialize a Synapse project — creates project.toml, registers with Synapse DB, and configures RPEV preferences.
+allowed-tools:
+  - Read
+  - Write
+  - Bash
+  - mcp__synapse__init_project
+---
+
+## Objective
+
+Set up this project for Synapse: detect the project name, create config files, configure per-layer involvement preferences (RPEV), register with the Synapse database, and optionally amend CLAUDE.md.
+
+## Process
+
+1. **Check for existing project:** Read `.synapse/config/project.toml`. If it exists, display the existing `project_id`, `name`, and `created_at`. Warn the user:
+
+   > "This project is already initialized (created: DATE). Re-running init will not affect existing data."
+
+   Offer two options:
+   - **Continue** — update the config files with any new choices
+   - **Abort** — exit without making changes
+
+   If the user chooses abort, stop here.
+
+2. **Detect project name:** Use Bash to detect the project name in order:
+   - (a) Read `package.json` and extract the `.name` field
+   - (b) Fall back to `basename $PWD`
+
+   Slugify the result: lowercase, replace spaces and special characters with hyphens, strip leading non-alphanumeric characters. Validate the result against `/^[a-z0-9][a-z0-9_-]*$/`.
+
+   Display the detected `project_id` to the user and allow them to confirm or provide a different name before proceeding. Do NOT proceed until confirmed.
+
+3. **Create config directory:** Use Bash to run `mkdir -p .synapse/config`.
+
+4. **Write project.toml:** Use the Write tool to create `.synapse/config/project.toml`:
+
+   ```toml
+   [project]
+   project_id = "{{confirmed_project_id}}"
+   name = "{{project_name}}"
+   skills = []
+   created_at = "{{current ISO timestamp}}"
+   ```
+
+   Replace all `{{...}}` placeholders with the actual values. The `created_at` should be the current UTC timestamp in ISO 8601 format.
+
+5. **Interactive RPEV configuration:** Walk the user through their involvement preferences for the recursive RPEV loop (Refine → Plan → Execute → Validate at each level). Present the defaults and let the user adjust:
+
+   | Level | Default | Options |
+   |-------|---------|---------|
+   | Project | user-driven | user-driven, co-pilot, advisory |
+   | Epic | co-pilot | user-driven, co-pilot, advisory |
+   | Feature | advisory | co-pilot, advisory, autopilot |
+   | Work Package | autopilot | advisory, autopilot |
+
+   Also present:
+   - **Explicit gate levels** (default: `["project", "epic"]`) — levels where the user must explicitly signal "this foundation is solid" before Plan auto-triggers
+   - **Proactive notifications** (default: `false`) — whether blocked items are pushed proactively or surfaced on-demand via `/synapse:status`
+
+   Explain: "At user-driven and co-pilot levels you guide the Refine stage. At advisory and autopilot levels the system proceeds with lighter touch."
+
+6. **Write trust.toml RPEV section:**
+   - If `.synapse/config/trust.toml` already exists, read it and preserve all existing sections
+   - If no trust.toml exists, copy the template from `packages/framework/config/trust.toml` as the base
+   - Append (or replace if already present) the `[rpev]` section with the user's choices:
+
+   ```toml
+   [rpev]
+   project_refine = "user-driven"
+   epic_refine = "co-pilot"
+   feature_refine = "advisory"
+   workpackage_refine = "autopilot"
+   explicit_gate_levels = ["project", "epic"]
+   proactive_notifications = false
+   ```
+
+   Use the Write tool to write the final trust.toml to `.synapse/config/trust.toml`.
+
+7. **Register with Synapse DB:** Call `mcp__synapse__init_project` with:
+   - `project_id`: the confirmed project_id
+   - `actor`: "synapse-orchestrator"
+
+   Report the result to the user. Example:
+
+   > "Synapse DB initialized: 5 tables created, 3 starter documents seeded."
+
+   If tables already existed (tables_skipped > 0), note that data was preserved.
+
+   NOTE: This step does NOT require Ollama — it creates LanceDB tables only. Do not check for Ollama here.
+
+8. **Offer CLAUDE.md amendment:** Check if `CLAUDE.md` exists in the project root. If it already contains a `## Synapse` section, skip this step silently.
+
+   Otherwise, offer to append the following block:
+
+   ```markdown
+   ## Synapse
+   This project uses Synapse for AI agent coordination.
+   Run `/synapse:status` to check project state, `/synapse:refine` to start work.
+   ```
+
+   Only append if the user explicitly agrees. Never modify CLAUDE.md silently. If the user declines, note it and continue.
+
+9. **Detect skills (auto-suggestion):** Use Bash to check `.claude/skills/` for subdirectories containing `SKILL.md` files:
+
+   ```bash
+   find .claude/skills -name "SKILL.md" -maxdepth 2 2>/dev/null | xargs -I{} dirname {}
+   ```
+
+   If any skills are found, list them and offer to add their names to the `skills` array in `project.toml`. Only update `project.toml` if the user agrees.
+
+10. **Summary:** Display a confirmation of everything created or configured:
+
+    ```
+    Synapse initialized for "{{project_name}}" ({{project_id}})
+
+    Created:
+    - .synapse/config/project.toml
+    - .synapse/config/trust.toml (RPEV: project=user-driven, epic=co-pilot, feature=advisory, wp=autopilot)
+
+    Synapse DB: {{tables_created}} tables ready, {{starters_seeded}} starter documents seeded
+
+    CLAUDE.md: {{amended | not modified}}
+    Skills: {{list or "none detected"}}
+
+    Next step: Run /synapse:map to index your codebase for semantic search.
+    ```
+
+## Anti-Patterns
+
+- Do NOT check for Ollama during init — only `/synapse:map` requires Ollama
+- Do NOT modify CLAUDE.md without explicit user consent
+- Do NOT hardcode `project_id` — always use the detected and confirmed value
+- Do NOT proceed past step 2 without user confirmation of the project_id
+
+## Attribution
+
+All Synapse tool calls MUST include `actor: "synapse-orchestrator"` for audit trail.

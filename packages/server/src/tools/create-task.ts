@@ -29,9 +29,18 @@ const CreateTaskInputSchema = z.object({
     ),
   title: z.string().min(1).describe("Task title"),
   description: z.string().default("").describe("Task description"),
-  depth: z.number().int().min(0).max(3).describe("Depth level: 0=Epic, 1=Feature, 2=Component, 3=Task"),
+  depth: z
+    .number()
+    .int()
+    .min(0)
+    .max(3)
+    .describe("Depth level: 0=Epic, 1=Feature, 2=Component, 3=Task"),
   parent_id: z.string().optional().describe("Parent task ID (required for depth > 0)"),
-  dependencies: z.array(z.string()).optional().default([]).describe("Task IDs this task depends on"),
+  dependencies: z
+    .array(z.string())
+    .optional()
+    .default([])
+    .describe("Task IDs this task depends on"),
   priority: z.enum(VALID_TASK_PRIORITIES).optional().describe("Task priority"),
   assigned_agent: z.enum(VALID_AGENT_ROLES).optional().describe("Agent role assigned to this task"),
   estimated_effort: z.string().optional().describe("Estimated effort string, e.g. '2h', '3d'"),
@@ -76,10 +85,7 @@ interface CycleDetectionResult {
  * @param proposedEdges - New edges to add (from_id -> to_id)
  * @returns { hasCycle: boolean }
  */
-export function detectCycles(
-  existingEdges: Edge[],
-  proposedEdges: Edge[],
-): CycleDetectionResult {
+export function detectCycles(existingEdges: Edge[], proposedEdges: Edge[]): CycleDetectionResult {
   // Build adjacency map from all edges (existing + proposed)
   const adjacency = new Map<string, Set<string>>();
 
@@ -93,7 +99,7 @@ export function detectCycles(
     if (!adjacency.has(edge.from)) {
       adjacency.set(edge.from, new Set());
     }
-    adjacency.get(edge.from)!.add(edge.to);
+    adjacency.get(edge.from)?.add(edge.to);
     // Ensure the "to" node exists in adjacency (even if it has no outgoing edges)
     if (!adjacency.has(edge.to)) {
       adjacency.set(edge.to, new Set());
@@ -175,9 +181,7 @@ export async function createTask(
   } else {
     // Non-epics require a parent_id
     if (!validated.parent_id) {
-      throw new Error(
-        `INVALID_DEPTH: Tasks with depth=${validated.depth} require a parent_id`,
-      );
+      throw new Error(`INVALID_DEPTH: Tasks with depth=${validated.depth} require a parent_id`);
     }
     parentId = validated.parent_id;
 
@@ -202,7 +206,7 @@ export async function createTask(
     if (validated.depth !== parentDepth + 1) {
       throw new Error(
         `INVALID_DEPTH: Task depth=${validated.depth} is not valid for parent depth=${parentDepth}. ` +
-        `Child depth must be parent depth + 1 (expected ${parentDepth + 1})`,
+          `Child depth must be parent depth + 1 (expected ${parentDepth + 1})`,
       );
     }
 
@@ -298,8 +302,8 @@ export async function createTask(
     const relRows = dependencies.map((depId) => ({
       relationship_id: ulid(),
       project_id: projectId,
-      from_id: taskId,   // the dependent (the task that HAS the dependency)
-      to_id: depId,      // the dependency (the task it depends on / is blocked by)
+      from_id: taskId, // the dependent (the task that HAS the dependency)
+      to_id: depId, // the dependency (the task it depends on / is blocked by)
       type: "task_depends_on",
       source: "create_task",
       created_at: now,
@@ -399,10 +403,7 @@ export function registerCreateTaskTool(server: McpServer, config: SynapseConfig)
           .enum(VALID_AGENT_ROLES)
           .optional()
           .describe("Agent role to assign to this task"),
-        estimated_effort: z
-          .string()
-          .optional()
-          .describe("Estimated effort, e.g. '2h', '3d', '1w'"),
+        estimated_effort: z.string().optional().describe("Estimated effort, e.g. '2h', '3d', '1w'"),
         tags: z.string().optional().describe("Pipe-separated tags, e.g. '|auth|backend|'"),
         phase: z.string().optional().describe("Project phase this task belongs to"),
       }),

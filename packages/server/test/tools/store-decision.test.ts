@@ -67,16 +67,21 @@ describe("storeDecision", () => {
       await initProject(tmpDir, "test-proj");
       const config = { ...TEST_CONFIG, db: tmpDir };
 
-      const result = await storeDecision(tmpDir, "test-proj", {
-        project_id: "test-proj",
-        subject: "Use TypeScript",
-        choice: "TypeScript over JavaScript",
-        context: "Need type safety for a large codebase",
-        rationale: "Catches bugs at compile time, better IDE support, self-documenting",
-        tier: 3,
-        decision_type: "convention",
-        tags: "|typescript|",
-      }, config);
+      const result = await storeDecision(
+        tmpDir,
+        "test-proj",
+        {
+          project_id: "test-proj",
+          subject: "Use TypeScript",
+          choice: "TypeScript over JavaScript",
+          context: "Need type safety for a large codebase",
+          rationale: "Catches bugs at compile time, better IDE support, self-documenting",
+          tier: 3,
+          decision_type: "convention",
+          tags: "|typescript|",
+        },
+        config,
+      );
 
       expect(typeof result.decision_id).toBe("string");
       expect(result.decision_id.length).toBe(26); // ULID length
@@ -91,17 +96,22 @@ describe("storeDecision", () => {
       await initProject(tmpDir, "test-proj");
       const config = { ...TEST_CONFIG, db: tmpDir };
 
-      const result = await storeDecision(tmpDir, "test-proj", {
-        project_id: "test-proj",
-        subject: "Use LanceDB for vector storage",
-        choice: "LanceDB",
-        context: "Need a vector database that works with TypeScript",
-        rationale: "Native TypeScript support, local-first, no external service needed",
-        tier: 1,
-        decision_type: "architectural",
-        tags: "|database|vector|",
-        phase: "phase-1",
-      }, config);
+      const result = await storeDecision(
+        tmpDir,
+        "test-proj",
+        {
+          project_id: "test-proj",
+          subject: "Use LanceDB for vector storage",
+          choice: "LanceDB",
+          context: "Need a vector database that works with TypeScript",
+          rationale: "Native TypeScript support, local-first, no external service needed",
+          tier: 1,
+          decision_type: "architectural",
+          tags: "|database|vector|",
+          phase: "phase-1",
+        },
+        config,
+      );
 
       const db = await lancedb.connect(tmpDir);
       const table = await db.openTable("decisions");
@@ -114,7 +124,9 @@ describe("storeDecision", () => {
       expect(row.subject).toBe("Use LanceDB for vector storage");
       expect(row.choice).toBe("LanceDB");
       expect(row.context).toBe("Need a vector database that works with TypeScript");
-      expect(row.rationale).toBe("Native TypeScript support, local-first, no external service needed");
+      expect(row.rationale).toBe(
+        "Native TypeScript support, local-first, no external service needed",
+      );
       expect(row.tier).toBe(1);
       expect(row.tier_name).toBe("architecture");
       expect(row.decision_type).toBe("architectural");
@@ -129,26 +141,36 @@ describe("storeDecision", () => {
       await initProject(tmpDir, "test-proj");
       const config = { ...TEST_CONFIG, db: tmpDir };
 
-      const tier0 = await storeDecision(tmpDir, "test-proj", {
-        project_id: "test-proj",
-        subject: "Product vision",
-        choice: "B2B SaaS",
-        context: "Market analysis",
-        rationale: "Better margins and retention",
-        tier: 0,
-        decision_type: "architectural",
-      }, config);
+      const tier0 = await storeDecision(
+        tmpDir,
+        "test-proj",
+        {
+          project_id: "test-proj",
+          subject: "Product vision",
+          choice: "B2B SaaS",
+          context: "Market analysis",
+          rationale: "Better margins and retention",
+          tier: 0,
+          decision_type: "architectural",
+        },
+        config,
+      );
       expect(tier0.tier_name).toBe("product_strategy");
 
-      const tier2 = await storeDecision(tmpDir, "test-proj", {
-        project_id: "test-proj",
-        subject: "Module structure",
-        choice: "Feature-first folders",
-        context: "Need to organize code by domain",
-        rationale: "Easier to navigate, cohesion by feature",
-        tier: 2,
-        decision_type: "module",
-      }, config);
+      const tier2 = await storeDecision(
+        tmpDir,
+        "test-proj",
+        {
+          project_id: "test-proj",
+          subject: "Module structure",
+          choice: "Feature-first folders",
+          context: "Need to organize code by domain",
+          rationale: "Easier to navigate, cohesion by feature",
+          tier: 2,
+          decision_type: "module",
+        },
+        config,
+      );
       expect(tier2.tier_name).toBe("functional_design");
     });
 
@@ -156,15 +178,20 @@ describe("storeDecision", () => {
       await initProject(tmpDir, "test-proj");
       const config = { ...TEST_CONFIG, db: tmpDir };
 
-      const result = await storeDecision(tmpDir, "test-proj", {
-        project_id: "test-proj",
-        subject: "First decision ever",
-        choice: "Something new",
-        context: "Brand new project",
-        rationale: "No precedent exists yet",
-        tier: 3,
-        decision_type: "convention",
-      }, config);
+      const result = await storeDecision(
+        tmpDir,
+        "test-proj",
+        {
+          project_id: "test-proj",
+          subject: "First decision ever",
+          choice: "Something new",
+          context: "Brand new project",
+          rationale: "No precedent exists yet",
+          tier: 3,
+          decision_type: "convention",
+        },
+        config,
+      );
 
       expect(result.has_precedent).toBe(false);
     });
@@ -177,15 +204,20 @@ describe("storeDecision", () => {
       await initProject(tmpDir, "test-proj");
       const config = { ...TEST_CONFIG, db: tmpDir };
 
-      const result = await storeDecision(tmpDir, "test-proj", {
-        project_id: "test-proj",
-        subject: "Use Bun runtime",
-        choice: "Bun over Node.js",
-        context: "Need faster runtime for development",
-        rationale: "Faster startup, native TypeScript support, faster test runner",
-        tier: 3,
-        decision_type: "tooling",
-      }, config);
+      const result = await storeDecision(
+        tmpDir,
+        "test-proj",
+        {
+          project_id: "test-proj",
+          subject: "Use Bun runtime",
+          choice: "Bun over Node.js",
+          context: "Need faster runtime for development",
+          rationale: "Faster startup, native TypeScript support, faster test runner",
+          tier: 3,
+          decision_type: "tooling",
+        },
+        config,
+      );
 
       const db = await lancedb.connect(tmpDir);
       const table = await db.openTable("decisions");
@@ -206,15 +238,20 @@ describe("storeDecision", () => {
       await initProject(tmpDir, "test-proj");
       const config = { ...TEST_CONFIG, db: tmpDir };
 
-      const result = await storeDecision(tmpDir, "test-proj", {
-        project_id: "test-proj",
-        subject: "Use Zod for validation",
-        choice: "Zod over Joi",
-        context: "Need schema validation with TypeScript inference",
-        rationale: "Best TypeScript integration, widely adopted, good error messages",
-        tier: 3,
-        decision_type: "tooling",
-      }, config);
+      const result = await storeDecision(
+        tmpDir,
+        "test-proj",
+        {
+          project_id: "test-proj",
+          subject: "Use Zod for validation",
+          choice: "Zod over Joi",
+          context: "Need schema validation with TypeScript inference",
+          rationale: "Best TypeScript integration, widely adopted, good error messages",
+          tier: 3,
+          decision_type: "tooling",
+        },
+        config,
+      );
 
       const db = await lancedb.connect(tmpDir);
       const activityTable = await db.openTable("activity_log");
@@ -236,29 +273,39 @@ describe("storeDecision", () => {
       const config = { ...TEST_CONFIG, db: tmpDir };
 
       // Store original decision
-      const decisionA = await storeDecision(tmpDir, "test-proj", {
-        project_id: "test-proj",
-        subject: "Use Jest for testing",
-        choice: "Jest",
-        context: "Need a test runner",
-        rationale: "Most popular, good ecosystem",
-        tier: 3,
-        decision_type: "tooling",
-      }, config);
+      const decisionA = await storeDecision(
+        tmpDir,
+        "test-proj",
+        {
+          project_id: "test-proj",
+          subject: "Use Jest for testing",
+          choice: "Jest",
+          context: "Need a test runner",
+          rationale: "Most popular, good ecosystem",
+          tier: 3,
+          decision_type: "tooling",
+        },
+        config,
+      );
 
       expect(decisionA.status).toBe("active");
 
       // Store superseding decision
-      const decisionB = await storeDecision(tmpDir, "test-proj", {
-        project_id: "test-proj",
-        subject: "Use Bun test for testing",
-        choice: "Bun test over Jest",
-        context: "Need a faster test runner with native TypeScript support",
-        rationale: "Bun test is faster, has native TypeScript support, and less configuration",
-        tier: 3,
-        decision_type: "tooling",
-        supersedes: decisionA.decision_id,
-      }, config);
+      const decisionB = await storeDecision(
+        tmpDir,
+        "test-proj",
+        {
+          project_id: "test-proj",
+          subject: "Use Bun test for testing",
+          choice: "Bun test over Jest",
+          context: "Need a faster test runner with native TypeScript support",
+          rationale: "Bun test is faster, has native TypeScript support, and less configuration",
+          tier: 3,
+          decision_type: "tooling",
+          supersedes: decisionA.decision_id,
+        },
+        config,
+      );
 
       expect(decisionB.status).toBe("active");
 
@@ -277,26 +324,36 @@ describe("storeDecision", () => {
       await initProject(tmpDir, "test-proj");
       const config = { ...TEST_CONFIG, db: tmpDir };
 
-      const original = await storeDecision(tmpDir, "test-proj", {
-        project_id: "test-proj",
-        subject: "API versioning strategy",
-        choice: "URL versioning",
-        context: "Need to version the REST API",
-        rationale: "Most visible and widely understood",
-        tier: 1,
-        decision_type: "architectural",
-      }, config);
+      const original = await storeDecision(
+        tmpDir,
+        "test-proj",
+        {
+          project_id: "test-proj",
+          subject: "API versioning strategy",
+          choice: "URL versioning",
+          context: "Need to version the REST API",
+          rationale: "Most visible and widely understood",
+          tier: 1,
+          decision_type: "architectural",
+        },
+        config,
+      );
 
-      const replacement = await storeDecision(tmpDir, "test-proj", {
-        project_id: "test-proj",
-        subject: "API versioning strategy v2",
-        choice: "Header versioning",
-        context: "URL versioning pollutes the route namespace",
-        rationale: "Cleaner URLs, follows HTTP standards, backend can route appropriately",
-        tier: 1,
-        decision_type: "architectural",
-        supersedes: original.decision_id,
-      }, config);
+      const replacement = await storeDecision(
+        tmpDir,
+        "test-proj",
+        {
+          project_id: "test-proj",
+          subject: "API versioning strategy v2",
+          choice: "Header versioning",
+          context: "URL versioning pollutes the route namespace",
+          rationale: "Cleaner URLs, follows HTTP standards, backend can route appropriately",
+          tier: 1,
+          decision_type: "architectural",
+          supersedes: original.decision_id,
+        },
+        config,
+      );
 
       const db = await lancedb.connect(tmpDir);
       const table = await db.openTable("decisions");
@@ -320,16 +377,21 @@ describe("storeDecision", () => {
       const config = { ...TEST_CONFIG, db: tmpDir };
 
       await expect(
-        storeDecision(tmpDir, "test-proj", {
-          project_id: "test-proj",
-          subject: "Test decision",
-          choice: "Something",
-          context: "Some context",
-          rationale: "Some rationale",
-          // biome-ignore lint/suspicious/noExplicitAny: intentional invalid value for test
-          tier: 5 as any,
-          decision_type: "convention",
-        }, config),
+        storeDecision(
+          tmpDir,
+          "test-proj",
+          {
+            project_id: "test-proj",
+            subject: "Test decision",
+            choice: "Something",
+            context: "Some context",
+            rationale: "Some rationale",
+            // biome-ignore lint/suspicious/noExplicitAny: intentional invalid value for test
+            tier: 5 as any,
+            decision_type: "convention",
+          },
+          config,
+        ),
       ).rejects.toThrow();
     });
 
@@ -338,16 +400,21 @@ describe("storeDecision", () => {
       const config = { ...TEST_CONFIG, db: tmpDir };
 
       await expect(
-        storeDecision(tmpDir, "test-proj", {
-          project_id: "test-proj",
-          subject: "Test decision",
-          choice: "Something",
-          context: "Some context",
-          rationale: "Some rationale",
-          // biome-ignore lint/suspicious/noExplicitAny: intentional invalid value for test
-          tier: -1 as any,
-          decision_type: "convention",
-        }, config),
+        storeDecision(
+          tmpDir,
+          "test-proj",
+          {
+            project_id: "test-proj",
+            subject: "Test decision",
+            choice: "Something",
+            context: "Some context",
+            rationale: "Some rationale",
+            // biome-ignore lint/suspicious/noExplicitAny: intentional invalid value for test
+            tier: -1 as any,
+            decision_type: "convention",
+          },
+          config,
+        ),
       ).rejects.toThrow();
     });
 
@@ -356,16 +423,21 @@ describe("storeDecision", () => {
       const config = { ...TEST_CONFIG, db: tmpDir };
 
       await expect(
-        storeDecision(tmpDir, "test-proj", {
-          project_id: "test-proj",
-          subject: "Test decision",
-          choice: "Something",
-          context: "Some context",
-          rationale: "Some rationale",
-          tier: 3,
-          // biome-ignore lint/suspicious/noExplicitAny: intentional invalid value for test
-          decision_type: "invalid_type" as any,
-        }, config),
+        storeDecision(
+          tmpDir,
+          "test-proj",
+          {
+            project_id: "test-proj",
+            subject: "Test decision",
+            choice: "Something",
+            context: "Some context",
+            rationale: "Some rationale",
+            tier: 3,
+            // biome-ignore lint/suspicious/noExplicitAny: intentional invalid value for test
+            decision_type: "invalid_type" as any,
+          },
+          config,
+        ),
       ).rejects.toThrow();
     });
 
@@ -374,15 +446,20 @@ describe("storeDecision", () => {
       const config = { ...TEST_CONFIG, db: tmpDir };
 
       await expect(
-        storeDecision(tmpDir, "test-proj", {
-          project_id: "test-proj",
-          subject: "",
-          choice: "Something",
-          context: "Some context",
-          rationale: "Some rationale",
-          tier: 3,
-          decision_type: "convention",
-        }, config),
+        storeDecision(
+          tmpDir,
+          "test-proj",
+          {
+            project_id: "test-proj",
+            subject: "",
+            choice: "Something",
+            context: "Some context",
+            rationale: "Some rationale",
+            tier: 3,
+            decision_type: "convention",
+          },
+          config,
+        ),
       ).rejects.toThrow();
     });
 
@@ -391,15 +468,20 @@ describe("storeDecision", () => {
       const config = { ...TEST_CONFIG, db: tmpDir };
 
       await expect(
-        storeDecision(tmpDir, "test-proj", {
-          project_id: "test-proj",
-          subject: "Some subject",
-          choice: "Something",
-          context: "Some context",
-          rationale: "",
-          tier: 3,
-          decision_type: "convention",
-        }, config),
+        storeDecision(
+          tmpDir,
+          "test-proj",
+          {
+            project_id: "test-proj",
+            subject: "Some subject",
+            choice: "Something",
+            context: "Some context",
+            rationale: "",
+            tier: 3,
+            decision_type: "convention",
+          },
+          config,
+        ),
       ).rejects.toThrow();
     });
   });
@@ -411,15 +493,20 @@ describe("storeDecision", () => {
       await initProject(tmpDir, "test-proj");
       const config = { ...TEST_CONFIG, db: tmpDir };
 
-      const result = await storeDecision(tmpDir, "test-proj", {
-        project_id: "test-proj",
-        subject: "Use ESLint",
-        choice: "ESLint over TSLint",
-        context: "Need a linter",
-        rationale: "TSLint is deprecated, ESLint has better ecosystem",
-        tier: 3,
-        decision_type: "tooling",
-      }, config);
+      const result = await storeDecision(
+        tmpDir,
+        "test-proj",
+        {
+          project_id: "test-proj",
+          subject: "Use ESLint",
+          choice: "ESLint over TSLint",
+          context: "Need a linter",
+          rationale: "TSLint is deprecated, ESLint has better ecosystem",
+          tier: 3,
+          decision_type: "tooling",
+        },
+        config,
+      );
 
       const db = await lancedb.connect(tmpDir);
       const table = await db.openTable("decisions");
@@ -433,15 +520,20 @@ describe("storeDecision", () => {
       await initProject(tmpDir, "test-proj");
       const config = { ...TEST_CONFIG, db: tmpDir };
 
-      const result = await storeDecision(tmpDir, "test-proj", {
-        project_id: "test-proj",
-        subject: "Use Prettier",
-        choice: "Prettier for code formatting",
-        context: "Need consistent code formatting",
-        rationale: "Zero config, widely adopted, reduces code review noise",
-        tier: 3,
-        decision_type: "tooling",
-      }, config);
+      const result = await storeDecision(
+        tmpDir,
+        "test-proj",
+        {
+          project_id: "test-proj",
+          subject: "Use Prettier",
+          choice: "Prettier for code formatting",
+          context: "Need consistent code formatting",
+          rationale: "Zero config, widely adopted, reduces code review noise",
+          tier: 3,
+          decision_type: "tooling",
+        },
+        config,
+      );
 
       expect(result.status).toBe("active");
     });
@@ -450,15 +542,20 @@ describe("storeDecision", () => {
       await initProject(tmpDir, "test-proj");
       const config = { ...TEST_CONFIG, db: tmpDir };
 
-      const result = await storeDecision(tmpDir, "test-proj", {
-        project_id: "test-proj",
-        subject: "Use Biome",
-        choice: "Biome over ESLint+Prettier",
-        context: "Need unified linting and formatting",
-        rationale: "Single tool, faster, written in Rust",
-        tier: 3,
-        decision_type: "tooling",
-      }, config);
+      const result = await storeDecision(
+        tmpDir,
+        "test-proj",
+        {
+          project_id: "test-proj",
+          subject: "Use Biome",
+          choice: "Biome over ESLint+Prettier",
+          context: "Need unified linting and formatting",
+          rationale: "Single tool, faster, written in Rust",
+          tier: 3,
+          decision_type: "tooling",
+        },
+        config,
+      );
 
       const db = await lancedb.connect(tmpDir);
       const table = await db.openTable("decisions");
@@ -479,15 +576,20 @@ describe("storeDecision", () => {
       const validTypes = ["architectural", "module", "pattern", "convention", "tooling"] as const;
 
       for (const decision_type of validTypes) {
-        const result = await storeDecision(tmpDir, "test-proj", {
-          project_id: "test-proj",
-          subject: `Decision of type ${decision_type}`,
-          choice: "Some choice",
-          context: "Some context",
-          rationale: `Rationale for ${decision_type} decision`,
-          tier: 3,
-          decision_type,
-        }, config);
+        const result = await storeDecision(
+          tmpDir,
+          "test-proj",
+          {
+            project_id: "test-proj",
+            subject: `Decision of type ${decision_type}`,
+            choice: "Some choice",
+            context: "Some context",
+            rationale: `Rationale for ${decision_type} decision`,
+            tier: 3,
+            decision_type,
+          },
+          config,
+        );
         expect(result.status).toBe("active");
       }
     });

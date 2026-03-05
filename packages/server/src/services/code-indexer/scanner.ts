@@ -1,5 +1,5 @@
 import { existsSync, readFileSync } from "node:fs";
-import { join, basename } from "node:path";
+import { basename, join } from "node:path";
 import Ignore from "ignore";
 import { logger } from "../../logger.js";
 
@@ -85,10 +85,7 @@ function extToLanguage(ext: string): FileEntry["language"] | null {
  * 3. opts.exclude_patterns (if provided)
  * 4. opts.include_patterns: if provided, only files matching at least one pattern are included
  */
-export async function scanFiles(
-  projectRoot: string,
-  opts?: ScanOptions,
-): Promise<ScanResult> {
+export async function scanFiles(projectRoot: string, opts?: ScanOptions): Promise<ScanResult> {
   // Build ignore filter
   const ig = Ignore();
 
@@ -132,7 +129,9 @@ export async function scanFiles(
     }
 
     // Determine language from extension
-    const ext = "." + relPath.split(".").pop()!;
+    const extPart = relPath.split(".").pop();
+    if (!extPart) continue; // No extension — skip
+    const ext = `.${extPart}`;
     const language = extToLanguage(ext);
     if (!language) continue; // Should not happen given the glob, but guard defensively
 

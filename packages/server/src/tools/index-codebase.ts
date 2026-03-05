@@ -14,10 +14,10 @@ import { escapeSQL } from "../db/sql-helpers.js";
 import { OllamaUnreachableError } from "../errors.js";
 import { createToolLogger, logger } from "../logger.js";
 import { logActivity } from "../services/activity-log.js";
-import { parseSource } from "../services/code-indexer/parser.js";
 import { extractSymbols } from "../services/code-indexer/extractor.js";
-import { resolveImports } from "../services/code-indexer/import-resolver.js";
 import type { ImportEdge } from "../services/code-indexer/import-resolver.js";
+import { resolveImports } from "../services/code-indexer/import-resolver.js";
+import { parseSource } from "../services/code-indexer/parser.js";
 import { scanFiles } from "../services/code-indexer/scanner.js";
 import { embed, getOllamaStatus } from "../services/embedder.js";
 import type { SynapseConfig, ToolResult } from "../types.js";
@@ -28,10 +28,7 @@ import type { SynapseConfig, ToolResult } from "../types.js";
 
 const IndexCodebaseInputSchema = z.object({
   project_id: z.string().regex(/^[a-z0-9][a-z0-9_-]*$/),
-  project_root: z
-    .string()
-    .min(1)
-    .describe("Absolute path to the project directory to index"),
+  project_root: z.string().min(1).describe("Absolute path to the project directory to index"),
   exclude_patterns: z
     .array(z.string())
     .optional()
@@ -219,12 +216,7 @@ export async function indexCodebase(
       const tree = parseSource(file.relativePath, content);
 
       // e. Extract symbols
-      const extraction = extractSymbols(
-        tree.rootNode,
-        content,
-        file.language,
-        file.relativePath,
-      );
+      const extraction = extractSymbols(tree.rootNode, content, file.language, file.relativePath);
 
       // f. Skip if no symbols extracted
       if (extraction.symbols.length === 0) {
@@ -281,19 +273,14 @@ export async function indexCodebase(
       allEdges.push(...fileEdges);
     } catch (err) {
       // Syntax errors: partial index + warning
-      logger.warn(
-        { file: file.relativePath, error: String(err) },
-        "Error indexing file",
-      );
+      logger.warn({ file: file.relativePath, error: String(err) }, "Error indexing file");
       errors.push(`${file.relativePath}: ${String(err)}`);
     }
   }
 
   // ── 7. Write relationship edges (batch) ───────────────────────────────────
   // Delete ALL existing ast_import edges for this project
-  await relTable.delete(
-    `source = 'ast_import' AND project_id = '${escapeSQL(projectId)}'`,
-  );
+  await relTable.delete(`source = 'ast_import' AND project_id = '${escapeSQL(projectId)}'`);
 
   // Insert all new edges
   if (allEdges.length > 0) {
@@ -388,10 +375,7 @@ export function registerIndexCodebaseTool(server: McpServer, config: SynapseConf
         project_id: z
           .string()
           .describe("Project identifier (lowercase slug: letters, numbers, hyphens, underscores)"),
-        project_root: z
-          .string()
-          .min(1)
-          .describe("Absolute path to the project directory to index"),
+        project_root: z.string().min(1).describe("Absolute path to the project directory to index"),
         exclude_patterns: z
           .array(z.string())
           .optional()
@@ -433,10 +417,7 @@ export function registerIndexCodebaseTool(server: McpServer, config: SynapseConf
         return { content: [{ type: "text", text: JSON.stringify(result, null, 2) }] };
       } catch (err) {
         const result: ToolResult = { success: false, error: String(err) };
-        log.error(
-          { error: String(err), durationMs: Date.now() - start },
-          "index_codebase failed",
-        );
+        log.error({ error: String(err), durationMs: Date.now() - start }, "index_codebase failed");
         return { content: [{ type: "text", text: JSON.stringify(result) }] };
       }
     },

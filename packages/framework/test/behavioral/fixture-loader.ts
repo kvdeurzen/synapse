@@ -1,5 +1,5 @@
-import { readFileSync, writeFileSync, existsSync, mkdirSync } from "node:fs";
-import { join, dirname } from "node:path";
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { dirname, join } from "node:path";
 
 const FIXTURES_DIR = join(import.meta.dir, "fixtures");
 
@@ -17,32 +17,32 @@ const FIXTURES_DIR = join(import.meta.dir, "fixtures");
  * Run `rm -rf test/behavioral/fixtures/ && bun test test/behavioral/` to re-record all.
  */
 export async function withFixture<T>(name: string, liveCall: () => Promise<T>): Promise<T> {
-	const fixturePath = join(FIXTURES_DIR, `${name}.json`);
+  const fixturePath = join(FIXTURES_DIR, `${name}.json`);
 
-	if (existsSync(fixturePath)) {
-		// Replay mode — return cached result, no live call
-		return JSON.parse(readFileSync(fixturePath, "utf-8")) as T;
-	}
+  if (existsSync(fixturePath)) {
+    // Replay mode — return cached result, no live call
+    return JSON.parse(readFileSync(fixturePath, "utf-8")) as T;
+  }
 
-	// Record mode — call live function, cache result
-	mkdirSync(dirname(fixturePath), { recursive: true });
-	const result = await liveCall();
-	writeFileSync(fixturePath, JSON.stringify(result, null, 2) + "\n");
-	return result;
+  // Record mode — call live function, cache result
+  mkdirSync(dirname(fixturePath), { recursive: true });
+  const result = await liveCall();
+  writeFileSync(fixturePath, `${JSON.stringify(result, null, 2)}\n`);
+  return result;
 }
 
 /**
  * Check if a fixture exists (for conditional test logic).
  */
 export function fixtureExists(name: string): boolean {
-	return existsSync(join(FIXTURES_DIR, `${name}.json`));
+  return existsSync(join(FIXTURES_DIR, `${name}.json`));
 }
 
 /**
  * Read a fixture directly (for scorecard evaluation).
  */
 export function readFixture<T>(name: string): T | null {
-	const fixturePath = join(FIXTURES_DIR, `${name}.json`);
-	if (!existsSync(fixturePath)) return null;
-	return JSON.parse(readFileSync(fixturePath, "utf-8")) as T;
+  const fixturePath = join(FIXTURES_DIR, `${name}.json`);
+  if (!existsSync(fixturePath)) return null;
+  return JSON.parse(readFileSync(fixturePath, "utf-8")) as T;
 }

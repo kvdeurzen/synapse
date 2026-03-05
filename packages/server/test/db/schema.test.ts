@@ -16,10 +16,10 @@ import {
   ProjectMetaRowSchema,
   RELATIONSHIPS_SCHEMA,
   RelationshipRowSchema,
-  TASKS_SCHEMA,
-  TaskRowSchema,
   TABLE_NAMES,
   TABLE_SCHEMAS,
+  TASKS_SCHEMA,
+  TaskRowSchema,
 } from "../../src/db/schema.js";
 
 // ────────────────────────────────────────────────────────────────────────────
@@ -552,7 +552,9 @@ describe("Zod TaskRowSchema validation", () => {
     expect(TaskRowSchema.safeParse({ ...validTask, is_blocked: true }).success).toBe(true);
     expect(TaskRowSchema.safeParse({ ...validTask, is_blocked: false }).success).toBe(true);
     // biome-ignore lint/suspicious/noExplicitAny: intentional invalid value for test
-    expect(TaskRowSchema.safeParse({ ...validTask, is_blocked: "true" as any }).success).toBe(false);
+    expect(TaskRowSchema.safeParse({ ...validTask, is_blocked: "true" as any }).success).toBe(
+      false,
+    );
   });
 
   test("valid priority values pass", () => {

@@ -116,10 +116,7 @@ export function resolvePyImport(
     const resolvedBase = normalizePath(nodePath.join(baseDir, modulePath));
 
     // Try .py and /__init__.py
-    const candidates = [
-      `${resolvedBase}.py`,
-      `${resolvedBase}/__init__.py`,
-    ];
+    const candidates = [`${resolvedBase}.py`, `${resolvedBase}/__init__.py`];
 
     for (const candidate of candidates) {
       if (fileSet.has(candidate)) {
@@ -131,10 +128,7 @@ export function resolvePyImport(
   } else {
     // Absolute import — check if it matches a local package
     const modulePath = importPath.replace(/\./g, "/");
-    const candidates = [
-      `${modulePath}.py`,
-      `${modulePath}/__init__.py`,
-    ];
+    const candidates = [`${modulePath}.py`, `${modulePath}/__init__.py`];
 
     for (const candidate of candidates) {
       if (fileSet.has(candidate)) {
@@ -173,10 +167,7 @@ export function resolveRustImport(
     for (let len = segments.length; len >= 1; len--) {
       const pathPart = segments.slice(0, len).join("/");
       const resolvedBase = normalizePath(nodePath.join("src", pathPart));
-      const candidates = [
-        `${resolvedBase}.rs`,
-        `${resolvedBase}/mod.rs`,
-      ];
+      const candidates = [`${resolvedBase}.rs`, `${resolvedBase}/mod.rs`];
       for (const candidate of candidates) {
         if (fileSet.has(candidate)) {
           return candidate;
@@ -193,10 +184,7 @@ export function resolveRustImport(
     for (let len = segments.length; len >= 1; len--) {
       const pathPart = segments.slice(0, len).join("/");
       const resolvedBase = normalizePath(nodePath.join(dir, pathPart));
-      const candidates = [
-        `${resolvedBase}.rs`,
-        `${resolvedBase}/mod.rs`,
-      ];
+      const candidates = [`${resolvedBase}.rs`, `${resolvedBase}/mod.rs`];
       for (const candidate of candidates) {
         if (fileSet.has(candidate)) {
           return candidate;
@@ -225,10 +213,7 @@ export function resolveRustImport(
     for (let len = segments.length; len >= 1; len--) {
       const pathPart = segments.slice(0, len).join("/");
       const resolvedBase = normalizePath(nodePath.join(currentDir, pathPart));
-      const candidates = [
-        `${resolvedBase}.rs`,
-        `${resolvedBase}/mod.rs`,
-      ];
+      const candidates = [`${resolvedBase}.rs`, `${resolvedBase}/mod.rs`];
       for (const candidate of candidates) {
         if (fileSet.has(candidate)) {
           return candidate;
@@ -243,10 +228,7 @@ export function resolveRustImport(
   if (!importPath.includes("::")) {
     // Simple identifier — treat as a mod declaration resolving to sibling file
     const resolvedBase = normalizePath(nodePath.join(dir, importPath));
-    const candidates = [
-      `${resolvedBase}.rs`,
-      `${resolvedBase}/mod.rs`,
-    ];
+    const candidates = [`${resolvedBase}.rs`, `${resolvedBase}/mod.rs`];
     for (const candidate of candidates) {
       if (fileSet.has(candidate)) {
         return candidate;

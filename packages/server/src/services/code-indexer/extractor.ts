@@ -268,9 +268,7 @@ function extractTypeScript(root: SyntaxNode, source: string): ExtractionResult {
         }
 
         // Check if this is "export default"
-        const isDefault = node.children.some(
-          (c) => c.type === "default",
-        );
+        const isDefault = node.children.some((c) => c.type === "default");
 
         // Unwrap the declaration inside export_statement
         for (const child of node.namedChildren) {
@@ -377,9 +375,7 @@ function extractPython(root: SyntaxNode, source: string): ExtractionResult {
               processNode(child, scopeChain);
             } else if (child.type === "decorated_definition") {
               // Handle decorated methods inside class
-              const innerFunc = child.namedChildren.find(
-                (c) => c.type === "function_definition",
-              );
+              const innerFunc = child.namedChildren.find((c) => c.type === "function_definition");
               if (innerFunc) {
                 const methodName = getNodeName(innerFunc);
                 const methodScopeChain = `${scopeChain}.${methodName}`;
@@ -402,8 +398,7 @@ function extractPython(root: SyntaxNode, source: string): ExtractionResult {
       case "decorated_definition": {
         // Unwrap: get the function_definition or class_definition inside
         const inner = node.namedChildren.find(
-          (c) =>
-            c.type === "function_definition" || c.type === "class_definition",
+          (c) => c.type === "function_definition" || c.type === "class_definition",
         );
         if (inner) {
           const name = getNodeName(inner);
@@ -479,10 +474,7 @@ function extractPython(root: SyntaxNode, source: string): ExtractionResult {
             }
             if (!relPath) relPath = ".";
             imports.push(relPath);
-          } else if (
-            moduleNode.type === "dotted_name" ||
-            moduleNode.type === "identifier"
-          ) {
+          } else if (moduleNode.type === "dotted_name" || moduleNode.type === "identifier") {
             imports.push(moduleNode.text);
           }
         }
@@ -575,9 +567,7 @@ function extractRust(root: SyntaxNode, source: string): ExtractionResult {
         });
 
         // Walk trait body for function items (method declarations)
-        const traitBody = node.namedChildren.find(
-          (c) => c.type === "declaration_list",
-        );
+        const traitBody = node.namedChildren.find((c) => c.type === "declaration_list");
         if (traitBody) {
           for (const child of traitBody.namedChildren) {
             if (child.type === "function_item") {
@@ -631,9 +621,7 @@ function extractRust(root: SyntaxNode, source: string): ExtractionResult {
         });
 
         // Walk impl body for function items
-        const implBody = node.namedChildren.find(
-          (c) => c.type === "declaration_list",
-        );
+        const implBody = node.namedChildren.find((c) => c.type === "declaration_list");
         if (implBody) {
           for (const child of implBody.namedChildren) {
             if (child.type === "function_item") {
@@ -686,7 +674,10 @@ function extractRust(root: SyntaxNode, source: string): ExtractionResult {
 
       case "use_declaration": {
         // Extract the use path text, strip "use " and trailing ";"
-        const text = node.text.replace(/^use\s+/, "").replace(/;$/, "").trim();
+        const text = node.text
+          .replace(/^use\s+/, "")
+          .replace(/;$/, "")
+          .trim();
         imports.push(text);
         break;
       }
@@ -695,18 +686,14 @@ function extractRust(root: SyntaxNode, source: string): ExtractionResult {
         const modNameNode = node.childForFieldName("name");
         const modName = modNameNode ? modNameNode.text : "";
         // Check if mod has a body
-        const body = node.namedChildren.find(
-          (c) => c.type === "declaration_list",
-        );
+        const body = node.namedChildren.find((c) => c.type === "declaration_list");
         if (!body) {
           // mod submodule; — file reference, add to imports
           if (modName) imports.push(modName);
         } else {
           // Inline mod with body — recurse as a scope container
           if (modName) {
-            const modScope = parentScope
-              ? `${parentScope}.${modName}`
-              : modName;
+            const modScope = parentScope ? `${parentScope}.${modName}` : modName;
             for (const child of body.namedChildren) {
               processNode(child, modScope);
             }

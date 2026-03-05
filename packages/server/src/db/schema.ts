@@ -1,10 +1,7 @@
 // Arrow types come from apache-arrow (installed as lancedb transitive dep — no explicit install needed)
 import { Bool, Field, FixedSizeList, Float32, Int32, Schema, Utf8 } from "apache-arrow";
 import { z } from "zod";
-import {
-  VALID_DECISION_STATUSES,
-  VALID_DECISION_TYPES,
-} from "../tools/decision-constants.js";
+import { VALID_DECISION_STATUSES, VALID_DECISION_TYPES } from "../tools/decision-constants.js";
 import {
   VALID_AGENT_ROLES,
   VALID_TASK_PRIORITIES,

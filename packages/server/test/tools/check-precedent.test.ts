@@ -6,8 +6,8 @@ import * as lancedb from "@lancedb/lancedb";
 import { insertBatch } from "../../src/db/batch.js";
 import { DecisionRowSchema } from "../../src/db/schema.js";
 import { _setFetchImpl } from "../../src/services/embedder.js";
-import { initProject } from "../../src/tools/init-project.js";
 import { checkPrecedent } from "../../src/tools/check-precedent.js";
+import { initProject } from "../../src/tools/init-project.js";
 import type { SynapseConfig } from "../../src/types.js";
 
 // ── Test helpers ──────────────────────────────────────────────────────────────
@@ -33,7 +33,9 @@ function normalizeVector(vec: number[]): number[] {
 /**
  * Create a mock Ollama /api/embed response that returns a specific vector.
  */
-function mockOllamaWithVector(vector: number[]): (url: string, init?: RequestInit) => Promise<Response> {
+function mockOllamaWithVector(
+  vector: number[],
+): (url: string, init?: RequestInit) => Promise<Response> {
   return (_url: string, _init?: RequestInit) => {
     return Promise.resolve(
       new Response(JSON.stringify({ embeddings: [vector] }), {
@@ -120,12 +122,17 @@ describe("checkPrecedent", () => {
       const config = { ...TEST_CONFIG, db: tmpDir };
       _setFetchImpl(mockOllamaWithVector(normalizeVector(makeVector(0.5))));
 
-      const result = await checkPrecedent(tmpDir, "test-proj", {
-        project_id: "test-proj",
-        subject: "Use TypeScript",
-        rationale: "TypeScript provides compile-time type safety",
-        decision_type: "convention",
-      }, config);
+      const result = await checkPrecedent(
+        tmpDir,
+        "test-proj",
+        {
+          project_id: "test-proj",
+          subject: "Use TypeScript",
+          rationale: "TypeScript provides compile-time type safety",
+          decision_type: "convention",
+        },
+        config,
+      );
 
       expect(result.has_precedent).toBe(false);
       expect(result.matches).toEqual([]);
@@ -150,12 +157,17 @@ describe("checkPrecedent", () => {
       // Mock embed to return same vector (would be a match if types aligned)
       _setFetchImpl(mockOllamaWithVector(vector));
 
-      const result = await checkPrecedent(tmpDir, "test-proj", {
-        project_id: "test-proj",
-        subject: "Use Prettier for formatting",
-        rationale: "Prettier provides automatic code formatting",
-        decision_type: "convention",
-      }, config);
+      const result = await checkPrecedent(
+        tmpDir,
+        "test-proj",
+        {
+          project_id: "test-proj",
+          subject: "Use Prettier for formatting",
+          rationale: "Prettier provides automatic code formatting",
+          decision_type: "convention",
+        },
+        config,
+      );
 
       expect(result.has_precedent).toBe(false);
       expect(result.matches).toEqual([]);
@@ -179,12 +191,17 @@ describe("checkPrecedent", () => {
 
       _setFetchImpl(mockOllamaWithVector(vector));
 
-      const result = await checkPrecedent(tmpDir, "test-proj", {
-        project_id: "test-proj",
-        subject: "Adopt TypeScript conventions",
-        rationale: "TypeScript conventions help with consistency",
-        decision_type: "convention",
-      }, config);
+      const result = await checkPrecedent(
+        tmpDir,
+        "test-proj",
+        {
+          project_id: "test-proj",
+          subject: "Adopt TypeScript conventions",
+          rationale: "TypeScript conventions help with consistency",
+          decision_type: "convention",
+        },
+        config,
+      );
 
       expect(result.has_precedent).toBe(true);
       expect(result.matches.length).toBe(1);
@@ -208,12 +225,17 @@ describe("checkPrecedent", () => {
 
       _setFetchImpl(mockOllamaWithVector(vector));
 
-      const result = await checkPrecedent(tmpDir, "test-proj", {
-        project_id: "test-proj",
-        subject: "Adopt TypeScript across the codebase",
-        rationale: "TypeScript provides compile-time type safety and better tooling",
-        decision_type: "convention",
-      }, config);
+      const result = await checkPrecedent(
+        tmpDir,
+        "test-proj",
+        {
+          project_id: "test-proj",
+          subject: "Adopt TypeScript across the codebase",
+          rationale: "TypeScript provides compile-time type safety and better tooling",
+          decision_type: "convention",
+        },
+        config,
+      );
 
       expect(result.has_precedent).toBe(true);
       expect(result.matches.length).toBeGreaterThan(0);
@@ -236,12 +258,17 @@ describe("checkPrecedent", () => {
 
       _setFetchImpl(mockOllamaWithVector(vector));
 
-      const result = await checkPrecedent(tmpDir, "test-proj", {
-        project_id: "test-proj",
-        subject: "New convention decision",
-        rationale: "Establishing consistent conventions across the codebase",
-        decision_type: "convention",
-      }, config);
+      const result = await checkPrecedent(
+        tmpDir,
+        "test-proj",
+        {
+          project_id: "test-proj",
+          subject: "New convention decision",
+          rationale: "Establishing consistent conventions across the codebase",
+          decision_type: "convention",
+        },
+        config,
+      );
 
       expect(result.has_precedent).toBe(true);
       expect(result.matches.length).toBeLessThanOrEqual(5);
@@ -265,12 +292,17 @@ describe("checkPrecedent", () => {
 
       _setFetchImpl(mockOllamaWithVector(vector));
 
-      const result = await checkPrecedent(tmpDir, "test-proj", {
-        project_id: "test-proj",
-        subject: "New convention",
-        rationale: "New convention rationale",
-        decision_type: "convention",
-      }, config);
+      const result = await checkPrecedent(
+        tmpDir,
+        "test-proj",
+        {
+          project_id: "test-proj",
+          subject: "New convention",
+          rationale: "New convention rationale",
+          decision_type: "convention",
+        },
+        config,
+      );
 
       expect(result.has_precedent).toBe(false);
       expect(result.matches).toEqual([]);
@@ -289,13 +321,18 @@ describe("checkPrecedent", () => {
 
       _setFetchImpl(mockOllamaWithVector(vector));
 
-      const result = await checkPrecedent(tmpDir, "test-proj", {
-        project_id: "test-proj",
-        subject: "New convention",
-        rationale: "New convention rationale",
-        decision_type: "convention",
-        include_inactive: true,
-      }, config);
+      const result = await checkPrecedent(
+        tmpDir,
+        "test-proj",
+        {
+          project_id: "test-proj",
+          subject: "New convention",
+          rationale: "New convention rationale",
+          decision_type: "convention",
+          include_inactive: true,
+        },
+        config,
+      );
 
       expect(result.has_precedent).toBe(true);
       expect(result.matches.length).toBeGreaterThan(0);
@@ -321,13 +358,18 @@ describe("checkPrecedent", () => {
 
       _setFetchImpl(mockOllamaWithVector(vector));
 
-      const result = await checkPrecedent(tmpDir, "test-proj", {
-        project_id: "test-proj",
-        subject: "Choose a vector database",
-        rationale: "Need a vector database for semantic search",
-        decision_type: "architectural",
-        tier: 1,
-      }, config);
+      const result = await checkPrecedent(
+        tmpDir,
+        "test-proj",
+        {
+          project_id: "test-proj",
+          subject: "Choose a vector database",
+          rationale: "Need a vector database for semantic search",
+          decision_type: "architectural",
+          tier: 1,
+        },
+        config,
+      );
 
       expect(result.has_precedent).toBe(true);
       expect(result.matches.length).toBeGreaterThan(0);
@@ -382,12 +424,17 @@ describe("checkPrecedent", () => {
 
       _setFetchImpl(mockOllamaWithVector(queryVector));
 
-      const result = await checkPrecedent(tmpDir, "test-proj", {
-        project_id: "test-proj",
-        subject: "New convention",
-        rationale: "New convention rationale",
-        decision_type: "convention",
-      }, config);
+      const result = await checkPrecedent(
+        tmpDir,
+        "test-proj",
+        {
+          project_id: "test-proj",
+          subject: "New convention",
+          rationale: "New convention rationale",
+          decision_type: "convention",
+        },
+        config,
+      );
 
       expect(result.has_precedent).toBe(true);
       expect(result.matches.length).toBeGreaterThan(1);
@@ -418,12 +465,17 @@ describe("checkPrecedent", () => {
       // Mock fetch to simulate Ollama being unreachable
       _setFetchImpl(() => Promise.reject(new TypeError("fetch failed: ECONNREFUSED")));
 
-      const result = await checkPrecedent(tmpDir, "test-proj", {
-        project_id: "test-proj",
-        subject: "New convention",
-        rationale: "Rationale for new convention",
-        decision_type: "convention",
-      }, config);
+      const result = await checkPrecedent(
+        tmpDir,
+        "test-proj",
+        {
+          project_id: "test-proj",
+          subject: "New convention",
+          rationale: "Rationale for new convention",
+          decision_type: "convention",
+        },
+        config,
+      );
 
       // Should gracefully degrade
       expect(result.has_precedent).toBe(false);

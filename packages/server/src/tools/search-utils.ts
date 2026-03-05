@@ -109,7 +109,10 @@ export function extractSnippet(content: string, query: string, maxTokens = 150):
   }
 
   // Find first occurrence of any query word (case-insensitive)
-  const words = query.toLowerCase().split(/\s+/).filter((w) => w.length > 0);
+  const words = query
+    .toLowerCase()
+    .split(/\s+/)
+    .filter((w) => w.length > 0);
   const lower = content.toLowerCase();
   let bestPos = 0;
   for (const word of words) {
@@ -233,7 +236,7 @@ export async function buildSearchPredicate(
     filters.status !== undefined ||
     filters.priority !== undefined;
 
-  let docMap = new Map<string, DocMeta>();
+  const docMap = new Map<string, DocMeta>();
   let postFilterRequired = false;
 
   if (hasMetadataFilters && dbPath) {

@@ -8,12 +8,8 @@ import { createToolLogger } from "../logger.js";
 import { logActivity } from "../services/activity-log.js";
 import { embed } from "../services/embedder.js";
 import type { SynapseConfig, ToolResult } from "../types.js";
-import {
-  VALID_AGENT_ROLES,
-  VALID_TASK_PRIORITIES,
-  VALID_TASK_STATUSES,
-} from "./task-constants.js";
 import { detectCycles } from "./create-task.js";
+import { VALID_AGENT_ROLES, VALID_TASK_PRIORITIES, VALID_TASK_STATUSES } from "./task-constants.js";
 
 // ────────────────────────────────────────────────────────────────────────────
 // Input schema (Zod)
@@ -145,9 +141,7 @@ export async function recomputeIsBlocked(
     .toArray();
 
   // is_blocked = true if ANY dep is not (done or cancelled)
-  const isBlocked = depRows.some(
-    (dep) => dep.status !== "done" && !(dep.is_cancelled as boolean),
-  );
+  const isBlocked = depRows.some((dep) => dep.status !== "done" && !(dep.is_cancelled as boolean));
 
   await tasksTable.update({
     where: `task_id = '${taskId}' AND project_id = '${projectId}'`,
@@ -206,7 +200,8 @@ export async function updateTask(
     );
   }
 
-  const existing = existingRows[0]!;
+  const existing = existingRows[0];
+  if (!existing) throw new Error(`Expected existing row for task_id='${validated.task_id}'`);
 
   // ── c. Validate transition ─────────────────────────────────────────────────
   // Cannot set status=done on an already-cancelled task
@@ -379,7 +374,9 @@ export async function updateTask(
     .limit(1)
     .toArray();
 
-  const finalRow = finalRows[0]!;
+  const finalRow = finalRows[0];
+  if (!finalRow)
+    throw new Error(`Expected final row for task_id='${validated.task_id}' after update`);
 
   return {
     task_id: validated.task_id,
@@ -437,19 +434,12 @@ export function registerUpdateTaskTool(server: McpServer, config: SynapseConfig)
           .optional()
           .nullable()
           .describe("Estimated effort, e.g. '2h', '3d', '1w' (null to clear)"),
-        is_blocked: z
-          .boolean()
-          .optional()
-          .describe("Manual is_blocked override"),
+        is_blocked: z.boolean().optional().describe("Manual is_blocked override"),
         is_cancelled: z
           .boolean()
           .optional()
           .describe("Mark task as cancelled (unblocks dependents)"),
-        block_reason: z
-          .string()
-          .optional()
-          .nullable()
-          .describe("Reason for block (null to clear)"),
+        block_reason: z.string().optional().nullable().describe("Reason for block (null to clear)"),
         tags: z.string().optional().describe("Pipe-separated tags, e.g. '|auth|backend|'"),
         phase: z.string().optional().nullable().describe("Project phase (null to clear)"),
         dependencies: z

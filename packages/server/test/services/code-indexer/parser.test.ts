@@ -1,8 +1,8 @@
 import { describe, expect, test } from "bun:test";
 import Parser from "tree-sitter";
-import TypeScriptLang from "tree-sitter-typescript";
 import PythonLang from "tree-sitter-python";
 import RustLang from "tree-sitter-rust";
+import TypeScriptLang from "tree-sitter-typescript";
 import { getParserForFile, parseSource } from "../../../src/services/code-indexer/parser";
 
 describe("tree-sitter smoke tests", () => {
@@ -86,7 +86,7 @@ describe("parseSource", () => {
   });
 
   test("parses Rust source correctly", () => {
-    const tree = parseSource("lib.rs", "fn greet() -> &'static str { \"hi\" }");
+    const tree = parseSource("lib.rs", 'fn greet() -> &\'static str { "hi" }');
     expect(tree.rootNode.type).toBe("source_file");
   });
 

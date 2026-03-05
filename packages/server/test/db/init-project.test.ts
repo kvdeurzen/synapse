@@ -3,8 +3,6 @@ import { mkdtempSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import * as lancedb from "@lancedb/lancedb";
-import { insertBatch } from "../../src/db/batch.js";
-import { ProjectMetaRowSchema } from "../../src/db/schema.js";
 import { initProject } from "../../src/tools/init-project.js";
 
 const TABLE_NAMES = [

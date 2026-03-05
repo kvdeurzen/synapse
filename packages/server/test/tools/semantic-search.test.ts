@@ -1,11 +1,11 @@
-import { afterEach, beforeEach, describe, expect, mock, test } from "bun:test";
+import { afterEach, beforeEach, describe, expect, test } from "bun:test";
 import { mkdtempSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import * as lancedb from "@lancedb/lancedb";
 import { ulid } from "ulidx";
-import { _setFetchImpl, setOllamaStatus } from "../../src/services/embedder.js";
 import { OllamaUnreachableError } from "../../src/errors.js";
+import { _setFetchImpl, setOllamaStatus } from "../../src/services/embedder.js";
 import { initProject } from "../../src/tools/init-project.js";
 import { semanticSearch } from "../../src/tools/semantic-search.js";
 import type { SynapseConfig } from "../../src/types.js";

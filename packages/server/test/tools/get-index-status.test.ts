@@ -1,15 +1,15 @@
 import { afterEach, beforeEach, describe, expect, test } from "bun:test";
+import { createHash } from "node:crypto";
 import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { createHash } from "node:crypto";
 import * as lancedb from "@lancedb/lancedb";
 import { ulid } from "ulidx";
 import { insertBatch } from "../../src/db/batch.js";
 import { ProjectMetaRowSchema } from "../../src/db/schema.js";
 import { createServer } from "../../src/server.js";
-import { initProject } from "../../src/tools/init-project.js";
 import { getIndexStatus } from "../../src/tools/get-index-status.js";
+import { initProject } from "../../src/tools/init-project.js";
 import type { SynapseConfig } from "../../src/types.js";
 
 // ── Test helpers ──────────────────────────────────────────────────────────────
@@ -149,12 +149,12 @@ describe("getIndexStatus", () => {
       const pyEntry = result.languages.find((l) => l.language === "python");
 
       expect(tsEntry).toBeDefined();
-      expect(tsEntry!.file_count).toBe(2); // a.ts, b.ts
-      expect(tsEntry!.chunk_count).toBe(3); // 3 chunks for typescript files
+      expect(tsEntry?.file_count).toBe(2); // a.ts, b.ts
+      expect(tsEntry?.chunk_count).toBe(3); // 3 chunks for typescript files
 
       expect(pyEntry).toBeDefined();
-      expect(pyEntry!.file_count).toBe(1); // c.py
-      expect(pyEntry!.chunk_count).toBe(1);
+      expect(pyEntry?.file_count).toBe(1); // c.py
+      expect(pyEntry?.chunk_count).toBe(1);
     });
   });
 

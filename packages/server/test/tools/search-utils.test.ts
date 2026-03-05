@@ -127,7 +127,7 @@ describe("extractSnippet", () => {
 
   test("case-insensitive keyword matching", () => {
     const prefix = "Start of long text. ".repeat(20);
-    const content = prefix + "UPPERCASED keyword found here. " + "More content. ".repeat(20);
+    const content = `${prefix}UPPERCASED keyword found here. ${"More content. ".repeat(20)}`;
     const result = extractSnippet(content, "uppercased", 30);
     expect(result.toLowerCase()).toContain("uppercased");
   });

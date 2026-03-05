@@ -32,8 +32,6 @@ const GetIndexStatusInputSchema = z.object({
     ),
 });
 
-type GetIndexStatusArgs = z.infer<typeof GetIndexStatusInputSchema>;
-
 // ────────────────────────────────────────────────────────────────────────────
 // Result type
 // ────────────────────────────────────────────────────────────────────────────
@@ -60,11 +58,7 @@ export async function getIndexStatus(
 
   // ── 1. Query project_meta for last_index_at ───────────────────────────────
   const metaTable = await db.openTable("project_meta");
-  const metaRows = await metaTable
-    .query()
-    .where(`project_id = '${projectId}'`)
-    .limit(1)
-    .toArray();
+  const metaRows = await metaTable.query().where(`project_id = '${projectId}'`).limit(1).toArray();
   const lastIndexAt: string | null =
     metaRows.length > 0 ? ((metaRows[0].last_index_at as string | null) ?? null) : null;
 
@@ -83,7 +77,8 @@ export async function getIndexStatus(
     if (!langMap.has(lang)) {
       langMap.set(lang, { files: new Set(), chunks: 0 });
     }
-    const entry = langMap.get(lang)!;
+    const entry = langMap.get(lang);
+    if (!entry) throw new Error(`Expected lang entry for: ${lang}`);
     entry.files.add(row.file_path as string);
     entry.chunks++;
   }

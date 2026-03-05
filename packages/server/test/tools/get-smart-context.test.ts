@@ -475,9 +475,7 @@ describe("getSmartContext - detailed mode", () => {
       max_tokens: 4000,
     });
 
-    const expandedDocs = result.documents.filter(
-      (d: { is_requested: boolean }) => !d.is_requested,
-    );
+    const expandedDocs = result.documents.filter((d: { is_requested: boolean }) => !d.is_requested);
     const depIdx = expandedDocs.findIndex((d: { doc_id: string }) => d.doc_id === depDoc);
     const refIdx = expandedDocs.findIndex((d: { doc_id: string }) => d.doc_id === refDoc);
     expect(depIdx).toBeGreaterThanOrEqual(0);
@@ -678,7 +676,7 @@ describe("getSmartContext - source_types and code_chunks integration", () => {
     // Should have both documents and code_items
     expect(result.documents.length).toBeGreaterThan(0);
     expect(result.code_items).toBeDefined();
-    expect(result.code_items!.length).toBeGreaterThan(0);
+    expect(result.code_items?.length).toBeGreaterThan(0);
     expect(result.source).toBe("both");
   });
 
@@ -729,7 +727,7 @@ describe("getSmartContext - source_types and code_chunks integration", () => {
 
     // With default "both", code_items should be present
     expect(result.code_items).toBeDefined();
-    expect(result.code_items!.length).toBeGreaterThan(0);
+    expect(result.code_items?.length).toBeGreaterThan(0);
   });
 
   // d. Code summaries use extractSnippet format
@@ -755,9 +753,9 @@ describe("getSmartContext - source_types and code_chunks integration", () => {
     });
 
     expect(result.code_items).toBeDefined();
-    expect(result.code_items!.length).toBeGreaterThan(0);
+    expect(result.code_items?.length).toBeGreaterThan(0);
 
-    const codeItem = result.code_items![0];
+    const codeItem = result.code_items?.[0];
     // Summary should contain the beginning of the content (extractSnippet with empty query)
     expect(typeof codeItem.summary).toBe("string");
     expect(codeItem.summary.length).toBeGreaterThan(0);
@@ -817,9 +815,7 @@ describe("getSmartContext - source_types and code_chunks integration", () => {
     });
 
     // Should find the code chunk by its chunk_id
-    const resolved = result.documents.find(
-      (d: { doc_id: string }) => d.doc_id === chunkId,
-    );
+    const resolved = result.documents.find((d: { doc_id: string }) => d.doc_id === chunkId);
     expect(resolved).toBeDefined();
     expect(resolved.content).toBe(codeContent);
     expect(resolved.is_requested).toBe(true);
@@ -976,6 +972,6 @@ describe("getSmartContext - source_types and code_chunks integration", () => {
     expect(result.source).toBe("code");
     expect(result.documents).toHaveLength(0);
     expect(result.code_items).toBeDefined();
-    expect(result.code_items!.length).toBeGreaterThan(0);
+    expect(result.code_items?.length).toBeGreaterThan(0);
   });
 });

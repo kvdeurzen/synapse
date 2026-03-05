@@ -1,8 +1,8 @@
+import { extname } from "node:path";
 import Parser from "tree-sitter";
-import TypeScriptLang from "tree-sitter-typescript";
 import PythonLang from "tree-sitter-python";
 import RustLang from "tree-sitter-rust";
-import { extname } from "node:path";
+import TypeScriptLang from "tree-sitter-typescript";
 
 // Re-export SUPPORTED_EXTENSIONS from scanner for convenience
 export { SUPPORTED_EXTENSIONS } from "./scanner.js";

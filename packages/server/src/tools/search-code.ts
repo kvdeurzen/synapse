@@ -15,8 +15,8 @@
  * - CodeSearchResult: result container type
  */
 
-import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { rerankers } from "@lancedb/lancedb";
+import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { connectDb } from "../db/connection.js";
 import { OllamaUnreachableError } from "../errors.js";
@@ -222,10 +222,7 @@ export async function searchCode(
   if (ollamaStatus !== "ok") {
     // Fall back to FTS-only when Ollama is unreachable
     const log = createToolLogger("search_code");
-    log.warn(
-      { ollamaStatus },
-      "Ollama unreachable — search_code hybrid falling back to FTS-only",
-    );
+    log.warn({ ollamaStatus }, "Ollama unreachable — search_code hybrid falling back to FTS-only");
 
     try {
       const rows = await codeChunksTable

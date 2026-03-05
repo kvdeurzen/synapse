@@ -5,7 +5,12 @@ import { ulid } from "ulidx";
 import { z } from "zod";
 import { insertBatch } from "../db/batch.js";
 import { connectDb } from "../db/connection.js";
-import { DocumentRowSchema, ProjectMetaRowSchema, TABLE_NAMES, TABLE_SCHEMAS } from "../db/schema.js";
+import {
+  DocumentRowSchema,
+  ProjectMetaRowSchema,
+  TABLE_NAMES,
+  TABLE_SCHEMAS,
+} from "../db/schema.js";
 import { escapeSQL } from "../db/sql-helpers.js";
 import { createToolLogger, logger } from "../logger.js";
 import type { SynapseConfig, ToolResult } from "../types.js";
@@ -207,7 +212,7 @@ export async function initProject(
       await codeChunksTable.createIndex("content", {
         config: lancedb.Index.fts({
           withPosition: true,
-          stem: false,        // preserve code identifiers exactly
+          stem: false, // preserve code identifiers exactly
           removeStopWords: false,
           lowercase: true,
         }),

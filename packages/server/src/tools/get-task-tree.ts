@@ -3,11 +3,7 @@ import { z } from "zod";
 import { connectDb } from "../db/connection.js";
 import { createToolLogger } from "../logger.js";
 import type { SynapseConfig, ToolResult } from "../types.js";
-import {
-  DEPTH_NAMES,
-  VALID_AGENT_ROLES,
-  VALID_TASK_STATUSES,
-} from "./task-constants.js";
+import { DEPTH_NAMES, VALID_AGENT_ROLES, VALID_TASK_STATUSES } from "./task-constants.js";
 
 // ────────────────────────────────────────────────────────────────────────────
 // Input schema (Zod)
@@ -20,10 +16,7 @@ const GetTaskTreeInputSchema = z.object({
       /^[a-z0-9][a-z0-9_-]*$/,
       "project_id must be a lowercase slug (letters, numbers, hyphens, underscores, must start with alphanumeric)",
     ),
-  root_task_id: z
-    .string()
-    .min(1)
-    .describe("Task ID to use as tree root (can be any depth)"),
+  root_task_id: z.string().min(1).describe("Task ID to use as tree root (can be any depth)"),
   max_depth: z
     .number()
     .int()
@@ -242,7 +235,8 @@ export async function getTaskTree(
     );
   }
 
-  const rootTaskRow = rootTaskRows[0]!;
+  const rootTaskRow = rootTaskRows[0];
+  if (!rootTaskRow) throw new Error(`Expected root task row for task_id='${rootTaskId}'`);
   const epicRootId = rootTaskRow.root_id as string; // The epic-level root_id
 
   // Fetch ALL tasks in the epic subtree using root_id denormalization (single query)
@@ -278,7 +272,7 @@ export async function getTaskTree(
     if (!depMap.has(fromId)) {
       depMap.set(fromId, []);
     }
-    depMap.get(fromId)!.push(toId);
+    depMap.get(fromId)?.push(toId);
   }
 
   // ── d. Build parent->children map ─────────────────────────────────────────
@@ -297,7 +291,7 @@ export async function getTaskTree(
       if (!childrenMap.has(parentId)) {
         childrenMap.set(parentId, []);
       }
-      childrenMap.get(parentId)!.push(row);
+      childrenMap.get(parentId)?.push(row);
     }
   }
 
@@ -320,7 +314,8 @@ export async function getTaskTree(
   let rootNode: TaskTreeNode | null = null;
 
   while (queue.length > 0) {
-    const item = queue.shift()!;
+    const item = queue.shift();
+    if (!item) break; // Guarded by queue.length > 0, but satisfies type checker
     const { taskId, relativeDepth } = item;
 
     const row = taskMap.get(taskId);
@@ -392,7 +387,7 @@ export async function getTaskTree(
     // Attach to parent
     const parentId = row.parent_id as string | null;
     if (parentId !== null && nodeMap.has(parentId)) {
-      nodeMap.get(parentId)!.children.push(node);
+      nodeMap.get(parentId)?.children.push(node);
     }
 
     // Enqueue children (sorted by created_at for stable order)
@@ -414,10 +409,13 @@ export async function getTaskTree(
   }
 
   // ── f. Apply filters (if provided) ────────────────────────────────────────
-  if (validated.filters && Object.keys(validated.filters).some((k) => {
-    const v = (validated.filters as Record<string, unknown>)[k];
-    return v !== undefined;
-  })) {
+  if (
+    validated.filters &&
+    Object.keys(validated.filters).some((k) => {
+      const v = (validated.filters as Record<string, unknown>)[k];
+      return v !== undefined;
+    })
+  ) {
     applyFilters(rootNode, validated.filters, true);
   }
 
@@ -453,7 +451,9 @@ export function registerGetTaskTreeTool(server: McpServer, config: SynapseConfig
         root_task_id: z
           .string()
           .min(1)
-          .describe("Task ID to use as tree root (can be any depth: epic, feature, component, task)"),
+          .describe(
+            "Task ID to use as tree root (can be any depth: epic, feature, component, task)",
+          ),
         max_depth: z
           .number()
           .int()

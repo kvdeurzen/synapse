@@ -15,11 +15,11 @@ import { embed, getOllamaStatus } from "../services/embedder.js";
 import type { SynapseConfig, ToolResult } from "../types.js";
 import { VALID_CATEGORIES, VALID_STATUSES } from "./doc-constants.js";
 import {
-  type SearchResultItem,
   buildSearchPredicate,
   extractSnippet,
   fetchDocMetadata,
   normalizeVectorScore,
+  type SearchResultItem,
 } from "./search-utils.js";
 
 // ────────────────────────────────────────────────────────────────────────────
@@ -182,10 +182,7 @@ export function registerSemanticSearchTool(server: McpServer, config: SynapseCon
           .string()
           .describe("Project identifier (lowercase slug: letters, numbers, hyphens, underscores)"),
         query: z.string().min(1).describe("Natural language search query"),
-        category: z
-          .enum(VALID_CATEGORIES)
-          .optional()
-          .describe("Filter by document category"),
+        category: z.enum(VALID_CATEGORIES).optional().describe("Filter by document category"),
         phase: z.string().optional().describe("Filter by project phase or milestone"),
         tags: z.string().optional().describe("Filter by single tag (exact match)"),
         status: z.enum(VALID_STATUSES).optional().describe("Filter by document status"),
@@ -235,10 +232,7 @@ export function registerSemanticSearchTool(server: McpServer, config: SynapseCon
       try {
         const data = await semanticSearch(dbPath, parsed.project_id, parsed, config);
         const result: ToolResult<SemanticSearchResult> = { success: true, data };
-        log.info(
-          { durationMs: Date.now() - start, total: data.total },
-          "semantic_search complete",
-        );
+        log.info({ durationMs: Date.now() - start, total: data.total }, "semantic_search complete");
         return { content: [{ type: "text", text: JSON.stringify(result) }] };
       } catch (err) {
         const result: ToolResult = { success: false, error: String(err) };

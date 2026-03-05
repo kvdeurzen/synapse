@@ -4,8 +4,8 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import * as lancedb from "@lancedb/lancedb";
 import { _setFetchImpl } from "../../src/services/embedder.js";
-import { initProject } from "../../src/tools/init-project.js";
 import { createTask } from "../../src/tools/create-task.js";
+import { initProject } from "../../src/tools/init-project.js";
 import { updateTask } from "../../src/tools/update-task.js";
 import type { SynapseConfig } from "../../src/types.js";
 
@@ -67,23 +67,33 @@ describe("updateTask", () => {
   // ── 1. Status update (no re-embedding) ────────────────────────────────────
 
   test("updates status without re-embedding", async () => {
-    const task = await createTask(tmpDir, "test-proj", {
-      project_id: "test-proj",
-      title: "My Task",
-      description: "Some description",
-      depth: 0,
-    }, config);
+    const task = await createTask(
+      tmpDir,
+      "test-proj",
+      {
+        project_id: "test-proj",
+        title: "My Task",
+        description: "Some description",
+        depth: 0,
+      },
+      config,
+    );
 
     // Now block embed to prove it's NOT called
     _setFetchImpl(() => {
       throw new Error("embed should NOT be called for status update");
     });
 
-    const result = await updateTask(tmpDir, "test-proj", {
-      project_id: "test-proj",
-      task_id: task.task_id,
-      status: "in_progress",
-    }, config);
+    const result = await updateTask(
+      tmpDir,
+      "test-proj",
+      {
+        project_id: "test-proj",
+        task_id: task.task_id,
+        status: "in_progress",
+      },
+      config,
+    );
 
     expect(result.status).toBe("in_progress");
     expect(result.changed_fields).toContain("status");
@@ -92,12 +102,17 @@ describe("updateTask", () => {
   // ── 2. Re-embedding on title change ───────────────────────────────────────
 
   test("re-embeds when title changes", async () => {
-    const task = await createTask(tmpDir, "test-proj", {
-      project_id: "test-proj",
-      title: "Old Title",
-      description: "Existing description",
-      depth: 0,
-    }, config);
+    const task = await createTask(
+      tmpDir,
+      "test-proj",
+      {
+        project_id: "test-proj",
+        title: "Old Title",
+        description: "Existing description",
+        depth: 0,
+      },
+      config,
+    );
 
     // Get the original vector (fresh connection)
     const dbBefore = await lancedb.connect(tmpDir);
@@ -120,11 +135,16 @@ describe("updateTask", () => {
       );
     });
 
-    const result = await updateTask(tmpDir, "test-proj", {
-      project_id: "test-proj",
-      task_id: task.task_id,
-      title: "New Title",
-    }, config);
+    const result = await updateTask(
+      tmpDir,
+      "test-proj",
+      {
+        project_id: "test-proj",
+        task_id: task.task_id,
+        title: "New Title",
+      },
+      config,
+    );
 
     expect(embedCalled).toBe(true);
     expect(result.changed_fields).toContain("title");
@@ -145,12 +165,17 @@ describe("updateTask", () => {
   // ── 3. Re-embedding on description change ─────────────────────────────────
 
   test("re-embeds when description changes", async () => {
-    const task = await createTask(tmpDir, "test-proj", {
-      project_id: "test-proj",
-      title: "Task Title",
-      description: "Old description",
-      depth: 0,
-    }, config);
+    const task = await createTask(
+      tmpDir,
+      "test-proj",
+      {
+        project_id: "test-proj",
+        title: "Task Title",
+        description: "Old description",
+        depth: 0,
+      },
+      config,
+    );
 
     let embedCalled = false;
     _setFetchImpl((_url, _init) => {
@@ -164,11 +189,16 @@ describe("updateTask", () => {
       );
     });
 
-    const result = await updateTask(tmpDir, "test-proj", {
-      project_id: "test-proj",
-      task_id: task.task_id,
-      description: "New description",
-    }, config);
+    const result = await updateTask(
+      tmpDir,
+      "test-proj",
+      {
+        project_id: "test-proj",
+        task_id: task.task_id,
+        description: "New description",
+      },
+      config,
+    );
 
     expect(embedCalled).toBe(true);
     expect(result.changed_fields).toContain("description");
@@ -177,22 +207,32 @@ describe("updateTask", () => {
   // ── 4. Priority update (no re-embedding) ─────────────────────────────────
 
   test("does not re-embed for priority update", async () => {
-    const task = await createTask(tmpDir, "test-proj", {
-      project_id: "test-proj",
-      title: "Task",
-      description: "Description",
-      depth: 0,
-    }, config);
+    const task = await createTask(
+      tmpDir,
+      "test-proj",
+      {
+        project_id: "test-proj",
+        title: "Task",
+        description: "Description",
+        depth: 0,
+      },
+      config,
+    );
 
     _setFetchImpl(() => {
       throw new Error("embed should NOT be called for priority update");
     });
 
-    const result = await updateTask(tmpDir, "test-proj", {
-      project_id: "test-proj",
-      task_id: task.task_id,
-      priority: "high",
-    }, config);
+    const result = await updateTask(
+      tmpDir,
+      "test-proj",
+      {
+        project_id: "test-proj",
+        task_id: task.task_id,
+        priority: "high",
+      },
+      config,
+    );
 
     expect(result.changed_fields).toContain("priority");
   });
@@ -200,22 +240,32 @@ describe("updateTask", () => {
   // ── 5. assigned_agent update ──────────────────────────────────────────────
 
   test("updates assigned_agent without re-embedding", async () => {
-    const task = await createTask(tmpDir, "test-proj", {
-      project_id: "test-proj",
-      title: "Task",
-      description: "",
-      depth: 0,
-    }, config);
+    const task = await createTask(
+      tmpDir,
+      "test-proj",
+      {
+        project_id: "test-proj",
+        title: "Task",
+        description: "",
+        depth: 0,
+      },
+      config,
+    );
 
     _setFetchImpl(() => {
       throw new Error("embed should NOT be called for agent update");
     });
 
-    const result = await updateTask(tmpDir, "test-proj", {
-      project_id: "test-proj",
-      task_id: task.task_id,
-      assigned_agent: "executor",
-    }, config);
+    const result = await updateTask(
+      tmpDir,
+      "test-proj",
+      {
+        project_id: "test-proj",
+        task_id: task.task_id,
+        assigned_agent: "executor",
+      },
+      config,
+    );
 
     expect(result.changed_fields).toContain("assigned_agent");
 
@@ -230,30 +280,45 @@ describe("updateTask", () => {
 
   test("recomputes dependents is_blocked when status becomes done", async () => {
     // Create taskA (pending), then taskB that depends on taskA
-    const taskA = await createTask(tmpDir, "test-proj", {
-      project_id: "test-proj",
-      title: "Task A (blocker)",
-      description: "",
-      depth: 0,
-    }, config);
+    const taskA = await createTask(
+      tmpDir,
+      "test-proj",
+      {
+        project_id: "test-proj",
+        title: "Task A (blocker)",
+        description: "",
+        depth: 0,
+      },
+      config,
+    );
 
-    const taskB = await createTask(tmpDir, "test-proj", {
-      project_id: "test-proj",
-      title: "Task B (blocked by A)",
-      description: "",
-      depth: 0,
-      dependencies: [taskA.task_id],
-    }, config);
+    const taskB = await createTask(
+      tmpDir,
+      "test-proj",
+      {
+        project_id: "test-proj",
+        title: "Task B (blocked by A)",
+        description: "",
+        depth: 0,
+        dependencies: [taskA.task_id],
+      },
+      config,
+    );
 
     // Verify taskB is blocked initially
     expect(taskB.is_blocked).toBe(true);
 
     // Mark taskA as done
-    await updateTask(tmpDir, "test-proj", {
-      project_id: "test-proj",
-      task_id: taskA.task_id,
-      status: "done",
-    }, config);
+    await updateTask(
+      tmpDir,
+      "test-proj",
+      {
+        project_id: "test-proj",
+        task_id: taskA.task_id,
+        status: "done",
+      },
+      config,
+    );
 
     // Check taskB is now unblocked
     const db = await lancedb.connect(tmpDir);
@@ -265,29 +330,44 @@ describe("updateTask", () => {
   // ── 7. Cancelling task unblocks dependents ────────────────────────────────
 
   test("cancelling task unblocks dependents", async () => {
-    const taskA = await createTask(tmpDir, "test-proj", {
-      project_id: "test-proj",
-      title: "Task A (blocker)",
-      description: "",
-      depth: 0,
-    }, config);
+    const taskA = await createTask(
+      tmpDir,
+      "test-proj",
+      {
+        project_id: "test-proj",
+        title: "Task A (blocker)",
+        description: "",
+        depth: 0,
+      },
+      config,
+    );
 
-    const taskB = await createTask(tmpDir, "test-proj", {
-      project_id: "test-proj",
-      title: "Task B (blocked by A)",
-      description: "",
-      depth: 0,
-      dependencies: [taskA.task_id],
-    }, config);
+    const taskB = await createTask(
+      tmpDir,
+      "test-proj",
+      {
+        project_id: "test-proj",
+        title: "Task B (blocked by A)",
+        description: "",
+        depth: 0,
+        dependencies: [taskA.task_id],
+      },
+      config,
+    );
 
     expect(taskB.is_blocked).toBe(true);
 
     // Cancel taskA
-    await updateTask(tmpDir, "test-proj", {
-      project_id: "test-proj",
-      task_id: taskA.task_id,
-      is_cancelled: true,
-    }, config);
+    await updateTask(
+      tmpDir,
+      "test-proj",
+      {
+        project_id: "test-proj",
+        task_id: taskA.task_id,
+        is_cancelled: true,
+      },
+      config,
+    );
 
     // Check taskB is now unblocked
     const db = await lancedb.connect(tmpDir);
@@ -300,41 +380,66 @@ describe("updateTask", () => {
 
   test("replaces dependencies with cycle detection", async () => {
     // Create A, B, C with no deps
-    const taskA = await createTask(tmpDir, "test-proj", {
-      project_id: "test-proj",
-      title: "Task A",
-      description: "",
-      depth: 0,
-    }, config);
+    const taskA = await createTask(
+      tmpDir,
+      "test-proj",
+      {
+        project_id: "test-proj",
+        title: "Task A",
+        description: "",
+        depth: 0,
+      },
+      config,
+    );
 
-    const taskB = await createTask(tmpDir, "test-proj", {
-      project_id: "test-proj",
-      title: "Task B",
-      description: "",
-      depth: 0,
-    }, config);
+    const taskB = await createTask(
+      tmpDir,
+      "test-proj",
+      {
+        project_id: "test-proj",
+        title: "Task B",
+        description: "",
+        depth: 0,
+      },
+      config,
+    );
 
-    const taskC = await createTask(tmpDir, "test-proj", {
-      project_id: "test-proj",
-      title: "Task C",
-      description: "",
-      depth: 0,
-    }, config);
+    const taskC = await createTask(
+      tmpDir,
+      "test-proj",
+      {
+        project_id: "test-proj",
+        title: "Task C",
+        description: "",
+        depth: 0,
+      },
+      config,
+    );
 
     // C depends on A (valid)
-    await updateTask(tmpDir, "test-proj", {
-      project_id: "test-proj",
-      task_id: taskC.task_id,
-      dependencies: [taskA.task_id],
-    }, config);
+    await updateTask(
+      tmpDir,
+      "test-proj",
+      {
+        project_id: "test-proj",
+        task_id: taskC.task_id,
+        dependencies: [taskA.task_id],
+      },
+      config,
+    );
 
     // Now try to make A depend on C — would create A->C, C->A cycle
     await expect(
-      updateTask(tmpDir, "test-proj", {
-        project_id: "test-proj",
-        task_id: taskA.task_id,
-        dependencies: [taskC.task_id],
-      }, config),
+      updateTask(
+        tmpDir,
+        "test-proj",
+        {
+          project_id: "test-proj",
+          task_id: taskA.task_id,
+          dependencies: [taskC.task_id],
+        },
+        config,
+      ),
     ).rejects.toThrow("CYCLE_DETECTED");
 
     // B is unused but confirms tasks are distinct
@@ -345,34 +450,49 @@ describe("updateTask", () => {
 
   test("rejects update on non-existent task", async () => {
     await expect(
-      updateTask(tmpDir, "test-proj", {
-        project_id: "test-proj",
-        task_id: "01HZ999NONEXISTENT999999",
-        status: "in_progress",
-      }, config),
+      updateTask(
+        tmpDir,
+        "test-proj",
+        {
+          project_id: "test-proj",
+          task_id: "01HZ999NONEXISTENT999999",
+          status: "in_progress",
+        },
+        config,
+      ),
     ).rejects.toThrow("TASK_NOT_FOUND");
   });
 
   // ── 10. Manual is_blocked with block_reason ───────────────────────────────
 
   test("allows manual is_blocked with block_reason", async () => {
-    const task = await createTask(tmpDir, "test-proj", {
-      project_id: "test-proj",
-      title: "Task",
-      description: "",
-      depth: 0,
-    }, config);
+    const task = await createTask(
+      tmpDir,
+      "test-proj",
+      {
+        project_id: "test-proj",
+        title: "Task",
+        description: "",
+        depth: 0,
+      },
+      config,
+    );
 
     _setFetchImpl(() => {
       throw new Error("embed should NOT be called");
     });
 
-    const result = await updateTask(tmpDir, "test-proj", {
-      project_id: "test-proj",
-      task_id: task.task_id,
-      is_blocked: true,
-      block_reason: "external dependency",
-    }, config);
+    const result = await updateTask(
+      tmpDir,
+      "test-proj",
+      {
+        project_id: "test-proj",
+        task_id: task.task_id,
+        is_blocked: true,
+        block_reason: "external dependency",
+      },
+      config,
+    );
 
     expect(result.is_blocked).toBe(true);
 
@@ -385,30 +505,38 @@ describe("updateTask", () => {
   // ── 11. Activity logging ──────────────────────────────────────────────────
 
   test("logs activity on update", async () => {
-    const task = await createTask(tmpDir, "test-proj", {
-      project_id: "test-proj",
-      title: "Task",
-      description: "",
-      depth: 0,
-    }, config);
+    const task = await createTask(
+      tmpDir,
+      "test-proj",
+      {
+        project_id: "test-proj",
+        title: "Task",
+        description: "",
+        depth: 0,
+      },
+      config,
+    );
 
     _setFetchImpl(() => {
       throw new Error("embed should NOT be called");
     });
 
-    await updateTask(tmpDir, "test-proj", {
-      project_id: "test-proj",
-      task_id: task.task_id,
-      priority: "high",
-    }, config);
+    await updateTask(
+      tmpDir,
+      "test-proj",
+      {
+        project_id: "test-proj",
+        task_id: task.task_id,
+        priority: "high",
+      },
+      config,
+    );
 
     const db = await lancedb.connect(tmpDir);
     const activityTable = await db.openTable("activity_log");
     const logs = await activityTable.query().toArray();
 
-    const updateLog = logs.find(
-      (l) => l.action === "update_task" && l.target_id === task.task_id,
-    );
+    const updateLog = logs.find((l) => l.action === "update_task" && l.target_id === task.task_id);
     expect(updateLog).toBeDefined();
     expect(updateLog?.target_type).toBe("task");
   });
@@ -416,43 +544,63 @@ describe("updateTask", () => {
   // ── 12. Cannot complete a cancelled task ──────────────────────────────────
 
   test("cannot complete a cancelled task", async () => {
-    const task = await createTask(tmpDir, "test-proj", {
-      project_id: "test-proj",
-      title: "Task",
-      description: "",
-      depth: 0,
-    }, config);
+    const task = await createTask(
+      tmpDir,
+      "test-proj",
+      {
+        project_id: "test-proj",
+        title: "Task",
+        description: "",
+        depth: 0,
+      },
+      config,
+    );
 
     _setFetchImpl(() => {
       throw new Error("embed should NOT be called");
     });
 
     // First cancel the task
-    await updateTask(tmpDir, "test-proj", {
-      project_id: "test-proj",
-      task_id: task.task_id,
-      is_cancelled: true,
-    }, config);
+    await updateTask(
+      tmpDir,
+      "test-proj",
+      {
+        project_id: "test-proj",
+        task_id: task.task_id,
+        is_cancelled: true,
+      },
+      config,
+    );
 
     // Now try to mark it as done — should throw INVALID_TRANSITION
     await expect(
-      updateTask(tmpDir, "test-proj", {
-        project_id: "test-proj",
-        task_id: task.task_id,
-        status: "done",
-      }, config),
+      updateTask(
+        tmpDir,
+        "test-proj",
+        {
+          project_id: "test-proj",
+          task_id: task.task_id,
+          status: "done",
+        },
+        config,
+      ),
     ).rejects.toThrow("INVALID_TRANSITION");
   });
 
   // ── 13. updated_at changes on every update ────────────────────────────────
 
   test("sets updated_at on every update", async () => {
-    const task = await createTask(tmpDir, "test-proj", {
-      project_id: "test-proj",
-      title: "Task",
-      description: "",
-      depth: 0,
-    }, config);
+    const task = await createTask(
+      tmpDir,
+      "test-proj",
+      {
+        project_id: "test-proj",
+        title: "Task",
+        description: "",
+        depth: 0,
+      },
+      config,
+    );
 
     const dbBefore = await lancedb.connect(tmpDir);
     const tableBefore = await dbBefore.openTable("tasks");
@@ -466,11 +614,16 @@ describe("updateTask", () => {
       throw new Error("embed should NOT be called");
     });
 
-    await updateTask(tmpDir, "test-proj", {
-      project_id: "test-proj",
-      task_id: task.task_id,
-      priority: "high",
-    }, config);
+    await updateTask(
+      tmpDir,
+      "test-proj",
+      {
+        project_id: "test-proj",
+        task_id: task.task_id,
+        priority: "high",
+      },
+      config,
+    );
 
     // Use fresh connection to read updated data (LanceDB table handles are snapshot-based)
     const dbAfter = await lancedb.connect(tmpDir);

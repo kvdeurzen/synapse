@@ -13,11 +13,7 @@ import { z } from "zod";
 import { connectDb } from "../db/connection.js";
 import { createToolLogger } from "../logger.js";
 import type { SynapseConfig, ToolResult } from "../types.js";
-import {
-  TIER_NAMES,
-  VALID_DECISION_STATUSES,
-  VALID_DECISION_TYPES,
-} from "./decision-constants.js";
+import { TIER_NAMES, VALID_DECISION_STATUSES, VALID_DECISION_TYPES } from "./decision-constants.js";
 
 // ────────────────────────────────────────────────────────────────────────────
 // Input schema (Zod)
@@ -124,7 +120,11 @@ export async function queryDecisions(
   // Fetch broader result set for JS-based post-filtering (subject/tags)
   // IMPORTANT: LanceDB SQL WHERE has limited LIKE support, so we do substring matching in JS
   const fetchLimit = limit + offset;
-  const rows = await table.query().where(predicate).limit(fetchLimit * 10).toArray();
+  const rows = await table
+    .query()
+    .where(predicate)
+    .limit(fetchLimit * 10)
+    .toArray();
 
   // Post-filter in JS: subject substring match (case-insensitive) and tags match
   let filtered = rows;
@@ -141,7 +141,12 @@ export async function queryDecisions(
     filtered = filtered.filter((row) => {
       const tags = row.tags as string;
       // Match if the tag appears as a pipe-delimited segment
-      return tags.includes(`|${tagPattern}|`) || tags.includes(`|${tagPattern}`) || tags.includes(`${tagPattern}|`) || tags === tagPattern;
+      return (
+        tags.includes(`|${tagPattern}|`) ||
+        tags.includes(`|${tagPattern}`) ||
+        tags.includes(`${tagPattern}|`) ||
+        tags === tagPattern
+      );
     });
   }
 
@@ -163,7 +168,7 @@ export async function queryDecisions(
     context: row.context as string,
     rationale: row.rationale as string,
     tier: row.tier as number,
-    tier_name: (row.tier_name as string) ?? (TIER_NAMES[row.tier as number] ?? "execution"),
+    tier_name: (row.tier_name as string) ?? TIER_NAMES[row.tier as number] ?? "execution",
     decision_type: row.decision_type as string,
     status: row.status as string,
     actor: row.actor as string,
@@ -210,7 +215,9 @@ export function registerQueryDecisionsTool(server: McpServer, config: SynapseCon
         decision_type: z
           .enum(VALID_DECISION_TYPES)
           .optional()
-          .describe("Filter by decision type: architectural, module, pattern, convention, or tooling"),
+          .describe(
+            "Filter by decision type: architectural, module, pattern, convention, or tooling",
+          ),
         subject: z
           .string()
           .optional()
@@ -218,7 +225,9 @@ export function registerQueryDecisionsTool(server: McpServer, config: SynapseCon
         tags: z
           .string()
           .optional()
-          .describe("Filter by tag (matches pipe-delimited tag, e.g. 'typescript' matches '|typescript|backend|')"),
+          .describe(
+            "Filter by tag (matches pipe-delimited tag, e.g. 'typescript' matches '|typescript|backend|')",
+          ),
         phase: z.string().optional().describe("Filter by project phase or milestone"),
         include_inactive: z
           .boolean()
@@ -264,10 +273,7 @@ export function registerQueryDecisionsTool(server: McpServer, config: SynapseCon
       try {
         const data = await queryDecisions(dbPath, parsed.project_id, parsed);
         const result: ToolResult<QueryDecisionsResult> = { success: true, data };
-        log.info(
-          { durationMs: Date.now() - start, total: data.total },
-          "query_decisions complete",
-        );
+        log.info({ durationMs: Date.now() - start, total: data.total }, "query_decisions complete");
         return { content: [{ type: "text", text: JSON.stringify(result) }] };
       } catch (err) {
         const result: ToolResult = { success: false, error: String(err) };

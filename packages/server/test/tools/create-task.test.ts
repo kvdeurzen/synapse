@@ -4,8 +4,8 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import * as lancedb from "@lancedb/lancedb";
 import { _setFetchImpl } from "../../src/services/embedder.js";
-import { initProject } from "../../src/tools/init-project.js";
 import { createTask, detectCycles } from "../../src/tools/create-task.js";
+import { initProject } from "../../src/tools/init-project.js";
 import type { SynapseConfig } from "../../src/types.js";
 
 // ── Test helpers ──────────────────────────────────────────────────────────────
@@ -68,12 +68,17 @@ describe("createTask", () => {
     test("creates an epic (depth=0) with root_id = task_id", async () => {
       await initProject(tmpDir, "test-proj");
 
-      const result = await createTask(tmpDir, "test-proj", {
-        project_id: "test-proj",
-        title: "Build Authentication System",
-        description: "Epic for the authentication module",
-        depth: 0,
-      }, config);
+      const result = await createTask(
+        tmpDir,
+        "test-proj",
+        {
+          project_id: "test-proj",
+          title: "Build Authentication System",
+          description: "Epic for the authentication module",
+          depth: 0,
+        },
+        config,
+      );
 
       expect(result.task_id).toBeDefined();
       expect(result.task_id.length).toBe(26); // ULID
@@ -89,12 +94,17 @@ describe("createTask", () => {
     test("epic has no parent_id in returned result", async () => {
       await initProject(tmpDir, "test-proj");
 
-      const result = await createTask(tmpDir, "test-proj", {
-        project_id: "test-proj",
-        title: "My Epic",
-        description: "",
-        depth: 0,
-      }, config);
+      const result = await createTask(
+        tmpDir,
+        "test-proj",
+        {
+          project_id: "test-proj",
+          title: "My Epic",
+          description: "",
+          depth: 0,
+        },
+        config,
+      );
 
       expect(result.parent_id).toBeNull();
     });
@@ -106,20 +116,30 @@ describe("createTask", () => {
     test("creates a feature (depth=1) under an epic with correct root_id", async () => {
       await initProject(tmpDir, "test-proj");
 
-      const epic = await createTask(tmpDir, "test-proj", {
-        project_id: "test-proj",
-        title: "Auth Epic",
-        description: "",
-        depth: 0,
-      }, config);
+      const epic = await createTask(
+        tmpDir,
+        "test-proj",
+        {
+          project_id: "test-proj",
+          title: "Auth Epic",
+          description: "",
+          depth: 0,
+        },
+        config,
+      );
 
-      const feature = await createTask(tmpDir, "test-proj", {
-        project_id: "test-proj",
-        title: "Login Feature",
-        description: "User login flow",
-        depth: 1,
-        parent_id: epic.task_id,
-      }, config);
+      const feature = await createTask(
+        tmpDir,
+        "test-proj",
+        {
+          project_id: "test-proj",
+          title: "Login Feature",
+          description: "User login flow",
+          depth: 1,
+          parent_id: epic.task_id,
+        },
+        config,
+      );
 
       expect(feature.depth).toBe(1);
       expect(feature.depth_name).toBe("feature");
@@ -130,28 +150,43 @@ describe("createTask", () => {
     test("creates a component (depth=2) under a feature with inherited root_id", async () => {
       await initProject(tmpDir, "test-proj");
 
-      const epic = await createTask(tmpDir, "test-proj", {
-        project_id: "test-proj",
-        title: "Auth Epic",
-        description: "",
-        depth: 0,
-      }, config);
+      const epic = await createTask(
+        tmpDir,
+        "test-proj",
+        {
+          project_id: "test-proj",
+          title: "Auth Epic",
+          description: "",
+          depth: 0,
+        },
+        config,
+      );
 
-      const feature = await createTask(tmpDir, "test-proj", {
-        project_id: "test-proj",
-        title: "Login Feature",
-        description: "",
-        depth: 1,
-        parent_id: epic.task_id,
-      }, config);
+      const feature = await createTask(
+        tmpDir,
+        "test-proj",
+        {
+          project_id: "test-proj",
+          title: "Login Feature",
+          description: "",
+          depth: 1,
+          parent_id: epic.task_id,
+        },
+        config,
+      );
 
-      const component = await createTask(tmpDir, "test-proj", {
-        project_id: "test-proj",
-        title: "JWT Component",
-        description: "JWT token management",
-        depth: 2,
-        parent_id: feature.task_id,
-      }, config);
+      const component = await createTask(
+        tmpDir,
+        "test-proj",
+        {
+          project_id: "test-proj",
+          title: "JWT Component",
+          description: "JWT token management",
+          depth: 2,
+          parent_id: feature.task_id,
+        },
+        config,
+      );
 
       expect(component.depth).toBe(2);
       expect(component.depth_name).toBe("component");
@@ -161,36 +196,56 @@ describe("createTask", () => {
     test("creates an atomic task (depth=3) under a component", async () => {
       await initProject(tmpDir, "test-proj");
 
-      const epic = await createTask(tmpDir, "test-proj", {
-        project_id: "test-proj",
-        title: "Auth Epic",
-        description: "",
-        depth: 0,
-      }, config);
+      const epic = await createTask(
+        tmpDir,
+        "test-proj",
+        {
+          project_id: "test-proj",
+          title: "Auth Epic",
+          description: "",
+          depth: 0,
+        },
+        config,
+      );
 
-      const feature = await createTask(tmpDir, "test-proj", {
-        project_id: "test-proj",
-        title: "Login Feature",
-        description: "",
-        depth: 1,
-        parent_id: epic.task_id,
-      }, config);
+      const feature = await createTask(
+        tmpDir,
+        "test-proj",
+        {
+          project_id: "test-proj",
+          title: "Login Feature",
+          description: "",
+          depth: 1,
+          parent_id: epic.task_id,
+        },
+        config,
+      );
 
-      const component = await createTask(tmpDir, "test-proj", {
-        project_id: "test-proj",
-        title: "JWT Component",
-        description: "",
-        depth: 2,
-        parent_id: feature.task_id,
-      }, config);
+      const component = await createTask(
+        tmpDir,
+        "test-proj",
+        {
+          project_id: "test-proj",
+          title: "JWT Component",
+          description: "",
+          depth: 2,
+          parent_id: feature.task_id,
+        },
+        config,
+      );
 
-      const task = await createTask(tmpDir, "test-proj", {
-        project_id: "test-proj",
-        title: "Implement token signing",
-        description: "Sign JWT tokens with RS256",
-        depth: 3,
-        parent_id: component.task_id,
-      }, config);
+      const task = await createTask(
+        tmpDir,
+        "test-proj",
+        {
+          project_id: "test-proj",
+          title: "Implement token signing",
+          description: "Sign JWT tokens with RS256",
+          depth: 3,
+          parent_id: component.task_id,
+        },
+        config,
+      );
 
       expect(task.depth).toBe(3);
       expect(task.depth_name).toBe("task");
@@ -200,21 +255,31 @@ describe("createTask", () => {
     test("rejects depth mismatch — component (depth=2) directly under epic (depth=0)", async () => {
       await initProject(tmpDir, "test-proj");
 
-      const epic = await createTask(tmpDir, "test-proj", {
-        project_id: "test-proj",
-        title: "Auth Epic",
-        description: "",
-        depth: 0,
-      }, config);
+      const epic = await createTask(
+        tmpDir,
+        "test-proj",
+        {
+          project_id: "test-proj",
+          title: "Auth Epic",
+          description: "",
+          depth: 0,
+        },
+        config,
+      );
 
       await expect(
-        createTask(tmpDir, "test-proj", {
-          project_id: "test-proj",
-          title: "JWT Component",
-          description: "Should fail — wrong depth",
-          depth: 2,
-          parent_id: epic.task_id,
-        }, config),
+        createTask(
+          tmpDir,
+          "test-proj",
+          {
+            project_id: "test-proj",
+            title: "JWT Component",
+            description: "Should fail — wrong depth",
+            depth: 2,
+            parent_id: epic.task_id,
+          },
+          config,
+        ),
       ).rejects.toThrow("INVALID_DEPTH");
     });
 
@@ -222,13 +287,18 @@ describe("createTask", () => {
       await initProject(tmpDir, "test-proj");
 
       await expect(
-        createTask(tmpDir, "test-proj", {
-          project_id: "test-proj",
-          title: "Orphan Task",
-          description: "Has no parent",
-          depth: 1,
-          parent_id: "01HZ999NONEXISTENT999999",
-        }, config),
+        createTask(
+          tmpDir,
+          "test-proj",
+          {
+            project_id: "test-proj",
+            title: "Orphan Task",
+            description: "Has no parent",
+            depth: 1,
+            parent_id: "01HZ999NONEXISTENT999999",
+          },
+          config,
+        ),
       ).rejects.toThrow("TASK_NOT_FOUND");
     });
 
@@ -236,12 +306,17 @@ describe("createTask", () => {
       await initProject(tmpDir, "test-proj");
 
       await expect(
-        createTask(tmpDir, "test-proj", {
-          project_id: "test-proj",
-          title: "Feature without parent",
-          description: "Missing parent_id",
-          depth: 1,
-        }, config),
+        createTask(
+          tmpDir,
+          "test-proj",
+          {
+            project_id: "test-proj",
+            title: "Feature without parent",
+            description: "Missing parent_id",
+            depth: 1,
+          },
+          config,
+        ),
       ).rejects.toThrow();
     });
   });
@@ -252,15 +327,20 @@ describe("createTask", () => {
     test("stores task with all 19 fields in the tasks table", async () => {
       await initProject(tmpDir, "test-proj");
 
-      const result = await createTask(tmpDir, "test-proj", {
-        project_id: "test-proj",
-        title: "Stored Task",
-        description: "Check all fields are stored",
-        depth: 0,
-        priority: "high",
-        tags: "|auth|backend|",
-        phase: "phase-1",
-      }, config);
+      const result = await createTask(
+        tmpDir,
+        "test-proj",
+        {
+          project_id: "test-proj",
+          title: "Stored Task",
+          description: "Check all fields are stored",
+          depth: 0,
+          priority: "high",
+          tags: "|auth|backend|",
+          phase: "phase-1",
+        },
+        config,
+      );
 
       const db = await lancedb.connect(tmpDir);
       const table = await db.openTable("tasks");
@@ -283,12 +363,17 @@ describe("createTask", () => {
     test("new tasks always start with status 'pending'", async () => {
       await initProject(tmpDir, "test-proj");
 
-      const result = await createTask(tmpDir, "test-proj", {
-        project_id: "test-proj",
-        title: "Task",
-        description: "",
-        depth: 0,
-      }, config);
+      const result = await createTask(
+        tmpDir,
+        "test-proj",
+        {
+          project_id: "test-proj",
+          title: "Task",
+          description: "",
+          depth: 0,
+        },
+        config,
+      );
 
       expect(result.status).toBe("pending");
     });
@@ -300,12 +385,17 @@ describe("createTask", () => {
     test("embeds title+description as 768-dim vector", async () => {
       await initProject(tmpDir, "test-proj");
 
-      const result = await createTask(tmpDir, "test-proj", {
-        project_id: "test-proj",
-        title: "My Task",
-        description: "Do something important",
-        depth: 0,
-      }, config);
+      const result = await createTask(
+        tmpDir,
+        "test-proj",
+        {
+          project_id: "test-proj",
+          title: "My Task",
+          description: "Do something important",
+          depth: 0,
+        },
+        config,
+      );
 
       const db = await lancedb.connect(tmpDir);
       const table = await db.openTable("tasks");
@@ -325,28 +415,36 @@ describe("createTask", () => {
     test("stores dependencies as task_depends_on relationships", async () => {
       await initProject(tmpDir, "test-proj");
 
-      const taskA = await createTask(tmpDir, "test-proj", {
-        project_id: "test-proj",
-        title: "Task A",
-        description: "",
-        depth: 0,
-      }, config);
+      const taskA = await createTask(
+        tmpDir,
+        "test-proj",
+        {
+          project_id: "test-proj",
+          title: "Task A",
+          description: "",
+          depth: 0,
+        },
+        config,
+      );
 
-      const taskB = await createTask(tmpDir, "test-proj", {
-        project_id: "test-proj",
-        title: "Task B (depends on A)",
-        description: "",
-        depth: 0,
-        dependencies: [taskA.task_id],
-      }, config);
+      const taskB = await createTask(
+        tmpDir,
+        "test-proj",
+        {
+          project_id: "test-proj",
+          title: "Task B (depends on A)",
+          description: "",
+          depth: 0,
+          dependencies: [taskA.task_id],
+        },
+        config,
+      );
 
       const db = await lancedb.connect(tmpDir);
       const relTable = await db.openTable("relationships");
       const rels = await relTable.query().toArray();
 
-      const depRel = rels.find(
-        (r) => r.from_id === taskB.task_id && r.to_id === taskA.task_id,
-      );
+      const depRel = rels.find((r) => r.from_id === taskB.task_id && r.to_id === taskA.task_id);
       expect(depRel).toBeDefined();
       expect(depRel?.type).toBe("task_depends_on");
       expect(depRel?.source).toBe("create_task");
@@ -355,20 +453,30 @@ describe("createTask", () => {
     test("auto-computes is_blocked=true when dependency is pending", async () => {
       await initProject(tmpDir, "test-proj");
 
-      const taskA = await createTask(tmpDir, "test-proj", {
-        project_id: "test-proj",
-        title: "Blocker Task",
-        description: "",
-        depth: 0,
-      }, config);
+      const taskA = await createTask(
+        tmpDir,
+        "test-proj",
+        {
+          project_id: "test-proj",
+          title: "Blocker Task",
+          description: "",
+          depth: 0,
+        },
+        config,
+      );
 
-      const taskB = await createTask(tmpDir, "test-proj", {
-        project_id: "test-proj",
-        title: "Blocked Task",
-        description: "",
-        depth: 0,
-        dependencies: [taskA.task_id],
-      }, config);
+      const taskB = await createTask(
+        tmpDir,
+        "test-proj",
+        {
+          project_id: "test-proj",
+          title: "Blocked Task",
+          description: "",
+          depth: 0,
+          dependencies: [taskA.task_id],
+        },
+        config,
+      );
 
       expect(taskB.is_blocked).toBe(true);
     });
@@ -376,12 +484,17 @@ describe("createTask", () => {
     test("auto-computes is_blocked=false when no dependencies", async () => {
       await initProject(tmpDir, "test-proj");
 
-      const task = await createTask(tmpDir, "test-proj", {
-        project_id: "test-proj",
-        title: "Independent Task",
-        description: "",
-        depth: 0,
-      }, config);
+      const task = await createTask(
+        tmpDir,
+        "test-proj",
+        {
+          project_id: "test-proj",
+          title: "Independent Task",
+          description: "",
+          depth: 0,
+        },
+        config,
+      );
 
       expect(task.is_blocked).toBe(false);
     });
@@ -390,13 +503,18 @@ describe("createTask", () => {
       await initProject(tmpDir, "test-proj");
 
       await expect(
-        createTask(tmpDir, "test-proj", {
-          project_id: "test-proj",
-          title: "Task with bad dep",
-          description: "",
-          depth: 0,
-          dependencies: ["01HZ999NONEXISTENT999999"],
-        }, config),
+        createTask(
+          tmpDir,
+          "test-proj",
+          {
+            project_id: "test-proj",
+            title: "Task with bad dep",
+            description: "",
+            depth: 0,
+            dependencies: ["01HZ999NONEXISTENT999999"],
+          },
+          config,
+        ),
       ).rejects.toThrow("DEPENDENCY_NOT_FOUND");
     });
   });
@@ -407,12 +525,17 @@ describe("createTask", () => {
     test("logs activity on creation", async () => {
       await initProject(tmpDir, "test-proj");
 
-      const result = await createTask(tmpDir, "test-proj", {
-        project_id: "test-proj",
-        title: "Logged Task",
-        description: "",
-        depth: 0,
-      }, config);
+      const result = await createTask(
+        tmpDir,
+        "test-proj",
+        {
+          project_id: "test-proj",
+          title: "Logged Task",
+          description: "",
+          depth: 0,
+        },
+        config,
+      );
 
       const db = await lancedb.connect(tmpDir);
       const activityTable = await db.openTable("activity_log");
@@ -433,13 +556,18 @@ describe("createTask", () => {
       await initProject(tmpDir, "test-proj");
 
       await expect(
-        createTask(tmpDir, "test-proj", {
-          project_id: "test-proj",
-          title: "Bad Task",
-          description: "",
-          // biome-ignore lint/suspicious/noExplicitAny: intentional invalid value for test
-          depth: 5 as any,
-        }, config),
+        createTask(
+          tmpDir,
+          "test-proj",
+          {
+            project_id: "test-proj",
+            title: "Bad Task",
+            description: "",
+            // biome-ignore lint/suspicious/noExplicitAny: intentional invalid value for test
+            depth: 5 as any,
+          },
+          config,
+        ),
       ).rejects.toThrow();
     });
 
@@ -447,14 +575,19 @@ describe("createTask", () => {
       await initProject(tmpDir, "test-proj");
 
       await expect(
-        createTask(tmpDir, "test-proj", {
-          project_id: "test-proj",
-          title: "Bad Priority Task",
-          description: "",
-          depth: 0,
-          // biome-ignore lint/suspicious/noExplicitAny: intentional invalid value for test
-          priority: "urgent" as any,
-        }, config),
+        createTask(
+          tmpDir,
+          "test-proj",
+          {
+            project_id: "test-proj",
+            title: "Bad Priority Task",
+            description: "",
+            depth: 0,
+            // biome-ignore lint/suspicious/noExplicitAny: intentional invalid value for test
+            priority: "urgent" as any,
+          },
+          config,
+        ),
       ).rejects.toThrow();
     });
 
@@ -462,14 +595,19 @@ describe("createTask", () => {
       await initProject(tmpDir, "test-proj");
 
       await expect(
-        createTask(tmpDir, "test-proj", {
-          project_id: "test-proj",
-          title: "Bad Agent Task",
-          description: "",
-          depth: 0,
-          // biome-ignore lint/suspicious/noExplicitAny: intentional invalid value for test
-          assigned_agent: "superman" as any,
-        }, config),
+        createTask(
+          tmpDir,
+          "test-proj",
+          {
+            project_id: "test-proj",
+            title: "Bad Agent Task",
+            description: "",
+            depth: 0,
+            // biome-ignore lint/suspicious/noExplicitAny: intentional invalid value for test
+            assigned_agent: "superman" as any,
+          },
+          config,
+        ),
       ).rejects.toThrow();
     });
   });

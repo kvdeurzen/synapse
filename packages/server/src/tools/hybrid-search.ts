@@ -9,22 +9,21 @@
  * - registerHybridSearchTool: MCP registration wrapper
  */
 
-import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { rerankers } from "@lancedb/lancedb";
+import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { connectDb } from "../db/connection.js";
 import { createToolLogger } from "../logger.js";
 import { embed, getOllamaStatus } from "../services/embedder.js";
 import type { SynapseConfig, ToolResult } from "../types.js";
 import { VALID_CATEGORIES, VALID_STATUSES } from "./doc-constants.js";
+import { type FulltextSearchResult, fulltextSearch } from "./fulltext-search.js";
 import {
-  type SearchResultItem,
   buildSearchPredicate,
   extractSnippet,
   fetchDocMetadata,
-  normalizeVectorScore,
+  type SearchResultItem,
 } from "./search-utils.js";
-import { fulltextSearch, type FulltextSearchResult } from "./fulltext-search.js";
 
 // ────────────────────────────────────────────────────────────────────────────
 // Input schema (Zod)
@@ -77,10 +76,7 @@ export async function hybridSearch(
   // ── 1. Check Ollama status — fall back to FTS if unavailable ──────────────
   const ollamaStatus = getOllamaStatus();
   if (ollamaStatus !== "ok") {
-    log.warn(
-      { ollamaStatus },
-      "Ollama unreachable — hybrid_search falling back to FTS-only",
-    );
+    log.warn({ ollamaStatus }, "Ollama unreachable — hybrid_search falling back to FTS-only");
 
     const ftsResult: FulltextSearchResult = await fulltextSearch(
       dbPath,
@@ -227,10 +223,7 @@ export function registerHybridSearchTool(server: McpServer, config: SynapseConfi
           .string()
           .describe("Project identifier (lowercase slug: letters, numbers, hyphens, underscores)"),
         query: z.string().min(1).describe("Search query combining keywords and natural language"),
-        category: z
-          .enum(VALID_CATEGORIES)
-          .optional()
-          .describe("Filter by document category"),
+        category: z.enum(VALID_CATEGORIES).optional().describe("Filter by document category"),
         phase: z.string().optional().describe("Filter by project phase or milestone"),
         tags: z.string().optional().describe("Filter by single tag (exact match)"),
         status: z.enum(VALID_STATUSES).optional().describe("Filter by document status"),

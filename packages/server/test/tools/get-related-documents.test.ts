@@ -420,10 +420,15 @@ export function double(n: number): number {
     );
 
     const config = { ...TEST_CONFIG, db: dbPath };
-    const result = await indexCodebase(dbPath, "ast-proj", {
-      project_id: "ast-proj",
-      project_root: codeProjectDir,
-    }, config);
+    const result = await indexCodebase(
+      dbPath,
+      "ast-proj",
+      {
+        project_id: "ast-proj",
+        project_root: codeProjectDir,
+      },
+      config,
+    );
 
     expect(result.files_indexed).toBe(2);
 
@@ -460,10 +465,15 @@ export function double(n: number): number {
     );
 
     const config = { ...TEST_CONFIG, db: dbPath };
-    await indexCodebase(dbPath, "ast-proj", {
-      project_id: "ast-proj",
-      project_root: codeProjectDir,
-    }, config);
+    await indexCodebase(
+      dbPath,
+      "ast-proj",
+      {
+        project_id: "ast-proj",
+        project_root: codeProjectDir,
+      },
+      config,
+    );
 
     const db = await lancedb.connect(dbPath);
     const relTable = await db.openTable("relationships");
@@ -521,10 +531,15 @@ export function double(n: number): number {
     );
 
     const config = { ...TEST_CONFIG, db: dbPath };
-    await indexCodebase(dbPath, "ast-proj", {
-      project_id: "ast-proj",
-      project_root: codeProjectDir,
-    }, config);
+    await indexCodebase(
+      dbPath,
+      "ast-proj",
+      {
+        project_id: "ast-proj",
+        project_root: codeProjectDir,
+      },
+      config,
+    );
 
     // math.ts should have utils.ts as a related document (via ast_import)
     const result = await getRelatedDocuments(dbPath, "ast-proj", {

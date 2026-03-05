@@ -28,9 +28,19 @@ const StoreDecisionInputSchema = z.object({
     ),
   subject: z.string().min(1).describe("What is being decided"),
   choice: z.string().min(1).describe("What was chosen"),
-  context: z.string().min(1).describe("Problem statement, constraints, and alternatives considered"),
+  context: z
+    .string()
+    .min(1)
+    .describe("Problem statement, constraints, and alternatives considered"),
   rationale: z.string().min(1).describe("Justification for the choice"),
-  tier: z.number().int().min(0).max(3).describe("Decision tier (0=product_strategy, 1=architecture, 2=functional_design, 3=execution)"),
+  tier: z
+    .number()
+    .int()
+    .min(0)
+    .max(3)
+    .describe(
+      "Decision tier (0=product_strategy, 1=architecture, 2=functional_design, 3=execution)",
+    ),
   decision_type: z.enum(VALID_DECISION_TYPES),
   tags: z
     .string()
@@ -113,12 +123,8 @@ export async function storeDecision(
   // ── 2. Embed the rationale text ───────────────────────────────────────────
   // Fail fast if Ollama is down — same pattern as store_document
   let vector: number[];
-  try {
-    const vectors = await embed([validated.rationale], projectId, config);
-    vector = vectors[0] ?? [];
-  } catch (err) {
-    throw err;
-  }
+  const vectors = await embed([validated.rationale], projectId, config);
+  vector = vectors[0] ?? [];
 
   // ── 3. Quick precedent check ──────────────────────────────────────────────
   // Check if any similar decisions exist (similarity >= 0.85, same decision_type)
@@ -131,7 +137,9 @@ export async function storeDecision(
       // Do a vector search for similar decisions of the same type
       const similar = await decisionsTable
         .vectorSearch(vector)
-        .where(`project_id = '${projectId}' AND decision_type = '${validated.decision_type}' AND status = 'active'`)
+        .where(
+          `project_id = '${projectId}' AND decision_type = '${validated.decision_type}' AND status = 'active'`,
+        )
         .limit(1)
         .toArray();
 
@@ -213,7 +221,10 @@ export function registerStoreDecisionTool(server: McpServer, config: SynapseConf
           .describe("Project identifier (lowercase slug: letters, numbers, hyphens, underscores)"),
         subject: z.string().min(1).describe("What is being decided"),
         choice: z.string().min(1).describe("What was chosen"),
-        context: z.string().min(1).describe("Problem statement, constraints, and alternatives considered"),
+        context: z
+          .string()
+          .min(1)
+          .describe("Problem statement, constraints, and alternatives considered"),
         rationale: z.string().min(1).describe("Justification for the choice"),
         tier: z
           .number()
@@ -226,18 +237,12 @@ export function registerStoreDecisionTool(server: McpServer, config: SynapseConf
         decision_type: z
           .enum(VALID_DECISION_TYPES)
           .describe("Decision type: architectural, module, pattern, convention, or tooling"),
-        tags: z
-          .string()
-          .optional()
-          .describe("Pipe-separated tags, e.g. '|typescript|backend|'"),
+        tags: z.string().optional().describe("Pipe-separated tags, e.g. '|typescript|backend|'"),
         phase: z
           .string()
           .optional()
           .describe("Project phase or milestone this decision belongs to"),
-        actor: z
-          .string()
-          .optional()
-          .describe("Who made this decision (defaults to 'agent')"),
+        actor: z.string().optional().describe("Who made this decision (defaults to 'agent')"),
         supersedes: z
           .string()
           .optional()

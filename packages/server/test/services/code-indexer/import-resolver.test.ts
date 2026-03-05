@@ -3,8 +3,8 @@
  * Covers TypeScript, Python, and Rust import path resolution.
  */
 
-import { describe, it, expect } from "bun:test";
-import { resolveImports, type ImportEdge, type ResolveOptions } from "../../../src/services/code-indexer/import-resolver";
+import { describe, expect, it } from "bun:test";
+import { resolveImports } from "../../../src/services/code-indexer/import-resolver";
 
 // ============================================================
 // TypeScript import resolution
@@ -171,7 +171,11 @@ describe("resolveImports — Python", () => {
       imports: ["..utils"],
     });
     expect(edges).toHaveLength(1);
-    expect(edges[0]).toEqual({ from: "mypackage/models/user.py", to: "mypackage/utils.py", symbols: [] });
+    expect(edges[0]).toEqual({
+      from: "mypackage/models/user.py",
+      to: "mypackage/utils.py",
+      symbols: [],
+    });
   });
 
   it("Test 3: absolute import matching local package (mypackage.utils)", () => {
@@ -213,7 +217,11 @@ describe("resolveImports — Python", () => {
       imports: [".models"],
     });
     expect(edges).toHaveLength(1);
-    expect(edges[0]).toEqual({ from: "mypackage/main.py", to: "mypackage/models/__init__.py", symbols: [] });
+    expect(edges[0]).toEqual({
+      from: "mypackage/main.py",
+      to: "mypackage/models/__init__.py",
+      symbols: [],
+    });
   });
 
   it("single dot (.) refers to current package __init__.py", () => {
@@ -343,10 +351,7 @@ describe("resolveImports — Rust", () => {
 
   it("mod declaration from subdirectory resolves to sibling mod.rs", () => {
     // From src/main.rs, mod db → src/db.rs or src/db/mod.rs
-    const fileSetWithDb = new Set([
-      "src/main.rs",
-      "src/db/mod.rs",
-    ]);
+    const fileSetWithDb = new Set(["src/main.rs", "src/db/mod.rs"]);
     const edges = resolveImports({
       fileSet: fileSetWithDb,
       language: "rust",

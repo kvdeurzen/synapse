@@ -457,7 +457,8 @@ async function runDetailedMode(
         if (requestedMap.has(rel.doc_id)) continue;
         // Skip if we already have an entry (use highest-priority relationship)
         if (relatedEntriesMap.has(rel.doc_id)) {
-          const existing = relatedEntriesMap.get(rel.doc_id)!;
+          const existing = relatedEntriesMap.get(rel.doc_id);
+          if (!existing) throw new Error(`Expected related entry for doc_id: ${rel.doc_id}`);
           const existingPri = RELATIONSHIP_PRIORITY[existing.relationship_type] ?? 99;
           const newPri = RELATIONSHIP_PRIORITY[rel.relationship_type] ?? 99;
           if (newPri < existingPri) {
@@ -481,15 +482,13 @@ async function runDetailedMode(
   const relatedFound = relatedEntriesMap.size;
 
   // Sort related docs by priority (depends_on/implements first), then title
-  const sortedRelated = Array.from(relatedEntriesMap.entries()).sort(
-    ([aId, aRel], [bId, bRel]) => {
-      const aPri = RELATIONSHIP_PRIORITY[aRel.relationship_type] ?? 99;
-      const bPri = RELATIONSHIP_PRIORITY[bRel.relationship_type] ?? 99;
-      if (aPri !== bPri) return aPri - bPri;
-      // Alphabetical by doc_id as tiebreaker (title not yet loaded)
-      return aId.localeCompare(bId);
-    },
-  );
+  const sortedRelated = Array.from(relatedEntriesMap.entries()).sort(([aId, aRel], [bId, bRel]) => {
+    const aPri = RELATIONSHIP_PRIORITY[aRel.relationship_type] ?? 99;
+    const bPri = RELATIONSHIP_PRIORITY[bRel.relationship_type] ?? 99;
+    if (aPri !== bPri) return aPri - bPri;
+    // Alphabetical by doc_id as tiebreaker (title not yet loaded)
+    return aId.localeCompare(bId);
+  });
 
   // Fetch full content of related documents
   let relatedIncluded = 0;
@@ -614,10 +613,7 @@ export function registerGetSmartContextTool(server: McpServer, config: SynapseCo
           .max(20000)
           .optional()
           .describe("Token budget for context assembly (default: 4000, min: 500, max: 20000)"),
-        category: z
-          .enum(VALID_CATEGORIES)
-          .optional()
-          .describe("Filter documents by category"),
+        category: z.enum(VALID_CATEGORIES).optional().describe("Filter documents by category"),
         phase: z.string().optional().describe("Filter documents by project phase or milestone"),
         tags: z
           .string()

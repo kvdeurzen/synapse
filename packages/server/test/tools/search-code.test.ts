@@ -5,8 +5,8 @@ import { join } from "node:path";
 import * as lancedb from "@lancedb/lancedb";
 import { Index } from "@lancedb/lancedb";
 import { ulid } from "ulidx";
-import { _setFetchImpl, setOllamaStatus } from "../../src/services/embedder.js";
 import { createServer } from "../../src/server.js";
+import { _setFetchImpl, setOllamaStatus } from "../../src/services/embedder.js";
 import { initProject } from "../../src/tools/init-project.js";
 import { globToSqlLike, searchCode } from "../../src/tools/search-code.js";
 import type { SynapseConfig } from "../../src/types.js";
@@ -173,7 +173,8 @@ describe("searchCode", () => {
         symbolName: "createUser",
         symbolType: "function",
         scopeChain: "UserService.createUser",
-        content: "async function createUser(name: string): Promise<User> { return new User(name); }",
+        content:
+          "async function createUser(name: string): Promise<User> { return new User(name); }",
         language: "typescript",
         startLine: 10,
         endLine: 12,

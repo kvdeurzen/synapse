@@ -3,19 +3,19 @@
 // This hook CANNOT block tool execution (PostToolUse hooks are post-hoc).
 // It appends a JSON log entry to .synapse-audit.log for each Synapse tool call.
 
-import fs from 'node:fs';
-import path from 'node:path';
+import fs from "node:fs";
+import path from "node:path";
 
-let input = '';
-process.stdin.setEncoding('utf8');
-process.stdin.on('data', chunk => (input += chunk));
-process.stdin.on('end', () => {
+let input = "";
+process.stdin.setEncoding("utf8");
+process.stdin.on("data", (chunk) => (input += chunk));
+process.stdin.on("end", () => {
   try {
     const data = JSON.parse(input);
-    const toolName = data.tool_name || '';
+    const toolName = data.tool_name || "";
 
     // Only audit Synapse MCP tool calls
-    if (!toolName.startsWith('mcp__synapse__')) {
+    if (!toolName.startsWith("mcp__synapse__")) {
       process.exit(0);
     }
 
@@ -24,15 +24,15 @@ process.stdin.on('end', () => {
     const logEntry = {
       ts: new Date().toISOString(),
       tool: toolName,
-      agent: toolInput.actor || toolInput.assigned_agent || 'unknown',
+      agent: toolInput.actor || toolInput.assigned_agent || "unknown",
       project_id: toolInput.project_id || null,
       input_keys: Object.keys(toolInput),
     };
 
-    const logPath = path.join(process.cwd(), '.synapse-audit.log');
-    fs.appendFileSync(logPath, JSON.stringify(logEntry) + '\n');
+    const logPath = path.join(process.cwd(), ".synapse-audit.log");
+    fs.appendFileSync(logPath, `${JSON.stringify(logEntry)}\n`);
     process.exit(0);
-  } catch (e) {
+  } catch (_e) {
     // Silent fail -- never block tool execution
     process.exit(0);
   }

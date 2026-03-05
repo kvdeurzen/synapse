@@ -119,9 +119,21 @@ describe("queryDecisions", () => {
 
   describe("tier filter", () => {
     test("filters by tier", async () => {
-      await insertTestDecision(tmpDir, { subject: "Tier 0 decision", tier: 0, tier_name: "product_strategy" });
-      await insertTestDecision(tmpDir, { subject: "Tier 1 decision", tier: 1, tier_name: "architecture" });
-      await insertTestDecision(tmpDir, { subject: "Tier 2 decision", tier: 2, tier_name: "functional_design" });
+      await insertTestDecision(tmpDir, {
+        subject: "Tier 0 decision",
+        tier: 0,
+        tier_name: "product_strategy",
+      });
+      await insertTestDecision(tmpDir, {
+        subject: "Tier 1 decision",
+        tier: 1,
+        tier_name: "architecture",
+      });
+      await insertTestDecision(tmpDir, {
+        subject: "Tier 2 decision",
+        tier: 2,
+        tier_name: "functional_design",
+      });
 
       const result = await queryDecisions(tmpDir, "test-proj", {
         project_id: "test-proj",
@@ -169,8 +181,14 @@ describe("queryDecisions", () => {
 
   describe("decision_type filter", () => {
     test("filters by decision_type", async () => {
-      await insertTestDecision(tmpDir, { subject: "Architectural decision", decision_type: "architectural" });
-      await insertTestDecision(tmpDir, { subject: "Convention decision", decision_type: "convention" });
+      await insertTestDecision(tmpDir, {
+        subject: "Architectural decision",
+        decision_type: "architectural",
+      });
+      await insertTestDecision(tmpDir, {
+        subject: "Convention decision",
+        decision_type: "convention",
+      });
       await insertTestDecision(tmpDir, { subject: "Tooling decision", decision_type: "tooling" });
 
       const result = await queryDecisions(tmpDir, "test-proj", {

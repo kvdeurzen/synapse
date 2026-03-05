@@ -1,14 +1,13 @@
 import { describe, expect, test } from "bun:test";
 import Parser from "tree-sitter";
-import TypeScriptLang from "tree-sitter-typescript";
 import PythonLang from "tree-sitter-python";
 import RustLang from "tree-sitter-rust";
+import TypeScriptLang from "tree-sitter-typescript";
 import {
   buildContextHeader,
-  splitLargeChunk,
   extractSymbols,
   type SymbolExtraction,
-  type ExtractionResult,
+  splitLargeChunk,
 } from "../../../src/services/code-indexer/extractor";
 
 // Helper: parse TypeScript source
@@ -126,21 +125,19 @@ describe("TypeScript extractor", () => {
     const result = extractSymbols(root, src, "typescript", "src/repo.ts");
     // 1 class overview + 2 methods = 3 symbols
     expect(result.symbols).toHaveLength(3);
-    const classOverview = result.symbols.find(
-      (s) => s.symbol_type === "class",
-    );
+    const classOverview = result.symbols.find((s) => s.symbol_type === "class");
     expect(classOverview).toBeDefined();
-    expect(classOverview!.symbol_name).toBe("UserRepo");
-    expect(classOverview!.is_overview).toBe(true);
+    expect(classOverview?.symbol_name).toBe("UserRepo");
+    expect(classOverview?.is_overview).toBe(true);
 
     const methods = result.symbols.filter((s) => s.symbol_type === "method");
     expect(methods).toHaveLength(2);
     const saveMethod = methods.find((s) => s.symbol_name === "save");
     expect(saveMethod).toBeDefined();
-    expect(saveMethod!.scope_chain).toBe("UserRepo.save");
+    expect(saveMethod?.scope_chain).toBe("UserRepo.save");
     const findMethod = methods.find((s) => s.symbol_name === "find");
     expect(findMethod).toBeDefined();
-    expect(findMethod!.scope_chain).toBe("UserRepo.find");
+    expect(findMethod?.scope_chain).toBe("UserRepo.find");
   });
 
   test("Test 3: arrow function const", () => {
@@ -162,15 +159,13 @@ enum Color { Red, Green, Blue }
     expect(result.symbols).toHaveLength(3);
     const iface = result.symbols.find((s) => s.symbol_type === "interface");
     expect(iface).toBeDefined();
-    expect(iface!.symbol_name).toBe("Config");
-    const typeAlias = result.symbols.find(
-      (s) => s.symbol_type === "type_alias",
-    );
+    expect(iface?.symbol_name).toBe("Config");
+    const typeAlias = result.symbols.find((s) => s.symbol_type === "type_alias");
     expect(typeAlias).toBeDefined();
-    expect(typeAlias!.symbol_name).toBe("Status");
+    expect(typeAlias?.symbol_name).toBe("Status");
     const enumSym = result.symbols.find((s) => s.symbol_type === "enum");
     expect(enumSym).toBeDefined();
-    expect(enumSym!.symbol_name).toBe("Color");
+    expect(enumSym?.symbol_name).toBe("Color");
   });
 
   test("Test 5: import extraction", () => {
@@ -203,9 +198,7 @@ export { baz } from "./baz";
     const result = extractSymbols(root, src, "typescript", "src/utils.ts");
     expect(result.symbols).toHaveLength(1);
     // Content should be prepended with context header
-    expect(result.symbols[0].content).toContain(
-      "File: src/utils.ts | function: greet",
-    );
+    expect(result.symbols[0].content).toContain("File: src/utils.ts | function: greet");
   });
 
   test("export_statement unwrapping", () => {
@@ -252,22 +245,22 @@ class UserService:
 
     const fn = result.symbols.find((s) => s.symbol_name === "greet");
     expect(fn).toBeDefined();
-    expect(fn!.symbol_type).toBe("function");
-    expect(fn!.scope_chain).toBe("greet");
+    expect(fn?.symbol_type).toBe("function");
+    expect(fn?.scope_chain).toBe("greet");
 
     const cls = result.symbols.find((s) => s.symbol_type === "class");
     expect(cls).toBeDefined();
-    expect(cls!.symbol_name).toBe("UserService");
-    expect(cls!.is_overview).toBe(true);
+    expect(cls?.symbol_name).toBe("UserService");
+    expect(cls?.is_overview).toBe(true);
 
     const methods = result.symbols.filter((s) => s.symbol_type === "method");
     expect(methods).toHaveLength(2);
     const createMethod = methods.find((s) => s.symbol_name === "create");
     expect(createMethod).toBeDefined();
-    expect(createMethod!.scope_chain).toBe("UserService.create");
+    expect(createMethod?.scope_chain).toBe("UserService.create");
     const deleteMethod = methods.find((s) => s.symbol_name === "delete");
     expect(deleteMethod).toBeDefined();
-    expect(deleteMethod!.scope_chain).toBe("UserService.delete");
+    expect(deleteMethod?.scope_chain).toBe("UserService.delete");
   });
 
   test("decorated function", () => {
@@ -308,9 +301,7 @@ from typing import List
     const src = `def hello(): pass`;
     const root = parsePY(src);
     const result = extractSymbols(root, src, "python", "src/hello.py");
-    expect(result.symbols[0].content).toContain(
-      "File: src/hello.py | function: hello",
-    );
+    expect(result.symbols[0].content).toContain("File: src/hello.py | function: hello");
   });
 });
 
@@ -338,21 +329,21 @@ impl Point {
 
     const structSym = result.symbols.find((s) => s.symbol_type === "struct");
     expect(structSym).toBeDefined();
-    expect(structSym!.symbol_name).toBe("Point");
-    expect(structSym!.is_overview).toBe(true);
+    expect(structSym?.symbol_name).toBe("Point");
+    expect(structSym?.is_overview).toBe(true);
 
     const implSym = result.symbols.find((s) => s.symbol_type === "impl");
     expect(implSym).toBeDefined();
-    expect(implSym!.is_overview).toBe(true);
+    expect(implSym?.is_overview).toBe(true);
 
     const methods = result.symbols.filter((s) => s.symbol_type === "method");
     expect(methods).toHaveLength(2);
     const newMethod = methods.find((s) => s.symbol_name === "new");
     expect(newMethod).toBeDefined();
-    expect(newMethod!.scope_chain).toBe("Point.new");
+    expect(newMethod?.scope_chain).toBe("Point.new");
     const distanceMethod = methods.find((s) => s.symbol_name === "distance");
     expect(distanceMethod).toBeDefined();
-    expect(distanceMethod!.scope_chain).toBe("Point.distance");
+    expect(distanceMethod?.scope_chain).toBe("Point.distance");
   });
 
   test("use declarations + mod", () => {
@@ -406,7 +397,7 @@ mod submodule;
     expect(result.symbols.length).toBeGreaterThanOrEqual(1);
     const traitSym = result.symbols.find((s) => s.symbol_type === "trait");
     expect(traitSym).toBeDefined();
-    expect(traitSym!.symbol_name).toBe("Animal");
+    expect(traitSym?.symbol_name).toBe("Animal");
   });
 
   test("type alias extraction", () => {
@@ -421,9 +412,7 @@ mod submodule;
     const src = `fn hello() -> i32 { 1 }`;
     const root = parseRS(src);
     const result = extractSymbols(root, src, "rust", "src/lib.rs");
-    expect(result.symbols[0].content).toContain(
-      "File: src/lib.rs | function: hello",
-    );
+    expect(result.symbols[0].content).toContain("File: src/lib.rs | function: hello");
   });
 });
 
@@ -439,9 +428,7 @@ describe("Large chunk splitting", () => {
     const root = parseTS(src);
     const result = extractSymbols(root, src, "typescript", "src/big.ts");
     // Should be split into at least 2 parts
-    const bigFuncParts = result.symbols.filter((s) =>
-      s.symbol_name.startsWith("bigFunc"),
-    );
+    const bigFuncParts = result.symbols.filter((s) => s.symbol_name.startsWith("bigFunc"));
     expect(bigFuncParts.length).toBeGreaterThanOrEqual(2);
     expect(bigFuncParts[0].symbol_name).toMatch(/bigFunc \(part 1\/\d+\)/);
     expect(bigFuncParts[1].symbol_name).toMatch(/bigFunc \(part 2\/\d+\)/);

@@ -5,8 +5,8 @@ import { join } from "node:path";
 import * as lancedb from "@lancedb/lancedb";
 import { ulid } from "ulidx";
 import { _setFetchImpl, setOllamaStatus } from "../../src/services/embedder.js";
-import { initProject } from "../../src/tools/init-project.js";
 import { hybridSearch } from "../../src/tools/hybrid-search.js";
+import { initProject } from "../../src/tools/init-project.js";
 import type { SynapseConfig } from "../../src/types.js";
 
 // ── Test helpers ──────────────────────────────────────────────────────────────

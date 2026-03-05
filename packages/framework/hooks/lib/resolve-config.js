@@ -7,9 +7,9 @@
  * 3. Return null if not found anywhere
  */
 
-import fs from 'node:fs';
-import path from 'node:path';
-import { fileURLToPath } from 'node:url';
+import fs from "node:fs";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -27,7 +27,7 @@ export function resolveConfig(filename) {
   // Walk up directories checking for .synapse/config/{filename}
   let current = startDir;
   while (true) {
-    const candidate = path.join(current, '.synapse', 'config', filename);
+    const candidate = path.join(current, ".synapse", "config", filename);
     if (fs.existsSync(candidate)) {
       return candidate;
     }
@@ -42,7 +42,7 @@ export function resolveConfig(filename) {
 
   // Monorepo dev fallback: packages/framework/config/{filename}
   // __dirname is packages/framework/hooks/lib/, so go up two levels to packages/framework/
-  const fallback = path.join(__dirname, '..', '..', 'config', filename);
+  const fallback = path.join(__dirname, "..", "..", "config", filename);
   if (fs.existsSync(fallback)) {
     return fallback;
   }

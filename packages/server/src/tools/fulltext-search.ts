@@ -15,11 +15,11 @@ import { createToolLogger } from "../logger.js";
 import type { SynapseConfig, ToolResult } from "../types.js";
 import { VALID_CATEGORIES, VALID_STATUSES } from "./doc-constants.js";
 import {
-  type SearchResultItem,
   buildSearchPredicate,
   extractSnippet,
   fetchDocMetadata,
   normalizeFtsScore,
+  type SearchResultItem,
 } from "./search-utils.js";
 
 // ────────────────────────────────────────────────────────────────────────────
@@ -59,7 +59,7 @@ export async function fulltextSearch(
   dbPath: string,
   projectId: string,
   args: Partial<FulltextSearchArgs> & { project_id: string; query: string },
-  config: SynapseConfig,
+  _config: SynapseConfig,
 ): Promise<FulltextSearchResult> {
   const validated = FulltextSearchInputSchema.parse(args);
   const limit = validated.limit ?? 5;
@@ -170,10 +170,7 @@ export function registerFulltextSearchTool(server: McpServer, config: SynapseCon
           .string()
           .describe("Project identifier (lowercase slug: letters, numbers, hyphens, underscores)"),
         query: z.string().min(1).describe("Search query with keywords to match"),
-        category: z
-          .enum(VALID_CATEGORIES)
-          .optional()
-          .describe("Filter by document category"),
+        category: z.enum(VALID_CATEGORIES).optional().describe("Filter by document category"),
         phase: z.string().optional().describe("Filter by project phase or milestone"),
         tags: z.string().optional().describe("Filter by single tag (exact match)"),
         status: z.enum(VALID_STATUSES).optional().describe("Filter by document status"),
@@ -223,17 +220,11 @@ export function registerFulltextSearchTool(server: McpServer, config: SynapseCon
       try {
         const data = await fulltextSearch(dbPath, parsed.project_id, parsed, config);
         const result: ToolResult<FulltextSearchResult> = { success: true, data };
-        log.info(
-          { durationMs: Date.now() - start, total: data.total },
-          "fulltext_search complete",
-        );
+        log.info({ durationMs: Date.now() - start, total: data.total }, "fulltext_search complete");
         return { content: [{ type: "text", text: JSON.stringify(result) }] };
       } catch (err) {
         const result: ToolResult = { success: false, error: String(err) };
-        log.error(
-          { error: String(err), durationMs: Date.now() - start },
-          "fulltext_search failed",
-        );
+        log.error({ error: String(err), durationMs: Date.now() - start }, "fulltext_search failed");
         return { content: [{ type: "text", text: JSON.stringify(result) }] };
       }
     },

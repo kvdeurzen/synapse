@@ -3,10 +3,10 @@ import { mkdtempSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { _setFetchImpl } from "../../src/services/embedder.js";
-import { initProject } from "../../src/tools/init-project.js";
 import { createTask } from "../../src/tools/create-task.js";
-import { updateTask } from "../../src/tools/update-task.js";
 import { getTaskTree } from "../../src/tools/get-task-tree.js";
+import { initProject } from "../../src/tools/init-project.js";
+import { updateTask } from "../../src/tools/update-task.js";
 import type { SynapseConfig } from "../../src/types.js";
 
 // ── Test helpers ──────────────────────────────────────────────────────────────
@@ -68,66 +68,101 @@ beforeEach(async () => {
   // └── F2 (feature, depth=1)
   //     └── T3 (component-level, depth=2)
 
-  const e1 = await createTask(tmpDir, "test-proj", {
-    project_id: "test-proj",
-    title: "Epic E1",
-    description: "The main epic",
-    depth: 0,
-  }, config);
+  const e1 = await createTask(
+    tmpDir,
+    "test-proj",
+    {
+      project_id: "test-proj",
+      title: "Epic E1",
+      description: "The main epic",
+      depth: 0,
+    },
+    config,
+  );
   epicE1 = e1.task_id;
 
-  const f1 = await createTask(tmpDir, "test-proj", {
-    project_id: "test-proj",
-    title: "Feature F1",
-    description: "Feature under E1",
-    depth: 1,
-    parent_id: epicE1,
-  }, config);
+  const f1 = await createTask(
+    tmpDir,
+    "test-proj",
+    {
+      project_id: "test-proj",
+      title: "Feature F1",
+      description: "Feature under E1",
+      depth: 1,
+      parent_id: epicE1,
+    },
+    config,
+  );
   featureF1 = f1.task_id;
 
-  const f2 = await createTask(tmpDir, "test-proj", {
-    project_id: "test-proj",
-    title: "Feature F2",
-    description: "Second feature under E1",
-    depth: 1,
-    parent_id: epicE1,
-  }, config);
+  const f2 = await createTask(
+    tmpDir,
+    "test-proj",
+    {
+      project_id: "test-proj",
+      title: "Feature F2",
+      description: "Second feature under E1",
+      depth: 1,
+      parent_id: epicE1,
+    },
+    config,
+  );
   featureF2 = f2.task_id;
 
-  const c1 = await createTask(tmpDir, "test-proj", {
-    project_id: "test-proj",
-    title: "Component C1",
-    description: "Component under F1",
-    depth: 2,
-    parent_id: featureF1,
-  }, config);
+  const c1 = await createTask(
+    tmpDir,
+    "test-proj",
+    {
+      project_id: "test-proj",
+      title: "Component C1",
+      description: "Component under F1",
+      depth: 2,
+      parent_id: featureF1,
+    },
+    config,
+  );
   componentC1 = c1.task_id;
 
-  const t1 = await createTask(tmpDir, "test-proj", {
-    project_id: "test-proj",
-    title: "Task T1",
-    description: "Task under C1",
-    depth: 3,
-    parent_id: componentC1,
-  }, config);
+  const t1 = await createTask(
+    tmpDir,
+    "test-proj",
+    {
+      project_id: "test-proj",
+      title: "Task T1",
+      description: "Task under C1",
+      depth: 3,
+      parent_id: componentC1,
+    },
+    config,
+  );
   taskT1 = t1.task_id;
 
-  const t2 = await createTask(tmpDir, "test-proj", {
-    project_id: "test-proj",
-    title: "Task T2",
-    description: "Second task under C1",
-    depth: 3,
-    parent_id: componentC1,
-  }, config);
+  const t2 = await createTask(
+    tmpDir,
+    "test-proj",
+    {
+      project_id: "test-proj",
+      title: "Task T2",
+      description: "Second task under C1",
+      depth: 3,
+      parent_id: componentC1,
+    },
+    config,
+  );
   taskT2 = t2.task_id;
 
-  const t3 = await createTask(tmpDir, "test-proj", {
-    project_id: "test-proj",
-    title: "Task T3",
-    description: "Task under F2",
-    depth: 2,
-    parent_id: featureF2,
-  }, config);
+  const t3 = await createTask(
+    tmpDir,
+    "test-proj",
+    {
+      project_id: "test-proj",
+      title: "Task T3",
+      description: "Task under F2",
+      depth: 2,
+      parent_id: featureF2,
+    },
+    config,
+  );
   taskT3 = t3.task_id;
 });
 
@@ -192,17 +227,29 @@ describe("getTaskTree", () => {
 
   test("computes rollup stats correctly", async () => {
     // Set T1 to done, T2 to in_progress
-    _setFetchImpl(() => { throw new Error("embed not needed"); });
-    await updateTask(tmpDir, "test-proj", {
-      project_id: "test-proj",
-      task_id: taskT1,
-      status: "done",
-    }, config);
-    await updateTask(tmpDir, "test-proj", {
-      project_id: "test-proj",
-      task_id: taskT2,
-      status: "in_progress",
-    }, config);
+    _setFetchImpl(() => {
+      throw new Error("embed not needed");
+    });
+    await updateTask(
+      tmpDir,
+      "test-proj",
+      {
+        project_id: "test-proj",
+        task_id: taskT1,
+        status: "done",
+      },
+      config,
+    );
+    await updateTask(
+      tmpDir,
+      "test-proj",
+      {
+        project_id: "test-proj",
+        task_id: taskT2,
+        status: "in_progress",
+      },
+      config,
+    );
 
     const result = await getTaskTree(tmpDir, "test-proj", {
       project_id: "test-proj",
@@ -221,9 +268,21 @@ describe("getTaskTree", () => {
   // ── 4. children_all_done = true when all direct children are done ──────────
 
   test("children_all_done is true when all direct children are done", async () => {
-    _setFetchImpl(() => { throw new Error("embed not needed"); });
-    await updateTask(tmpDir, "test-proj", { project_id: "test-proj", task_id: taskT1, status: "done" }, config);
-    await updateTask(tmpDir, "test-proj", { project_id: "test-proj", task_id: taskT2, status: "done" }, config);
+    _setFetchImpl(() => {
+      throw new Error("embed not needed");
+    });
+    await updateTask(
+      tmpDir,
+      "test-proj",
+      { project_id: "test-proj", task_id: taskT1, status: "done" },
+      config,
+    );
+    await updateTask(
+      tmpDir,
+      "test-proj",
+      { project_id: "test-proj", task_id: taskT2, status: "done" },
+      config,
+    );
 
     const result = await getTaskTree(tmpDir, "test-proj", {
       project_id: "test-proj",
@@ -301,11 +360,16 @@ describe("getTaskTree", () => {
 
   test("includes dependency_ids on each node", async () => {
     // Create T1 with a dependency on T3
-    await updateTask(tmpDir, "test-proj", {
-      project_id: "test-proj",
-      task_id: taskT1,
-      dependencies: [taskT3],
-    }, config);
+    await updateTask(
+      tmpDir,
+      "test-proj",
+      {
+        project_id: "test-proj",
+        task_id: taskT1,
+        dependencies: [taskT3],
+      },
+      config,
+    );
 
     const result = await getTaskTree(tmpDir, "test-proj", {
       project_id: "test-proj",
@@ -324,8 +388,15 @@ describe("getTaskTree", () => {
   // ── 10. Status filter ─────────────────────────────────────────────────────
 
   test("filters by status — only done nodes fully shown", async () => {
-    _setFetchImpl(() => { throw new Error("embed not needed"); });
-    await updateTask(tmpDir, "test-proj", { project_id: "test-proj", task_id: taskT1, status: "done" }, config);
+    _setFetchImpl(() => {
+      throw new Error("embed not needed");
+    });
+    await updateTask(
+      tmpDir,
+      "test-proj",
+      { project_id: "test-proj", task_id: taskT1, status: "done" },
+      config,
+    );
 
     const result = await getTaskTree(tmpDir, "test-proj", {
       project_id: "test-proj",
@@ -347,12 +418,19 @@ describe("getTaskTree", () => {
   // ── 11. assigned_agent filter ─────────────────────────────────────────────
 
   test("filters by assigned_agent", async () => {
-    _setFetchImpl(() => { throw new Error("embed not needed"); });
-    await updateTask(tmpDir, "test-proj", {
-      project_id: "test-proj",
-      task_id: taskT1,
-      assigned_agent: "executor",
-    }, config);
+    _setFetchImpl(() => {
+      throw new Error("embed not needed");
+    });
+    await updateTask(
+      tmpDir,
+      "test-proj",
+      {
+        project_id: "test-proj",
+        task_id: taskT1,
+        assigned_agent: "executor",
+      },
+      config,
+    );
 
     const result = await getTaskTree(tmpDir, "test-proj", {
       project_id: "test-proj",
@@ -375,12 +453,17 @@ describe("getTaskTree", () => {
 
   test("root with no children returns empty children array", async () => {
     // Create a lone epic
-    const lone = await createTask(tmpDir, "test-proj", {
-      project_id: "test-proj",
-      title: "Lone Epic",
-      description: "No children",
-      depth: 0,
-    }, config);
+    const lone = await createTask(
+      tmpDir,
+      "test-proj",
+      {
+        project_id: "test-proj",
+        title: "Lone Epic",
+        description: "No children",
+        depth: 0,
+      },
+      config,
+    );
 
     const result = await getTaskTree(tmpDir, "test-proj", {
       project_id: "test-proj",

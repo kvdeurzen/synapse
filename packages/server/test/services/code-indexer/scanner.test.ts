@@ -1,12 +1,12 @@
-import { describe, expect, test, beforeEach, afterEach } from "bun:test";
+import { afterEach, beforeEach, describe, expect, test } from "bun:test";
 import { mkdirSync, rmSync, writeFileSync } from "node:fs";
-import { join } from "node:path";
 import { tmpdir } from "node:os";
+import { join } from "node:path";
 import {
-  scanFiles,
-  isTestFile,
   DEFAULT_EXCLUSIONS,
+  isTestFile,
   SUPPORTED_EXTENSIONS,
+  scanFiles,
 } from "../../../src/services/code-indexer/scanner";
 
 // ---------------------------------------------------------------------------
@@ -185,7 +185,7 @@ describe("scanFiles", () => {
     const result = await scanFiles(tempDir);
     const found = result.files.find((f) => f.relativePath === "src/main.ts");
     expect(found).toBeDefined();
-    expect(found!.absolutePath).toBe(join(tempDir, "src/main.ts"));
+    expect(found?.absolutePath).toBe(join(tempDir, "src/main.ts"));
   });
 
   test("language is correctly detected for each extension", async () => {

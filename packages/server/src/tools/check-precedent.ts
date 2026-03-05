@@ -15,11 +15,7 @@ import { OllamaUnreachableError } from "../errors.js";
 import { createToolLogger } from "../logger.js";
 import { embed } from "../services/embedder.js";
 import type { SynapseConfig, ToolResult } from "../types.js";
-import {
-  TIER_NAMES,
-  VALID_DECISION_STATUSES,
-  VALID_DECISION_TYPES,
-} from "./decision-constants.js";
+import { TIER_NAMES, VALID_DECISION_TYPES } from "./decision-constants.js";
 import { normalizeVectorScore } from "./search-utils.js";
 
 // ────────────────────────────────────────────────────────────────────────────
@@ -41,12 +37,24 @@ const CheckPrecedentInputSchema = z.object({
       /^[a-z0-9][a-z0-9_-]*$/,
       "project_id must be a lowercase slug (letters, numbers, hyphens, underscores, must start with alphanumeric)",
     ),
-  subject: z.string().min(1).describe("What is being decided (for context only — used in proposed output)"),
-  rationale: z.string().min(1).describe("Justification for the proposed choice — embedded for vector comparison"),
+  subject: z
+    .string()
+    .min(1)
+    .describe("What is being decided (for context only — used in proposed output)"),
+  rationale: z
+    .string()
+    .min(1)
+    .describe("Justification for the proposed choice — embedded for vector comparison"),
   decision_type: z
     .enum(VALID_DECISION_TYPES)
     .describe("Decision type used for pre-filtering before vector search"),
-  tier: z.number().int().min(0).max(3).optional().describe("Informational tier — included in proposed output"),
+  tier: z
+    .number()
+    .int()
+    .min(0)
+    .max(3)
+    .optional()
+    .describe("Informational tier — included in proposed output"),
   include_inactive: z
     .boolean()
     .optional()
@@ -91,7 +99,12 @@ export interface CheckPrecedentResult {
 export async function checkPrecedent(
   dbPath: string,
   projectId: string,
-  args: Partial<CheckPrecedentArgs> & { project_id: string; subject: string; rationale: string; decision_type: string },
+  args: Partial<CheckPrecedentArgs> & {
+    project_id: string;
+    subject: string;
+    rationale: string;
+    decision_type: string;
+  },
   config: SynapseConfig,
 ): Promise<CheckPrecedentResult> {
   const validated = CheckPrecedentInputSchema.parse(args);
@@ -182,7 +195,7 @@ export async function checkPrecedent(
       choice: row.choice as string,
       rationale: row.rationale as string,
       tier,
-      tier_name: (row.tier_name as string) ?? (TIER_NAMES[tier] ?? "execution"),
+      tier_name: (row.tier_name as string) ?? TIER_NAMES[tier] ?? "execution",
       decision_type: row.decision_type as string,
       status: row.status as string,
       similarity_score,
@@ -223,17 +236,24 @@ export function registerCheckPrecedentTool(server: McpServer, config: SynapseCon
           .string()
           .describe("Project identifier (lowercase slug: letters, numbers, hyphens, underscores)"),
         subject: z.string().min(1).describe("What is being decided (used in response context)"),
-        rationale: z.string().min(1).describe("Justification for the proposed choice — embedded for vector comparison"),
+        rationale: z
+          .string()
+          .min(1)
+          .describe("Justification for the proposed choice — embedded for vector comparison"),
         decision_type: z
           .enum(VALID_DECISION_TYPES)
-          .describe("Decision type: architectural, module, pattern, convention, or tooling — used for pre-filtering"),
+          .describe(
+            "Decision type: architectural, module, pattern, convention, or tooling — used for pre-filtering",
+          ),
         tier: z
           .number()
           .int()
           .min(0)
           .max(3)
           .optional()
-          .describe("Decision tier: 0=product_strategy, 1=architecture, 2=functional_design, 3=execution (informational)"),
+          .describe(
+            "Decision tier: 0=product_strategy, 1=architecture, 2=functional_design, 3=execution (informational)",
+          ),
         include_inactive: z
           .boolean()
           .optional()

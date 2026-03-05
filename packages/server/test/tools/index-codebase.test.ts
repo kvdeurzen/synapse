@@ -5,8 +5,8 @@ import { join } from "node:path";
 import * as lancedb from "@lancedb/lancedb";
 import { OllamaUnreachableError } from "../../src/errors.js";
 import { _setFetchImpl, setOllamaStatus } from "../../src/services/embedder.js";
-import { initProject } from "../../src/tools/init-project.js";
 import { indexCodebase } from "../../src/tools/index-codebase.js";
+import { initProject } from "../../src/tools/init-project.js";
 import type { SynapseConfig } from "../../src/types.js";
 
 // ── Test helpers ──────────────────────────────────────────────────────────────
@@ -97,10 +97,15 @@ export class Calculator {
       );
 
       const config = { ...TEST_CONFIG, db: dbPath };
-      const result = await indexCodebase(dbPath, "test-proj", {
-        project_id: "test-proj",
-        project_root: projectDir,
-      }, config);
+      const result = await indexCodebase(
+        dbPath,
+        "test-proj",
+        {
+          project_id: "test-proj",
+          project_root: projectDir,
+        },
+        config,
+      );
 
       // Verify result counters
       expect(result.files_scanned).toBe(2);
@@ -167,20 +172,30 @@ export class Calculator {
       const config = { ...TEST_CONFIG, db: dbPath };
 
       // First index
-      const first = await indexCodebase(dbPath, "test-proj", {
-        project_id: "test-proj",
-        project_root: projectDir,
-      }, config);
+      const first = await indexCodebase(
+        dbPath,
+        "test-proj",
+        {
+          project_id: "test-proj",
+          project_root: projectDir,
+        },
+        config,
+      );
 
       expect(first.files_scanned).toBe(2);
       expect(first.files_indexed).toBe(2);
       expect(first.skipped_unchanged).toBe(0);
 
       // Second index — no changes
-      const second = await indexCodebase(dbPath, "test-proj", {
-        project_id: "test-proj",
-        project_root: projectDir,
-      }, config);
+      const second = await indexCodebase(
+        dbPath,
+        "test-proj",
+        {
+          project_id: "test-proj",
+          project_root: projectDir,
+        },
+        config,
+      );
 
       expect(second.files_scanned).toBe(2);
       expect(second.files_indexed).toBe(0);
@@ -219,10 +234,15 @@ export class Calculator {
       const config = { ...TEST_CONFIG, db: dbPath };
 
       // First index
-      const first = await indexCodebase(dbPath, "test-proj", {
-        project_id: "test-proj",
-        project_root: projectDir,
-      }, config);
+      const _first = await indexCodebase(
+        dbPath,
+        "test-proj",
+        {
+          project_id: "test-proj",
+          project_root: projectDir,
+        },
+        config,
+      );
 
       // Get the chunk count for utils.ts
       const db1 = await lancedb.connect(dbPath);
@@ -246,10 +266,15 @@ export function subtract(a: number, b: number): number {
       );
 
       // Second index — only utils.ts changed
-      const second = await indexCodebase(dbPath, "test-proj", {
-        project_id: "test-proj",
-        project_root: projectDir,
-      }, config);
+      const second = await indexCodebase(
+        dbPath,
+        "test-proj",
+        {
+          project_id: "test-proj",
+          project_root: projectDir,
+        },
+        config,
+      );
 
       expect(second.files_indexed).toBe(1);
       expect(second.skipped_unchanged).toBe(1);
@@ -303,10 +328,15 @@ export function double(n: number): number {
       const config = { ...TEST_CONFIG, db: dbPath };
 
       // First index
-      const first = await indexCodebase(dbPath, "test-proj", {
-        project_id: "test-proj",
-        project_root: projectDir,
-      }, config);
+      const first = await indexCodebase(
+        dbPath,
+        "test-proj",
+        {
+          project_id: "test-proj",
+          project_root: projectDir,
+        },
+        config,
+      );
 
       expect(first.files_indexed).toBe(2);
 
@@ -323,10 +353,15 @@ export function double(n: number): number {
       rmSync(utilsPath);
 
       // Second index — utils.ts deleted
-      const second = await indexCodebase(dbPath, "test-proj", {
-        project_id: "test-proj",
-        project_root: projectDir,
-      }, config);
+      const second = await indexCodebase(
+        dbPath,
+        "test-proj",
+        {
+          project_id: "test-proj",
+          project_root: projectDir,
+        },
+        config,
+      );
 
       expect(second.files_deleted).toBe(1);
 
@@ -362,10 +397,15 @@ export function double(n: number): number {
       const config = { ...TEST_CONFIG, db: dbPath };
 
       await expect(
-        indexCodebase(dbPath, "test-proj", {
-          project_id: "test-proj",
-          project_root: projectDir,
-        }, config),
+        indexCodebase(
+          dbPath,
+          "test-proj",
+          {
+            project_id: "test-proj",
+            project_root: projectDir,
+          },
+          config,
+        ),
       ).rejects.toThrow(OllamaUnreachableError);
     });
 
@@ -378,10 +418,15 @@ export function double(n: number): number {
       const config = { ...TEST_CONFIG, db: dbPath };
 
       await expect(
-        indexCodebase(dbPath, "test-proj", {
-          project_id: "test-proj",
-          project_root: projectDir,
-        }, config),
+        indexCodebase(
+          dbPath,
+          "test-proj",
+          {
+            project_id: "test-proj",
+            project_root: projectDir,
+          },
+          config,
+        ),
       ).rejects.toThrow(OllamaUnreachableError);
     });
   });
@@ -412,10 +457,15 @@ export function double(n: number): number {
 
       const config = { ...TEST_CONFIG, db: dbPath };
 
-      const result = await indexCodebase(dbPath, "test-proj", {
-        project_id: "test-proj",
-        project_root: projectDir,
-      }, config);
+      const result = await indexCodebase(
+        dbPath,
+        "test-proj",
+        {
+          project_id: "test-proj",
+          project_root: projectDir,
+        },
+        config,
+      );
 
       // valid.ts should be indexed
       expect(result.files_indexed).toBe(1);
@@ -452,10 +502,15 @@ export function testAdd(): boolean {
 
       const config = { ...TEST_CONFIG, db: dbPath };
 
-      const result = await indexCodebase(dbPath, "test-proj", {
-        project_id: "test-proj",
-        project_root: projectDir,
-      }, config);
+      const result = await indexCodebase(
+        dbPath,
+        "test-proj",
+        {
+          project_id: "test-proj",
+          project_root: projectDir,
+        },
+        config,
+      );
 
       expect(result.files_indexed).toBe(2);
 
@@ -523,10 +578,15 @@ export function double(n: number): number {
       const config = { ...TEST_CONFIG, db: dbPath };
 
       // First index
-      const first = await indexCodebase(dbPath, "test-proj", {
-        project_id: "test-proj",
-        project_root: projectDir,
-      }, config);
+      const first = await indexCodebase(
+        dbPath,
+        "test-proj",
+        {
+          project_id: "test-proj",
+          project_root: projectDir,
+        },
+        config,
+      );
 
       expect(first.edges_created).toBeGreaterThan(0);
 
@@ -557,10 +617,15 @@ export function triple(n: number): number {
 `,
       );
 
-      const second = await indexCodebase(dbPath, "test-proj", {
-        project_id: "test-proj",
-        project_root: projectDir,
-      }, config);
+      const second = await indexCodebase(
+        dbPath,
+        "test-proj",
+        {
+          project_id: "test-proj",
+          project_root: projectDir,
+        },
+        config,
+      );
 
       // Edges should be replaced (delete-then-reinsert)
       const db2 = await lancedb.connect(dbPath);
@@ -593,10 +658,15 @@ export function triple(n: number): number {
       const config = { ...TEST_CONFIG, db: dbPath };
 
       // First index — capture created_at from project_meta
-      await indexCodebase(dbPath, "test-proj", {
-        project_id: "test-proj",
-        project_root: projectDir,
-      }, config);
+      await indexCodebase(
+        dbPath,
+        "test-proj",
+        {
+          project_id: "test-proj",
+          project_root: projectDir,
+        },
+        config,
+      );
 
       const db1 = await lancedb.connect(dbPath);
       const metaTable1 = await db1.openTable("project_meta");
@@ -607,10 +677,15 @@ export function triple(n: number): number {
       await new Promise((r) => setTimeout(r, 10));
 
       // Second index — created_at must be preserved
-      await indexCodebase(dbPath, "test-proj", {
-        project_id: "test-proj",
-        project_root: projectDir,
-      }, config);
+      await indexCodebase(
+        dbPath,
+        "test-proj",
+        {
+          project_id: "test-proj",
+          project_root: projectDir,
+        },
+        config,
+      );
 
       const db2 = await lancedb.connect(dbPath);
       const metaTable2 = await db2.openTable("project_meta");
@@ -637,10 +712,15 @@ export function triple(n: number): number {
       );
 
       const config = { ...TEST_CONFIG, db: dbPath };
-      const result = await indexCodebase(dbPath, "test-proj", {
-        project_id: "test-proj",
-        project_root: projectDir,
-      }, config);
+      const result = await indexCodebase(
+        dbPath,
+        "test-proj",
+        {
+          project_id: "test-proj",
+          project_root: projectDir,
+        },
+        config,
+      );
 
       // All required fields per CODE-09
       expect(typeof result.files_scanned).toBe("number");

@@ -17,13 +17,7 @@
  * review      — task work is complete, awaiting review
  * done        — task is fully complete
  */
-export const VALID_TASK_STATUSES = [
-  "pending",
-  "ready",
-  "in_progress",
-  "review",
-  "done",
-] as const;
+export const VALID_TASK_STATUSES = ["pending", "ready", "in_progress", "review", "done"] as const;
 export type ValidTaskStatus = (typeof VALID_TASK_STATUSES)[number];
 
 // ────────────────────────────────────────────────────────────────────────────

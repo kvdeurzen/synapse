@@ -231,7 +231,7 @@ Parallelizable: Phase 17 (Tech Debt) and Phase 20 (Skills) can proceed in parall
 | 14. Quality Gates and PEV Workflow | v2.0 | 4/4 | Complete | 2026-03-02 |
 | 15. Foundation | v3.0 | 2/2 | Complete | 2026-03-03 |
 | 16. User Journey Commands | v3.0 | 3/3 | Complete | 2026-03-05 |
-| 17. Tech Debt | 2/2 | Complete   | 2026-03-05 | - |
+| 17. Tech Debt | 2/2 | Complete    | 2026-03-05 | - |
 | 18. RPEV Orchestration | v3.0 | 0/~3 | Not started | - |
 | 19. Agent Prompts + Level-Awareness | v3.0 | 0/3 | Not started | - |
 | 20. Skills Completion | v3.0 | 0/2 | Not started | - |

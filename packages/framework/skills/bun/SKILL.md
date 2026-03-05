@@ -35,3 +35,13 @@ user-invocable: false
 - `npm run <script>` in documentation or scripts — use `bun run` for consistency
 - Installing `node-fetch` or `cross-fetch` — `fetch` is globally available in Bun
 - Using `jest` or `vitest` when `bun:test` is built-in and faster
+
+## Commands
+
+- Run file: `bun <file.ts>`
+- Run tests: `bun test`
+- Run specific test: `bun test <file>`
+- Install deps: `bun install`
+- Run script: `bun run <script>`
+- Build: `bun build <entrypoint> --outdir=./dist`
+- Shell command: `bun run -- <command>`

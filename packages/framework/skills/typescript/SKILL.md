@@ -40,3 +40,9 @@ user-invocable: false
 - `JSON.parse(raw)` without Zod validation — always validate external data
 - Using `interface` for union types — use `type` instead
 - Mutable arrays where readonly would suffice
+
+## Commands
+
+- Type-check: `npx tsc --noEmit`
+- Lint: `npx eslint .` or `bunx biome check .`
+- Format: `npx prettier --write .` or `bunx biome format --write .`

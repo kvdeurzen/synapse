@@ -38,3 +38,10 @@ user-invocable: false
 - Direct DOM manipulation with `document.querySelector` — use refs
 - Inline object/function creation in JSX that causes unnecessary re-renders
 - Deeply nested conditional JSX — extract into named sub-components
+
+## Commands
+
+- Dev server: `bun run dev` or `npx next dev` (Next.js)
+- Build: `bun run build`
+- Lint: `npx eslint src/`
+- Type-check: `npx tsc --noEmit`

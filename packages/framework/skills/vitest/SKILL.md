@@ -37,3 +37,11 @@ user-invocable: false
 - `setTimeout`/`sleep` in tests — use fake timers or redesign to avoid timing
 - Testing third-party library behavior — test your integration code, not the library itself
 - Over-mocking: mocking so much that the test only validates the mock configuration
+
+## Commands
+
+- Run all: `bun test` (bun:test) or `npx vitest` (vitest)
+- Run specific: `bun test <file>` or `npx vitest <file>`
+- Watch mode: `npx vitest --watch`
+- Coverage: `npx vitest --coverage`
+- Run single test: `npx vitest -t "test name"`

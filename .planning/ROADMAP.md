@@ -47,7 +47,7 @@ See [v2.0 Archive](milestones/v2.0-ROADMAP.md) for full details.
 - [x] **Phase 16: User Journey Commands** - /synapse:init, /synapse:map, /synapse:refine, /synapse:status, /synapse:focus slash commands and user journey documentation (completed 2026-03-05)
 - [x] **Phase 17: Tech Debt** - escapeSQL dedup, created_at fix, INT-02 ULID edges, lint warnings, config ordering (completed 2026-03-05)
 - [x] **Phase 18: RPEV Orchestration** - readiness gating, auto-queue Refine→Plan→Execute, trust config expansion, decision persistence (completed 2026-03-05)
-- [ ] **Phase 19: Agent Prompts + Level-Awareness** - MCP-first principle, tool sequences, frontmatter, handoff protocol, level-aware behavior
+- [x] **Phase 19: Agent Prompts + Level-Awareness** - MCP-first principle, tool sequences, frontmatter, handoff protocol, level-aware behavior (plan 1/3 complete)
 - [ ] **Phase 20: Skills Completion** - dynamic skill injection from project.toml, language-agnostic agents, fleshed-out skills, new generic skills
 - [ ] **Phase 21: Agent Pool** - configurable slots, auto-assignment, work queue, agent-based focus
 - [ ] **Phase 22: Install Script** - one-command install.sh with prerequisite checks, file wiring, and Ollama smoke test
@@ -136,7 +136,7 @@ Plans:
 **Plans**: 3 plans
 
 Plans:
-- [ ] 19-01-PLAN.md — Add mcpServers frontmatter + shared MCP header + error handling to all 11 agents (AGENT-01, AGENT-03, AGENT-08)
+- [x] 19-01-PLAN.md — Add mcpServers frontmatter + shared MCP header + error handling to all 11 agents (AGENT-01, AGENT-03, AGENT-08)
 - [ ] 19-02-PLAN.md — Expand Key Tool Sequences with literal parameters + domain mode injection (AGENT-02, AGENT-09)
 - [ ] 19-03-PLAN.md — Orchestrator handoff protocol, validator findings-as-document, persistence patterns, context_refs flow (AGENT-04, AGENT-05, AGENT-06, AGENT-07, AGENT-10, AGENT-11)
 
@@ -239,7 +239,7 @@ Parallelizable: Phase 17 (Tech Debt) and Phase 20 (Skills) can proceed in parall
 | 16. User Journey Commands | v3.0 | 3/3 | Complete | 2026-03-05 |
 | 17. Tech Debt | v3.0 | 2/2 | Complete | 2026-03-05 |
 | 18. RPEV Orchestration | 3/3 | Complete    | 2026-03-05 | - |
-| 19. Agent Prompts + Level-Awareness | v3.0 | 0/3 | Not started | - |
+| 19. Agent Prompts + Level-Awareness | v3.0 | 1/3 | In progress | - |
 | 20. Skills Completion | v3.0 | 0/2 | Not started | - |
 | 21. Agent Pool | v3.0 | 0/~2 | Not started | - |
 | 22. Install Script | v3.0 | 0/2 | Not started | - |

@@ -2,16 +2,16 @@
 gsd_state_version: 1.0
 milestone: v3.0
 milestone_name: Working Prototype
-status: completed
-stopped_at: Phase 19 context gathered
-last_updated: "2026-03-05T19:01:12.640Z"
-last_activity: 2026-03-05 — Completed Phase 18-03 (RPEV User Commands + Agent Permissions)
+status: in_progress
+stopped_at: Completed Phase 19-01 (Agent Prompts + Level Awareness)
+last_updated: "2026-03-05T19:24:00Z"
+last_activity: 2026-03-05 — Completed Phase 19-01 (mcpServers + MCP headers + level sections for all 11 agents)
 progress:
   total_phases: 10
   completed_phases: 4
   total_plans: 10
-  completed_plans: 10
-  percent: 20
+  completed_plans: 11
+  percent: 22
 ---
 
 # Project State
@@ -26,12 +26,12 @@ See: .planning/PROJECT.md (updated 2026-03-03)
 
 ## Current Position
 
-Phase: 18 of 24 (RPEV Orchestration) — complete
-Plan: 3 of 3 in current phase (phase complete)
-Status: Phase complete, ready for Phase 19
-Last activity: 2026-03-05 — Completed Phase 18-03 (RPEV User Commands + Agent Permissions)
+Phase: 19 of 24 (Agent Prompts + Level Awareness) — plan 1 complete
+Plan: 1 of 1 in current phase (phase complete)
+Status: Phase 19 complete, ready for Phase 20
+Last activity: 2026-03-05 — Completed Phase 19-01 (mcpServers + MCP headers + level sections for all 11 agents)
 
-Progress: [██░░░░░░░░] 20%
+Progress: [██░░░░░░░░] 22%
 
 ## Performance Metrics
 
@@ -54,6 +54,7 @@ Progress: [██░░░░░░░░] 20%
 | Phase 17-tech-debt P02 | 5min | 2 tasks | 64 files |
 | Phase 18-rpev-orchestration P02 | 4min | 2 tasks | 2 files |
 | Phase 18-rpev-orchestration P03 | 3min | 2 tasks | 4 files |
+| Phase 19-agent-prompts P01 | 4min | 1 task | 11 files |
 
 ## Accumulated Context
 
@@ -94,11 +95,14 @@ Key decisions affecting v3.0:
 - [Phase 18-03]: Two-tier approval UX in /synapse:focus: summary-first (Tier 1) for quick triage, discuss-deeper (Tier 2) for conversational review — mirrors how users evaluate plans
 - [Phase 18-03]: Stage document is more authoritative than task tree status for RPEV stage display in /synapse:status — avoids stale status mismatch
 - [Phase 18-03]: store_document and link_documents granted to 4 specialist agents (plan-reviewer, integration-checker, executor, validator) as Phase 19 AGENT-05/06/07 prep — permissions expanded now, behaviors added in Phase 19
+- [Phase 19-01]: mcpServers: ["synapse"] added to all 11 agent frontmatter — prevents silent MCP tool loss in subagents (GitHub #5465, #13605)
+- [Phase 19-01]: Two-tier error handling in all agents: WRITE failure = HALT + report, READ failure = warn + continue; connection error on first call = HALT
+- [Phase 19-01]: Level-aware context budgets: epic=8000+, feature=6000, component=4000, task=2000-4000 tokens; 6 decision-maker agents get 4-level section, 5 executor-tier agents get 2-tier section
 
 ### Blockers/Concerns
 
 - Hook path resolution silently fails outside repo root (confirmed by two GitHub issues) — Phase 15 fixes this first
-- Subagents may not inherit MCP tools without `mcpServers:` frontmatter (GitHub issues #5465, #13605) — Phase 19 adds this to all agents
+- ~~Subagents may not inherit MCP tools without `mcpServers:` frontmatter (GitHub issues #5465, #13605)~~ — RESOLVED: Phase 19-01 added mcpServers to all 11 agents
 - E2E validation (Phase 24) will surface unknown failure modes; Phase 24 plan 24-02 is dedicated to patching top-3
 
 ### Pending Todos
@@ -107,6 +111,6 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-03-05T19:01:12.635Z
-Stopped at: Phase 19 context gathered
-Resume file: .planning/phases/19-agent-prompts-level-awareness/19-CONTEXT.md
+Last session: 2026-03-05T19:24:00Z
+Stopped at: Completed Phase 19-01 (Agent Prompts + Level Awareness)
+Resume file: .planning/phases/19-agent-prompts-level-awareness/19-01-SUMMARY.md

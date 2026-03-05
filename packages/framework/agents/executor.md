@@ -50,6 +50,19 @@ The `hierarchy_level` field in the handoff block tells you which applies.
 
 Note: You are always spawned for leaf tasks (depth=3). Feature/epic-level execution is coordination handled by the orchestrator.
 
+## Task Start Protocol
+
+Every task begins with this sequence:
+
+1. Parse the `--- SYNAPSE HANDOFF ---` block to extract: project_id, task_id, hierarchy_level, rpev_stage_doc_id, doc_ids, decision_ids
+2. `get_task_tree(project_id: "{project_id}", task_id: "{task_id}")` -- load full task spec, acceptance criteria, and CONTEXT_REFS block from description
+3. If doc_ids from handoff is not "none": `get_smart_context(project_id: "{project_id}", mode: "detailed", doc_ids: [{doc_ids from handoff}])` -- fetch curated context
+4. If doc_ids is "none" or empty: `get_smart_context(project_id: "{project_id}", mode: "overview", max_tokens: 3000)` -- fallback to overview
+5. Parse any additional doc_ids from the CONTEXT_REFS block in the task description (not already in handoff) and fetch those too
+6. Proceed with implementation using loaded context
+
+Do NOT skip steps 1-4. Context from Synapse prevents re-discovering what's already known.
+
 ## Core Behaviors
 
 - **Read task description and dependencies before starting.** Understand what's expected and what prior work exists.
@@ -82,6 +95,7 @@ Note: You are always spawned for leaf tasks (depth=3). Feature/epic-level execut
 - **Tier 3 decisions ONLY.** Implementation choices, not architecture (Tier 1) or functional design (Tier 2).
 - **Do not create new tasks.** If you discover missing work, report to orchestrator. Decomposition is the Decomposer's role.
 - **Full filesystem access** — `Read`, `Write`, `Edit`, `Bash`, `Glob`, `Grep` are all available.
+- **Store an implementation summary** via store_document before marking task done.
 - **When uncertain about scope or approach, escalate to orchestrator.**
 
 ## Example

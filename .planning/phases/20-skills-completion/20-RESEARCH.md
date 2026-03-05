@@ -561,30 +561,64 @@ Note: The old `skills = [...]` field is removed entirely. `role_skills` is the o
 - Key conventions: documented in Code Examples section above
 - Commands: documented in Code Examples section above
 
-### New Generic Skills (SKILL-05)
+### New Generic Skills (SKILL-05) — Community-Sourced
 
-**testing-strategy/SKILL.md**
-- Language-agnostic testing pyramid, unit/integration/e2e scope, mocking strategy, what to test vs what not to test
+Full research with source URLs: see `generic-skills-research.md` in this directory.
+
+**testing-strategy/SKILL.md** (Sources: Martin Fowler's Practical Test Pyramid, awesome-cursorrules Vitest/Cypress rules, caduh.com Testing Pyramid guide, AI Hero TDD Claude Code skill)
+- Pyramid ratio: 60–70% unit / 20–30% integration / 5–10% E2E
+- Test behavior not implementation: public interfaces only; private methods indicate design problems
+- Mocking discipline: mock at boundaries (external services, I/O, clock), not internal collaborators
+- No duplication across levels: if a unit test covers an edge case, E2E should not repeat it
+- TDD vertically: one test → one implementation → repeat; never bulk-write tests
+- Flake prevention: control time, randomness, and network deterministically; never sleep
 - Commands: language-neutral (reference to project's testing skill for actual commands)
 
-**architecture-design/SKILL.md**
-- ADR (Architecture Decision Record) format, separation of concerns, dependency direction, interface-first design, deferred decisions
+**architecture-design/SKILL.md** (Sources: "The Architecture is the Prompt" hexagonal design, joelparkerhenderson/architecture-decision-record, Kirill Markin cursor IDE rules, DDD+Hexagonal for AI Agents)
+- Dependency direction is non-negotiable: infrastructure → application → domain; never reverse
+- Interface before implementation: define ports/contracts first, then write adapters
+- ADR every significant decision: Title / Status / Context / Decision / Consequences; one decision per ADR; immutable once accepted
+- Functional core, imperative shell: pure business logic at center; I/O and side effects at edges
+- Architecture as AI prompt: clean boundaries let agents work in isolated slices without full system context
+- Y-statement format: "In the context of X, facing concern Y, we decided Z, to achieve Q, accepting R"
 - Commands: documentation-related (no executables — this is a cognitive skill)
 
-**security/SKILL.md**
-- Input validation, parameterized queries (SQL injection), secret management (no hardcoded keys), least-privilege, dependency audit
+**security/SKILL.md** (Sources: Cloud Security Alliance R.A.I.L.G.U.A.R.D. framework, Sean Goedecke "Principles for Coding Securely with LLMs", Van-LLM-Crew/cursor-secure-coding ASVS Level 1/2)
+- Parameterized queries always: never concatenate user input into SQL/queries
+- Secrets in vaults, never in code: environment variables minimum; proper secret management preferred
+- Least privilege everywhere: DB permissions, API scopes, agent tool access
+- LLM output = untrusted input: sanitize before execution or display
+- No unsafe functions: `eval()`, `exec()`, raw SQL string construction are banned
+- Dependency audit continuously: scan for CVEs; approve new dependencies explicitly
+- Human in the loop for destructive operations: shell commands, DB writes, user impersonation
 - Commands: `npm audit`, `cargo audit`, `pip-audit`, `trivy` (tool-agnostic listing)
 
-**brainstorming/SKILL.md**
-- Structured brainstorming for technical problem solving: option enumeration, tradeoff analysis, DECIDED/OPEN/EMERGING states
+**brainstorming/SKILL.md** (Sources: ratacat/claude-skills brainstorming skill, claude-cortex brainstorming skill, TechnickAI brainstorming skill)
+- One question at a time: never overwhelm with multiple simultaneous questions
+- Present options before recommending: enumerate at least 3 distinct approaches with explicit tradeoffs
+- Structure each option: description / benefits / drawbacks / "best when" conditions / risk assessment
+- YAGNI discipline: simplest solution that solves the stated problem wins unless clear reason otherwise
+- Document the decision: capture what, why, key decisions, and open questions in markdown
+- Avoid hybrid defaults: they optimize for neither option; force a clear choice with explicit criteria
 - Commands: none (cognitive skill)
 
-**defining-requirements/SKILL.md**
-- Requirements quality: testable, unambiguous, prioritized (must/should/could), acceptance criteria format, avoiding gold-plating
+**defining-requirements/SKILL.md** (Sources: Kiro spec-driven development, nikiforovall spec-driven skill with EARS format, Prolifics Testing "Ten Attributes of Testable Requirements", Gherkin Acceptance Criteria Claude Code skill)
+- EARS format: "When [condition], the system shall [behavior]" — eliminates ambiguity
+- Given/When/Then acceptance criteria: every requirement has a testable scenario
+- No feature without business justification: necessity attribute prevents gold-plating
+- Sequential gate process: Requirements → Design → Tasks → Implementation; never skip
+- Zero improvisation in implementation: execute spec exactly as written; deviations require spec update
+- Unambiguous language: ban "easy", "fast", "adequate", "sometimes"; use measurable quantities
+- Traceability: every requirement has a unique ID and links to test cases
 - Commands: none (cognitive skill)
 
-**documentation/SKILL.md**
-- When to document (decisions, APIs, non-obvious behavior), what not to document (obvious code), README structure, inline comment conventions
+**documentation/SKILL.md** (Sources: Kirill Markin cursor IDE rules, awesome-cursorrules JS/TS quality rules, community consensus on comments, DEV Community cursor rules guide)
+- Comments explain why, not what: if code is clear, comment explains the reasoning, not the mechanics
+- JSDoc for all public API surfaces: exported functions, classes, and types need doc comments; private internals do not
+- README at major feature boundaries: each significant module/feature should have a README
+- Never duplicate documentation: single source of truth; link rather than restate
+- Self-documenting names reduce comment need: invest in naming before writing a comment
+- Structured logging over string interpolation: treat log output as queryable data
 - Commands: documentation generator references (language-specific, listed neutrally)
 
 ---
@@ -641,8 +675,16 @@ Note: The old `skills = [...]` field is removed entirely. `role_skills` is the o
 - tailwindcss.com v4 release notes — CSS-first config, bg-linear-to-*, Lightning CSS confirmed via WebSearch cross-referenced with official site
 - github.com/PatrickJS/awesome-cursorrules — Python/TS cursor rules community source
 
-### Tertiary (LOW confidence)
-- WebSearch results for architecture-design, security, brainstorming skill conventions — patterns well-known but not verified against a single canonical source; write from established principles
+### Tertiary (HIGH confidence — upgraded from LOW after dedicated research)
+- Martin Fowler's Practical Test Pyramid — canonical language-agnostic testing reference
+- Cloud Security Alliance R.A.I.L.G.U.A.R.D. framework — security cursor rules
+- Sean Goedecke "Principles for Coding Securely with LLMs" — LLM-specific security
+- Van-LLM-Crew/cursor-secure-coding — OWASP/ASVS cursor rules
+- joelparkerhenderson/architecture-decision-record — canonical ADR reference
+- ratacat/claude-skills, claude-cortex, TechnickAI brainstorming skills — 3 independently verified
+- Kiro spec-driven development, nikiforovall EARS format skill — requirements processes
+- Prolifics Testing "Ten Attributes of Testable Requirements" — quality reference
+- Full details: generic-skills-research.md in phase directory
 
 ---
 
@@ -655,7 +697,7 @@ Note: The old `skills = [...]` field is removed entirely. `role_skills` is the o
 - Agent prompt changes: HIGH — all 7 files inspected; all 9 specific lines identified
 - Skill content (existing 3 thin skills): HIGH for sql/python (extend established pattern); MEDIUM for tailwind (v4 update needed, verified via official source)
 - Skill content (new language skills: rust, go, cargo-test, go-test, pytest): HIGH — authoritative community sources identified
-- Skill content (new generic skills): MEDIUM — established patterns, no single canonical source
+- Skill content (new generic skills): HIGH — 18+ community sources researched; top 3 per domain condensed (see generic-skills-research.md)
 
 **Research date:** 2026-03-05
 **Valid until:** 2026-04-05 (stable domain — no fast-moving libraries involved)

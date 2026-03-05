@@ -2,15 +2,15 @@
 gsd_state_version: 1.0
 milestone: v3.0
 milestone_name: Working Prototype
-status: in_progress
-stopped_at: Completed Phase 19-01 (Agent Prompts + Level Awareness)
-last_updated: "2026-03-05T19:24:00Z"
+status: completed
+stopped_at: Completed Phase 19-02 (Concrete Tool Sequences + Domain Mode Injection)
+last_updated: "2026-03-05T19:39:17.081Z"
 last_activity: 2026-03-05 — Completed Phase 19-01 (mcpServers + MCP headers + level sections for all 11 agents)
 progress:
   total_phases: 10
   completed_phases: 4
-  total_plans: 10
-  completed_plans: 11
+  total_plans: 13
+  completed_plans: 12
   percent: 22
 ---
 
@@ -55,6 +55,7 @@ Progress: [██░░░░░░░░] 22%
 | Phase 18-rpev-orchestration P02 | 4min | 2 tasks | 2 files |
 | Phase 18-rpev-orchestration P03 | 3min | 2 tasks | 4 files |
 | Phase 19-agent-prompts P01 | 4min | 1 task | 11 files |
+| Phase 19 P02 | 4min | 2 tasks | 12 files |
 
 ## Accumulated Context
 
@@ -98,6 +99,9 @@ Key decisions affecting v3.0:
 - [Phase 19-01]: mcpServers: ["synapse"] added to all 11 agent frontmatter — prevents silent MCP tool loss in subagents (GitHub #5465, #13605)
 - [Phase 19-01]: Two-tier error handling in all agents: WRITE failure = HALT + report, READ failure = warn + continue; connection error on first call = HALT
 - [Phase 19-01]: Level-aware context budgets: epic=8000+, feature=6000, component=4000, task=2000-4000 tokens; 6 decision-maker agents get 4-level section, 5 executor-tier agents get 2-tier section
+- [Phase 19]: store_document before update_task: validator/integration-checker/plan-reviewer store findings as linked documents with doc_id={agent}-findings-{task_id}, then update_task status only -- findings remain queryable, task descriptions stay clean
+- [Phase 19]: Domain autonomy modes injected from trust.toml [domains] section into session additionalContext via synapse-startup.js -- agents can differentiate co-pilot/autopilot/advisory behavior per domain
+- [Phase 19]: {agent}-{type}-{task_id} naming convention for all agent-stored documents -- enables predictable doc_id lookup and deduplication via store_document upsert
 
 ### Blockers/Concerns
 
@@ -111,6 +115,6 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-03-05T19:24:00Z
-Stopped at: Completed Phase 19-01 (Agent Prompts + Level Awareness)
-Resume file: .planning/phases/19-agent-prompts-level-awareness/19-01-SUMMARY.md
+Last session: 2026-03-05T19:39:17.077Z
+Stopped at: Completed Phase 19-02 (Concrete Tool Sequences + Domain Mode Injection)
+Resume file: None

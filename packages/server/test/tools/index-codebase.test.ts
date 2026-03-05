@@ -575,7 +575,53 @@ export function triple(n: number): number {
     });
   });
 
-  // ── 8. Return value correctness (CODE-09) ─────────────────────────────────
+  // ── 8. project_meta created_at preservation (DEBT-02) ────────────────────
+
+  describe("project_meta created_at preservation (DEBT-02)", () => {
+    test("re-running index_codebase preserves original created_at", async () => {
+      const dbPath = join(tmpDir, "db");
+      await initProject(dbPath, "test-proj");
+
+      writeFileSync(
+        join(projectDir, "utils.ts"),
+        `export function add(a: number, b: number): number {
+  return a + b;
+}
+`,
+      );
+
+      const config = { ...TEST_CONFIG, db: dbPath };
+
+      // First index — capture created_at from project_meta
+      await indexCodebase(dbPath, "test-proj", {
+        project_id: "test-proj",
+        project_root: projectDir,
+      }, config);
+
+      const db1 = await lancedb.connect(dbPath);
+      const metaTable1 = await db1.openTable("project_meta");
+      const rows1 = await metaTable1.query().toArray();
+      const originalCreatedAt = rows1[0].created_at as string;
+
+      // Wait briefly to ensure new timestamp would differ
+      await new Promise((r) => setTimeout(r, 10));
+
+      // Second index — created_at must be preserved
+      await indexCodebase(dbPath, "test-proj", {
+        project_id: "test-proj",
+        project_root: projectDir,
+      }, config);
+
+      const db2 = await lancedb.connect(dbPath);
+      const metaTable2 = await db2.openTable("project_meta");
+      const rows2 = await metaTable2.query().toArray();
+
+      expect(rows2.length).toBe(1);
+      expect(rows2[0].created_at).toBe(originalCreatedAt);
+    });
+  });
+
+  // ── 9. Return value correctness (CODE-09) ─────────────────────────────────
 
   describe("return value correctness (CODE-09)", () => {
     test("returns all required counters", async () => {

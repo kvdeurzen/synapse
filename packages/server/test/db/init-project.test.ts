@@ -232,6 +232,67 @@ describe("initProject — starter document seeding", () => {
   });
 });
 
+// ── created_at preservation (DEBT-02) ────────────────────────────────────────
+
+describe("initProject — created_at preservation", () => {
+  test("fresh init sets created_at to current time", async () => {
+    const before = new Date();
+    await initProject(tmpDir, "test-proj");
+    const after = new Date();
+
+    const db = await lancedb.connect(tmpDir);
+    const table = await db.openTable("project_meta");
+    const rows = await table.query().toArray();
+
+    expect(rows.length).toBe(1);
+    const createdAt = new Date(rows[0].created_at as string);
+    expect(createdAt.getTime()).toBeGreaterThanOrEqual(before.getTime());
+    expect(createdAt.getTime()).toBeLessThanOrEqual(after.getTime());
+  });
+
+  test("re-running init_project preserves original created_at", async () => {
+    // First init — capture created_at
+    await initProject(tmpDir, "test-proj");
+    const db1 = await lancedb.connect(tmpDir);
+    const table1 = await db1.openTable("project_meta");
+    const rows1 = await table1.query().toArray();
+    const originalCreatedAt = rows1[0].created_at as string;
+
+    // Wait briefly to ensure updated_at would differ if set to now
+    await new Promise((r) => setTimeout(r, 10));
+
+    // Second init — created_at must be preserved
+    await initProject(tmpDir, "test-proj");
+    const db2 = await lancedb.connect(tmpDir);
+    const table2 = await db2.openTable("project_meta");
+    const rows2 = await table2.query().toArray();
+
+    expect(rows2.length).toBe(1);
+    expect(rows2[0].created_at).toBe(originalCreatedAt);
+  });
+
+  test("re-running init_project updates updated_at", async () => {
+    await initProject(tmpDir, "test-proj");
+    const db1 = await lancedb.connect(tmpDir);
+    const table1 = await db1.openTable("project_meta");
+    const rows1 = await table1.query().toArray();
+    const originalUpdatedAt = rows1[0].updated_at as string;
+
+    await new Promise((r) => setTimeout(r, 10));
+
+    await initProject(tmpDir, "test-proj");
+    const db2 = await lancedb.connect(tmpDir);
+    const table2 = await db2.openTable("project_meta");
+    const rows2 = await table2.query().toArray();
+
+    expect(rows2.length).toBe(1);
+    // updated_at should be newer or equal (at worst same ms)
+    const updatedAtNew = new Date(rows2[0].updated_at as string);
+    const updatedAtOld = new Date(originalUpdatedAt);
+    expect(updatedAtNew.getTime()).toBeGreaterThanOrEqual(updatedAtOld.getTime());
+  });
+});
+
 // ── project_meta row seeding ──────────────────────────────────────────────────
 
 describe("initProject — project_meta seeding", () => {

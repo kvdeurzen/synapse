@@ -6,6 +6,7 @@ import { z } from "zod";
 import { insertBatch } from "../db/batch.js";
 import { connectDb } from "../db/connection.js";
 import { DocumentRowSchema, ProjectMetaRowSchema, TABLE_NAMES, TABLE_SCHEMAS } from "../db/schema.js";
+import { escapeSQL } from "../db/sql-helpers.js";
 import { createToolLogger, logger } from "../logger.js";
 import type { SynapseConfig, ToolResult } from "../types.js";
 
@@ -129,14 +130,6 @@ Reusable technical decisions and coding conventions for this project.
 `,
   },
 };
-
-// ────────────────────────────────────────────────────────────────────────────
-// Helpers
-// ────────────────────────────────────────────────────────────────────────────
-
-function escapeSQL(val: string): string {
-  return val.replace(/'/g, "''");
-}
 
 // ────────────────────────────────────────────────────────────────────────────
 // Core logic (testable without MCP server)
@@ -331,16 +324,29 @@ export async function initProject(
   }
 
   // ── Seed project_meta row (always upsert for idempotency) ────────────────
+  // Open a fresh table reference to avoid stale data (Pitfall 5)
   const projectMetaTable = await db.openTable("project_meta");
-  await projectMetaTable.delete(`project_id = '${escapeSQL(projectId)}'`);
+
+  // Read existing created_at before deleting so we can preserve it (DEBT-02)
+  const existingRows = await projectMetaTable
+    .query()
+    .where(`project_id = '${escapeSQL(projectId)}'`)
+    .select(["created_at"])
+    .limit(1)
+    .toArray();
+
   const metaNow = new Date().toISOString();
+  const originalCreatedAt =
+    existingRows.length > 0 ? (existingRows[0].created_at as string) : metaNow;
+
+  await projectMetaTable.delete(`project_id = '${escapeSQL(projectId)}'`);
   await insertBatch(
     projectMetaTable,
     [
       {
         project_id: projectId,
         name: projectId,
-        created_at: metaNow,
+        created_at: originalCreatedAt,
         updated_at: metaNow,
         description: null,
         last_index_at: null,

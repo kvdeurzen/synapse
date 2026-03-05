@@ -5,6 +5,7 @@ import { z } from "zod";
 import { insertBatch } from "../db/batch.js";
 import { connectDb } from "../db/connection.js";
 import { CodeChunkRowSchema, ProjectMetaRowSchema, RelationshipRowSchema } from "../db/schema.js";
+import { escapeSQL } from "../db/sql-helpers.js";
 import { OllamaUnreachableError } from "../errors.js";
 import { createToolLogger, logger } from "../logger.js";
 import { logActivity } from "../services/activity-log.js";
@@ -50,14 +51,6 @@ export interface IndexCodebaseResult {
   files_deleted: number; // files in DB but not on disk anymore
   edges_created: number;
   errors: string[]; // per-file errors (syntax error warnings)
-}
-
-// ────────────────────────────────────────────────────────────────────────────
-// SQL escape helper
-// ────────────────────────────────────────────────────────────────────────────
-
-function escapeSQL(val: string): string {
-  return val.replace(/'/g, "''");
 }
 
 // ────────────────────────────────────────────────────────────────────────────
@@ -264,8 +257,21 @@ export async function indexCodebase(
 
   // ── 9. Update project_meta last_index_at (upsert via delete+insert) ─────
   try {
+    // Open a fresh table reference to avoid stale data (Pitfall 5)
     const projectMetaTable = await db.openTable("project_meta");
+
+    // Read existing created_at before deleting so we can preserve it (DEBT-02)
+    const existingMeta = await projectMetaTable
+      .query()
+      .where(`project_id = '${escapeSQL(projectId)}'`)
+      .select(["created_at"])
+      .limit(1)
+      .toArray();
+
     const now = new Date().toISOString();
+    const originalCreatedAt =
+      existingMeta.length > 0 ? (existingMeta[0].created_at as string) : now;
+
     await projectMetaTable.delete(`project_id = '${escapeSQL(projectId)}'`);
     await insertBatch(
       projectMetaTable,
@@ -273,7 +279,7 @@ export async function indexCodebase(
         {
           project_id: projectId,
           name: projectId,
-          created_at: now,
+          created_at: originalCreatedAt,
           updated_at: now,
           description: null,
           last_index_at: now,

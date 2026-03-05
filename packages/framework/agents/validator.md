@@ -79,7 +79,7 @@ Do NOT skip steps 1-5. The executor implemented against this context -- validate
 
 **Verify Against Spec:**
 1. Inspect code via Read, search_code, Glob, Grep
-2. Run tests via `Bash("bun test {test_file}")` -- capture exit code
+2. Run tests via `Bash("{test_command} {test_file}")` -- capture exit code (test_command comes from the project's testing skill, e.g., pytest, bun test, cargo test)
 3. Run broader module tests for regression check
 
 **Pass Task:**
@@ -106,7 +106,7 @@ Task: "Implement JWT signing utility — RS256, 15-min TTL, jose library"
 2. `query_decisions` — find decision D-47: "JWT with refresh tokens, RS256, jose library"
 3. `Read src/auth/jwt.ts` — verify: uses jose (✓), RS256 (✓), check TTL...
 4. TTL is set to `'1h'` instead of `'15m'` — spec says 15-min
-5. `Bash("bun test src/auth/jwt")` — tests pass but don't assert TTL value
+5. `Bash("{test_command} for the auth JWT module")` — tests pass but don't assert TTL value
 6. `store_document(project_id: "{project_id}", doc_id: "validator-findings-{task_id}", title: "Validation Findings: JWT signing utility", category: "validation_report", status: "active", tags: "|validator|findings|{task_id}|", content: "## Findings\nToken TTL mismatch\n\n## Expected\n15-min TTL per spec and decision D-47\n\n## Found\nTTL set to '1h' at jwt.ts:23\n\n## Location\nsrc/auth/jwt.ts:23\n\n## Test Output\nTests pass but do not assert TTL value", actor: "validator")`
 7. `link_documents(project_id: "{project_id}", from_id: "validator-findings-{task_id}", to_id: "{task_id}", relationship_type: "validates", actor: "validator")`
 8. `update_task(project_id: "{project_id}", task_id: "{task_id}", status: "failed", actor: "validator")` -- status ONLY
@@ -128,7 +128,7 @@ For each acceptance criterion in the task spec:
 1. **Check files exist:** Verify all expected files exist at the specified paths (use `Glob`, `Read`)
 2. **Check exports and patterns:** Verify expected exports, function signatures, types, or patterns are present in the implementation (use `Grep`, `Read`, `search_code`)
 3. **Run tests:** Execute the test commands specified in the unit test expectations:
-   - Use `bun test` (not jest or vitest) for this project
+   - Use the test command from the project's testing skill (e.g., `pytest` for Python, `cargo test` for Rust, `bun test` for TypeScript/Bun)
    - Run the specific test file(s) for this task, not the full suite
    - Capture exit code — non-zero is a failure regardless of output
 4. **Check for regressions:** Run the broader test suite for the affected module to ensure existing tests still pass

@@ -168,9 +168,9 @@ Epic: "Authentication System" (depth 0, from Architect)
 **Dependencies:** Feature 2 depends on Feature 1 (needs token format). Feature 3 depends on Features 1 and 2. Feature 4 depends on Feature 1.
 
 **Leaf tasks for Feature 1 (depth 3):**
-- Task: "Implement JWT signing utility" — `src/auth/jwt.ts`, `test/auth/jwt.test.ts` (2 files)
-- Task: "Create token payload schema" — `src/auth/types.ts`, `src/auth/schema.ts` (2 files)
-- Task: "Implement refresh token generation with rotation" — `src/auth/refresh.ts`, `test/auth/refresh.test.ts` (2 files)
+- Task: "Implement JWT signing utility" — signing module source + test file (2 files)
+- Task: "Create token payload schema" — payload types module + schema validation module (2 files)
+- Task: "Implement refresh token generation with rotation" — refresh module source + test file (2 files)
 
 Each task touches 2 files — well within the 2-5 file guideline.
 
@@ -217,7 +217,7 @@ For every epic (depth=0), create a child "epic integration" task (depth=1) that:
 ### Validation Task Acceptance Criteria
 
 All validation tasks must include acceptance criteria that are independently verifiable by the Validator and Integration Checker agents without additional context from you:
-- Specific commands to run (e.g., `bun test packages/server/src/auth/`)
+- Specific commands to run (e.g., run tests for the auth module using the test command from the project's testing skill)
 - Expected test count or coverage thresholds
 - Files that must exist and exports/patterns they must contain
 

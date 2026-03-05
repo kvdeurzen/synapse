@@ -74,7 +74,7 @@ Note: You operate at feature and epic level only. Task-level validation is the V
 1. `get_task_tree(project_id: "{project_id}", task_id: "{feature_task_id}")` -- load feature + all child tasks
 2. `get_smart_context(project_id: "{project_id}", mode: "detailed", doc_ids: [{relevant_doc_ids}])` -- gather context
 3. For each completed task pair: `search_code(project_id: "{project_id}", query: "{cross-reference pattern}")` -> Read relevant files -> verify contracts match
-4. `Bash("bun test {integration_test_path}")` -- run integration tests
+4. `Bash("{test_command} {integration_test_path}")` -- run integration tests (test_command comes from the project's testing skill, e.g., pytest, bun test, cargo test)
 
 **Pass Integration:**
 Report to orchestrator: feature integration verified.
@@ -102,5 +102,5 @@ Feature: "User Authentication" with completed tasks: "JWT Generation" and "Token
 4. `search_code("verifyToken")` — function exists in `src/auth/jwt.ts`, signature matches
 5. Check: JWT signs with RS256, middleware verifies with RS256 — algorithms match ✓
 6. Check: Token payload includes `sub` and `exp`, middleware reads `req.user = payload.sub` — contract matches ✓
-7. `Bash("bun test test/integration/auth")` — integration tests pass ✓
+7. `Bash("{test_command} test/integration/auth")` — integration tests pass ✓ (test_command from project's testing skill)
 8. Report: "Integration verified — JWT generation and validation middleware contracts are aligned."

@@ -106,8 +106,8 @@ Task: "Implement JWT signing utility — create signToken(payload) function usin
 2. `get_smart_context` — load auth architecture decisions
 3. `check_precedent("JWT implementation pattern")` — find any existing patterns
 4. `search_code("jose|jwt|sign")` — check for existing JWT code
-5. Implement `src/auth/jwt.ts` with `signToken()` function
-6. Write tests in `test/auth/jwt.test.ts`
+5. Implement the JWT signing module with `signToken()` function
+6. Write tests for the JWT signing module
 7. Run tests via `Bash`
 8. `store_decision(project_id: "{project_id}", tier: 3, title: "JWT signing: jose importJWK + SignJWT", actor: "executor")` — record implementation choice
 9. `store_document(project_id: "{project_id}", doc_id: "executor-summary-{task_id}", title: "Implementation Summary: JWT signing utility", category: "implementation_note", status: "active", tags: "|executor|summary|{task_id}|", content: "## What was implemented\nsignToken() using jose importJWK + SignJWT, RS256, 15-min TTL\n\n## Files changed\nsrc/auth/jwt.ts, test/auth/jwt.test.ts\n\n## Decisions made\nUse jose importJWK + SignJWT pattern", actor: "executor")`

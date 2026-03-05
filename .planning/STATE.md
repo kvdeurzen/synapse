@@ -2,16 +2,16 @@
 gsd_state_version: 1.0
 milestone: v3.0
 milestone_name: Working Prototype
-status: executing
-stopped_at: Completed 16-02-PLAN.md — refine + status commands, deleted new-goal
-last_updated: "2026-03-05T09:30:38.042Z"
-last_activity: 2026-03-03 — Completed 15-01 (resolveConfig utility + project context injection)
+status: Not started
+stopped_at: Completed 17-01-PLAN.md — escapeSQL extraction, created_at preservation, AST edge resolvability
+last_updated: "2026-03-05T14:41:03.928Z"
+last_activity: 2026-03-05 — Completed Phase 16 (User Journey Commands)
 progress:
-  total_phases: 8
+  total_phases: 10
   completed_phases: 2
-  total_plans: 5
-  completed_plans: 5
-  percent: 50
+  total_plans: 7
+  completed_plans: 6
+  percent: 20
 ---
 
 # Project State
@@ -21,23 +21,23 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-03)
 
 **Core value:** Agents get the right context for any task — from both project decisions and actual code — without wasting tokens on irrelevant content. The orchestrator ensures agents respect established decisions and decompose work to context-window-sized executable units.
-**Current focus:** Phase 15 — Foundation (project_id injection + hook path fixes)
+**Current focus:** Phase 17 — Tech Debt (clean code before RPEV rework)
 **Previous milestones:** v1.0 Data Layer (shipped 2026-03-01), v2.0 Agentic Framework (shipped 2026-03-02)
 
 ## Current Position
 
-Phase: 15 of 22 (Foundation)
-Plan: 1 of 2 in current phase
-Status: In progress
-Last activity: 2026-03-03 — Completed 15-01 (resolveConfig utility + project context injection)
+Phase: 17 of 24 (Tech Debt) — next up
+Plan: 0 of 2 in current phase
+Status: Not started
+Last activity: 2026-03-05 — Completed Phase 16 (User Journey Commands)
 
-Progress: [█████░░░░░] 50%
+Progress: [██░░░░░░░░] 20%
 
 ## Performance Metrics
 
 **v1.0:** 9 phases, 24 plans, 495 tests, 3 days
 **v2.0:** 6 phases, 19 plans, 708 tests (cumulative), 4 days
-**v3.0:** 8 phases planned, 16 plans estimated
+**v3.0:** 10 phases planned, ~21 plans estimated
 
 **By Phase (v3.0):**
 
@@ -50,6 +50,7 @@ Progress: [█████░░░░░] 50%
 | Phase 16-user-journey-commands P01 | 2 | 2 tasks | 2 files |
 | Phase 16-user-journey-commands P03 | 2 | 2 tasks | 2 files |
 | Phase 16 P02 | 2 | 3 tasks | 3 files |
+| Phase 17-tech-debt P01 | 5 | 2 tasks | 7 files |
 
 ## Accumulated Context
 
@@ -61,7 +62,7 @@ Key decisions affecting v3.0:
 - Copy-based install script (not symlinks) — user's `.claude/` is the live copy; install.sh generates it
 - `$CLAUDE_PROJECT_DIR`-prefixed hook paths — required to fix silent hook failures outside repo root
 - `.synapse/config/project.toml` as single source of truth — startup hook reads it; agents never ask user for project_id
-- Phase 16 and Phase 17 can proceed in parallel — install script has no dependency on command file content
+- Phase 17 (Tech Debt) and Phase 20 (Skills) can proceed in parallel with phases 18-19 — both depend only on Phase 15
 - Project context block prepended before baseInstructions in additionalContext — project_id is first thing agents see
 - Hard fail on missing project.toml uses process.exit(0) — never block session with non-zero exit; error surfaces via additionalContext
 - Skills validation is warn-only — misconfigured skills never block session start
@@ -77,12 +78,14 @@ Key decisions affecting v3.0:
 - [Phase 16]: DECIDED/OPEN/EMERGING are the canonical decision states for refinement sessions
 - [Phase 16]: At Project and Epic level, user must explicitly signal readiness — no auto-transition to Plan
 - [Phase 16]: Refinement state persisted via store_document with doc_id reuse on resume (versioning not duplication)
+- [Phase 17-tech-debt]: File path as doc_id for code files in documents table — direct lookup compat with relationships, no ULID mapping needed (Phase 17-01)
+- [Phase 17-tech-debt]: code_chunks.doc_id stays as file path — consistent with documents.doc_id=filePath; ULID migration deferred (Phase 17-01)
 
 ### Blockers/Concerns
 
 - Hook path resolution silently fails outside repo root (confirmed by two GitHub issues) — Phase 15 fixes this first
-- Subagents may not inherit MCP tools without `mcpServers:` frontmatter (GitHub issues #5465, #13605) — Phase 18 adds this to all agents
-- E2E validation (Phase 21) will surface unknown failure modes; Phase 21 plan 21-02 is dedicated to patching top-3
+- Subagents may not inherit MCP tools without `mcpServers:` frontmatter (GitHub issues #5465, #13605) — Phase 19 adds this to all agents
+- E2E validation (Phase 24) will surface unknown failure modes; Phase 24 plan 24-02 is dedicated to patching top-3
 
 ### Pending Todos
 
@@ -90,6 +93,6 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-03-05T09:26:51.728Z
-Stopped at: Completed 16-02-PLAN.md — refine + status commands, deleted new-goal
+Last session: 2026-03-05T14:41:03.927Z
+Stopped at: Completed 17-01-PLAN.md — escapeSQL extraction, created_at preservation, AST edge resolvability
 Resume file: None

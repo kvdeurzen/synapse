@@ -19,7 +19,7 @@ Requirements for Working Prototype milestone. Each maps to roadmap phases.
 - [x] **CMD-01**: `/synapse:init` command creates project.toml, calls init_project, offers opt-in CLAUDE.md amendment
 - [x] **CMD-02**: `/synapse:map` command wraps index_codebase with Ollama health check and progress feedback
 - [ ] **CMD-03**: `/synapse:plan` command connects user goal to PEV workflow via orchestrator agent
-- [ ] **CMD-04**: User journey from install to ongoing use is documented as a step-by-step flow
+- [x] **CMD-04**: User journey from install to ongoing use is documented as a step-by-step flow
 
 ### Install
 
@@ -116,7 +116,7 @@ Which phases cover which requirements. Updated during roadmap creation.
 | CMD-01 | Phase 16 | Complete |
 | CMD-02 | Phase 16 | Complete |
 | CMD-03 | Phase 16 | Pending |
-| CMD-04 | Phase 16 | Pending |
+| CMD-04 | Phase 16 | Complete |
 | INST-01 | Phase 17 | Pending |
 | INST-02 | Phase 17 | Pending |
 | INST-03 | Phase 17 | Pending |

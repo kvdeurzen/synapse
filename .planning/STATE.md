@@ -3,8 +3,8 @@ gsd_state_version: 1.0
 milestone: v3.0
 milestone_name: Working Prototype
 status: executing
-stopped_at: Completed 16-01-PLAN.md (init + map commands)
-last_updated: "2026-03-05T09:26:17.452Z"
+stopped_at: Completed 16-02-PLAN.md — refine + status commands, deleted new-goal
+last_updated: "2026-03-05T09:26:51.731Z"
 last_activity: 2026-03-03 — Completed 15-01 (resolveConfig utility + project context injection)
 progress:
   total_phases: 8
@@ -48,6 +48,8 @@ Progress: [█████░░░░░] 50%
 *Updated after each plan completion*
 | Phase 15-foundation P02 | 2 | 2 tasks | 4 files |
 | Phase 16-user-journey-commands P01 | 2 | 2 tasks | 2 files |
+| Phase 16-user-journey-commands P03 | 2 | 2 tasks | 2 files |
+| Phase 16 P02 | 2 | 3 tasks | 3 files |
 
 ## Accumulated Context
 
@@ -69,6 +71,12 @@ Key decisions affecting v3.0:
 - [Phase 15-02]: precedent-gate.js left unmodified — reads no config files, advisory-only hook
 - [Phase 16-01]: init.md anti-patterns section explicitly states no Ollama during init — map.md is the only command requiring Ollama
 - [Phase 16-01]: RPEV trust.toml [rpev] section seeds proactive_notifications=false as Phase 23 placeholder; explicit_gate_levels=[project,epic] by default
+- [Phase 16-user-journey-commands]: Agent-based focus (/synapse:focus agent C) explicitly deferred to Agent Pool phase (Phase 21)
+- [Phase 16-user-journey-commands]: focus.md allowed-tools list is broad: gateway command enables full interaction (refine/create/decide) after navigation
+- [Phase 16]: /synapse:new-goal deleted — clean break, replaced entirely by /synapse:refine
+- [Phase 16]: DECIDED/OPEN/EMERGING are the canonical decision states for refinement sessions
+- [Phase 16]: At Project and Epic level, user must explicitly signal readiness — no auto-transition to Plan
+- [Phase 16]: Refinement state persisted via store_document with doc_id reuse on resume (versioning not duplication)
 
 ### Blockers/Concerns
 
@@ -82,6 +90,6 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-03-05T09:26:17.449Z
-Stopped at: Completed 16-01-PLAN.md (init + map commands)
+Last session: 2026-03-05T09:26:51.728Z
+Stopped at: Completed 16-02-PLAN.md — refine + status commands, deleted new-goal
 Resume file: None

@@ -152,8 +152,8 @@ Plans:
 **Plans**: 2 plans
 
 Plans:
-- [ ] 20-01: Update synapse-startup.js to inject SKILL.md file content (not just names) and remove hardcoded skills from agents.toml (SKILL-01, SKILL-02)
-- [ ] 20-02: Make agent prompts language-agnostic (SKILL-03), flesh out thin skills (SKILL-04), and add new generic skills (SKILL-05)
+- [ ] 20-01-PLAN.md — Dynamic skill manifest injection + agents.toml role_skills (SKILL-01, SKILL-02)
+- [ ] 20-02-PLAN.md — Language-agnostic agent prompts + skill content (SKILL-03, SKILL-04, SKILL-05)
 
 ### Phase 21: Agent Pool
 **Goal**: Configurable pool of agent slots that auto-assigns to highest-priority unblocked work, enabling the "system drives, user unblocks" model

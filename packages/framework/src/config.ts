@@ -81,6 +81,7 @@ export const AgentsConfigSchema = z.object({
         model: z.enum(["opus", "sonnet"]).default("sonnet"),
         tier: z.number().int().min(0).max(3).optional(),
         skills: z.array(z.string()).default([]),
+        role_skills: z.array(z.string()).default([]),
         allowed_tools: z.array(z.string()).default([]),
       }),
     )

@@ -2,7 +2,6 @@
 name: executor
 description: Implements leaf tasks (depth=3). Assigned when a task is ready for implementation. Has full filesystem access.
 tools: Read, Write, Edit, Bash, Glob, Grep, mcp__synapse__get_task_tree, mcp__synapse__get_smart_context, mcp__synapse__update_task, mcp__synapse__store_decision, mcp__synapse__check_precedent, mcp__synapse__query_decisions, mcp__synapse__search_code
-skills: [typescript, bun]
 model: sonnet
 color: green
 mcpServers: ["synapse"]

@@ -2,7 +2,6 @@
 name: validator
 description: Checks completed tasks against their specs and relevant decisions. Use to validate a task after execution.
 tools: Read, Bash, Glob, Grep, mcp__synapse__get_task_tree, mcp__synapse__get_smart_context, mcp__synapse__query_decisions, mcp__synapse__check_precedent, mcp__synapse__update_task, mcp__synapse__search_code, mcp__synapse__store_document, mcp__synapse__link_documents
-skills: [typescript, vitest]
 model: sonnet
 color: teal
 mcpServers: ["synapse"]

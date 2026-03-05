@@ -2,7 +2,6 @@
 name: decomposer
 description: Breaks epics and features into executable leaf tasks. Use when an epic or feature needs task decomposition within context window limits.
 tools: Read, Bash, Glob, Grep, mcp__synapse__create_task, mcp__synapse__update_task, mcp__synapse__get_task_tree, mcp__synapse__get_smart_context, mcp__synapse__store_decision, mcp__synapse__check_precedent, mcp__synapse__query_decisions
-skills: [typescript]
 model: opus
 color: yellow
 mcpServers: ["synapse"]

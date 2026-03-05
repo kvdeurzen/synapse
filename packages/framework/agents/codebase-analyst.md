@@ -2,7 +2,6 @@
 name: codebase-analyst
 description: Maintains codebase analysis by running index_codebase and storing analysis findings as documents. Use for code health assessments and index updates.
 tools: Read, Bash, Glob, Grep, mcp__synapse__index_codebase, mcp__synapse__get_index_status, mcp__synapse__store_document, mcp__synapse__update_document, mcp__synapse__link_documents, mcp__synapse__search_code, mcp__synapse__get_smart_context
-skills: [typescript]
 model: sonnet
 color: gray
 mcpServers: ["synapse"]

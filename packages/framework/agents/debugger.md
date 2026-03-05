@@ -2,7 +2,6 @@
 name: debugger
 description: Performs root-cause analysis on execution and validation failures. Use when an Executor or Validator reports a failure.
 tools: Read, Bash, Glob, Grep, mcp__synapse__get_task_tree, mcp__synapse__get_smart_context, mcp__synapse__search_code, mcp__synapse__query_decisions, mcp__synapse__store_document, mcp__synapse__link_documents
-skills: [typescript, vitest]
 model: sonnet
 color: magenta
 mcpServers: ["synapse"]

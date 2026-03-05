@@ -3,7 +3,7 @@
 [agents.product-strategist]
 model = "opus"
 tier = 0
-skills = []
+role_skills = ["architecture-design", "brainstorming", "defining-requirements", "documentation"]
 allowed_tools = [
   "Read",
   "Bash",
@@ -21,7 +21,7 @@ allowed_tools = [
 
 [agents.researcher]
 model = "sonnet"
-skills = []
+role_skills = ["defining-requirements", "documentation"]
 allowed_tools = [
   "Read",
   "Bash",
@@ -40,7 +40,7 @@ allowed_tools = [
 [agents.architect]
 model = "opus"
 tier = 1
-skills = ["typescript"]
+role_skills = ["testing-strategy", "architecture-design", "security", "brainstorming", "defining-requirements", "documentation"]
 allowed_tools = [
   "Read",
   "Bash",
@@ -59,7 +59,7 @@ allowed_tools = [
 
 [agents.decomposer]
 model = "opus"
-skills = ["typescript"]
+role_skills = ["testing-strategy", "security", "brainstorming", "defining-requirements"]
 allowed_tools = [
   "Read",
   "Bash",
@@ -76,7 +76,7 @@ allowed_tools = [
 
 [agents.plan-reviewer]
 model = "opus"
-skills = []
+role_skills = ["security"]
 allowed_tools = [
   "Read",
   "Bash",
@@ -94,7 +94,7 @@ allowed_tools = [
 [agents.executor]
 model = "sonnet"
 tier = 3
-skills = ["typescript", "bun"]
+role_skills = ["testing-strategy", "security", "documentation"]
 allowed_tools = [
   "Read",
   "Write",
@@ -115,7 +115,7 @@ allowed_tools = [
 
 [agents.validator]
 model = "sonnet"
-skills = ["typescript", "vitest"]
+role_skills = ["testing-strategy", "security"]
 allowed_tools = [
   "Read",
   "Bash",
@@ -133,7 +133,7 @@ allowed_tools = [
 
 [agents.integration-checker]
 model = "sonnet"
-skills = ["typescript"]
+role_skills = ["testing-strategy", "security"]
 allowed_tools = [
   "Read",
   "Bash",
@@ -152,7 +152,7 @@ allowed_tools = [
 
 [agents.debugger]
 model = "sonnet"
-skills = ["typescript", "vitest"]
+role_skills = ["testing-strategy", "security"]
 allowed_tools = [
   "Read",
   "Bash",
@@ -168,7 +168,7 @@ allowed_tools = [
 
 [agents.codebase-analyst]
 model = "sonnet"
-skills = ["typescript"]
+role_skills = ["testing-strategy", "security"]
 allowed_tools = [
   "Read",
   "Bash",

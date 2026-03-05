@@ -2,7 +2,6 @@
 name: architect
 description: Defines architecture, stores Tier 1-2 decisions, creates epic task structure. Use when planning how to build something or making structural choices.
 tools: Read, Bash, Glob, Grep, mcp__synapse__store_decision, mcp__synapse__query_decisions, mcp__synapse__check_precedent, mcp__synapse__create_task, mcp__synapse__update_task, mcp__synapse__get_task_tree, mcp__synapse__get_smart_context, mcp__synapse__store_document, mcp__synapse__link_documents
-skills: [typescript]
 model: opus
 color: blue
 mcpServers: ["synapse"]

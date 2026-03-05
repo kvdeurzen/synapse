@@ -3,9 +3,9 @@ gsd_state_version: 1.0
 milestone: v3.0
 milestone_name: Working Prototype
 status: Not started
-stopped_at: Phase 18 context gathered
-last_updated: "2026-03-05T15:31:33.825Z"
-last_activity: 2026-03-05 — Completed Phase 16 (User Journey Commands)
+stopped_at: Completed 18-01-PLAN.md (RPEV Involvement Matrix)
+last_updated: "2026-03-05T15:53:14Z"
+last_activity: 2026-03-05 — Completed Phase 18-01 (RPEV Involvement Matrix)
 progress:
   total_phases: 10
   completed_phases: 3
@@ -26,10 +26,10 @@ See: .planning/PROJECT.md (updated 2026-03-03)
 
 ## Current Position
 
-Phase: 17 of 24 (Tech Debt) — next up
-Plan: 0 of 2 in current phase
-Status: Not started
-Last activity: 2026-03-05 — Completed Phase 16 (User Journey Commands)
+Phase: 18 of 24 (RPEV Orchestration) — in progress
+Plan: 1 of 3 in current phase
+Status: In progress
+Last activity: 2026-03-05 — Completed Phase 18-01 (RPEV Involvement Matrix)
 
 Progress: [██░░░░░░░░] 20%
 
@@ -83,6 +83,9 @@ Key decisions affecting v3.0:
 - [Phase 17-tech-debt]: code_chunks.doc_id stays as file path — consistent with documents.doc_id=filePath; ULID migration deferred (Phase 17-01)
 - [Phase 17-tech-debt]: Explicit null guard over optional chaining for map mutations — if (!entry) throw makes invariant visible; optional chaining silently no-ops .push()/.add()
 - [Phase 17-tech-debt]: Type assertion (value as string) over non-null assertion (value!) in test post-expect assertions — satisfies Biome noNonNullAssertion without semantic change
+- [Phase 18-01]: Flat underscore-separated keys (project_refine) in [rpev.involvement] — dotted keys create nested sub-tables in smol-toml, causing parse errors
+- [Phase 18-01]: rpevContext condition uses trustToml.rpev (not trustToml && agentsToml) — RPEV matrix only requires trust.toml; graceful degradation even when agents.toml absent
+- [Phase 18-01]: TOML sub-table ordering: [rpev.involvement] and [rpev.domain_overrides] declared before [rpev] scalar keys per TOML spec requirement
 
 ### Blockers/Concerns
 
@@ -96,6 +99,6 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-03-05T15:31:33.823Z
-Stopped at: Phase 18 context gathered
-Resume file: .planning/phases/18-rpev-orchestration/18-CONTEXT.md
+Last session: 2026-03-05T15:53:14Z
+Stopped at: Completed 18-01-PLAN.md (RPEV Involvement Matrix)
+Resume file: .planning/phases/18-rpev-orchestration/18-01-SUMMARY.md

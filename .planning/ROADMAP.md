@@ -119,7 +119,7 @@ Plans:
 **Plans**: 3 plans
 
 Plans:
-- [ ] 18-01-PLAN.md — Expand trust.toml with involvement matrix, update synapse-startup.js to inject it (RPEV-02)
+- [x] 18-01-PLAN.md — Expand trust.toml with involvement matrix, update synapse-startup.js to inject it (RPEV-02)
 - [ ] 18-02-PLAN.md — Update synapse-orchestrator.md and pev-workflow.md for RPEV model (RPEV-01, RPEV-03, RPEV-04, RPEV-05, RPEV-08)
 - [ ] 18-03-PLAN.md — Bridge refine.md to stage documents, update status.md/focus.md for approvals, update agents.toml (RPEV-01, RPEV-06, RPEV-07)
 
@@ -238,7 +238,7 @@ Parallelizable: Phase 17 (Tech Debt) and Phase 20 (Skills) can proceed in parall
 | 15. Foundation | v3.0 | 2/2 | Complete | 2026-03-03 |
 | 16. User Journey Commands | v3.0 | 3/3 | Complete | 2026-03-05 |
 | 17. Tech Debt | v3.0 | 2/2 | Complete | 2026-03-05 |
-| 18. RPEV Orchestration | v3.0 | 0/3 | Not started | - |
+| 18. RPEV Orchestration | v3.0 | 1/3 | In progress | - |
 | 19. Agent Prompts + Level-Awareness | v3.0 | 0/3 | Not started | - |
 | 20. Skills Completion | v3.0 | 0/2 | Not started | - |
 | 21. Agent Pool | v3.0 | 0/~2 | Not started | - |

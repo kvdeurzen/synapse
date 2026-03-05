@@ -44,7 +44,7 @@ See [v2.0 Archive](milestones/v2.0-ROADMAP.md) for full details.
 **Milestone Goal:** Wire up all existing pieces into a usable end-to-end product — from install to agent-driven PEV workflow execution on a real project.
 
 - [x] **Phase 15: Foundation** - project.toml schema, project_id injection via startup hook, hook path fixes, config resolution (completed 2026-03-03)
-- [ ] **Phase 16: User Journey Commands** - /synapse:init, /synapse:map, /synapse:refine, /synapse:status, /synapse:focus slash commands and user journey documentation
+- [x] **Phase 16: User Journey Commands** - /synapse:init, /synapse:map, /synapse:refine, /synapse:status, /synapse:focus slash commands and user journey documentation (completed 2026-03-05)
 - [ ] **Phase 17: Install Script** - one-command install.sh with prerequisite checks, file wiring, and Ollama smoke test
 - [ ] **Phase 18: Agent Prompt Improvements** - MCP-first principle, tool sequences, frontmatter, handoff protocol, findings persistence, error handling, domain mode, context refs
 - [ ] **Phase 19: Skills Completion** - dynamic skill injection from project.toml, language-agnostic agents, fleshed-out skills, new generic skills
@@ -199,7 +199,7 @@ Note: Phase 16 and Phase 17 can proceed in parallel (no dependency between them)
 | 13.1 Move Separate Modules into a Single Repo | v2.0 | 2/2 | Complete | 2026-03-02 |
 | 14. Quality Gates and PEV Workflow | v2.0 | 4/4 | Complete | 2026-03-02 |
 | 15. Foundation | v3.0 | 2/2 | Complete | 2026-03-03 |
-| 16. User Journey Commands | v3.0 | 0/3 | Not started | - |
+| 16. User Journey Commands | 3/3 | Complete   | 2026-03-05 | - |
 | 17. Install Script | v3.0 | 0/2 | Not started | - |
 | 18. Agent Prompt Improvements | v3.0 | 0/3 | Not started | - |
 | 19. Skills Completion | v3.0 | 0/2 | Not started | - |

@@ -7,6 +7,7 @@ allowed-tools:
   - mcp__synapse__get_smart_context
   - mcp__synapse__project_overview
   - mcp__synapse__semantic_search
+  - mcp__synapse__query_documents
 ---
 
 ## Objective
@@ -25,9 +26,23 @@ Display the full RPEV project dashboard: epics in priority order, blocked items 
 
 3. **Get recent context:** Call `mcp__synapse__get_smart_context` in overview mode to retrieve recent decisions and activity.
 
-4. **Check for active refinement sessions:** Call `mcp__synapse__semantic_search` with query `"refinement state"`, category `"plan"`, status `"active"` to find in-progress brainstorming sessions. Include these in the epic display under their respective epics.
+4. **Query RPEV stage documents:** Call `mcp__synapse__query_documents` with:
+   - `category`: `"plan"`
+   - `tags`: `"rpev-stage"`
+   - `actor`: `"synapse-orchestrator"`
+
+   Parse each returned document's content (JSON) to extract:
+   - Items with `pending_approval: true` — these need user attention
+   - Items with `stage: "REFINING"` — active refinement sessions
+   - Items with notes containing failure/retry information — these are flagged failures
+   - Items with `stage: "EXECUTING"` or `"VALIDATING"` — in-progress work
+
+   Also still check for active refinement sessions via `mcp__synapse__semantic_search` with query `"refinement state"`, category `"plan"`, status `"active"` — refinement state documents are separate from stage documents.
 
 5. **Present RPEV dashboard:**
+
+   When displaying RPEV stage badges for epics, use stage document data when available — it is more authoritative than task tree status for RPEV stage. If a stage document exists for an epic (matched by `rpev-stage-[task_id]`), use its `stage` field for the stage badge. If no stage document exists, fall back to inferring stage from task tree status.
+
    ```
    ## Synapse Dashboard
 
@@ -47,14 +62,18 @@ Display the full RPEV project dashboard: epics in priority order, blocked items 
 
    ### Needs Your Input
 
-   [If blocked items exist:]
+   [If any stage documents have pending_approval=true:]
    N items need your attention:
-     1. Epic B / Feature 4 — decision needed: "Auth strategy"
-     2. Epic A / Feature 2 / WP 3 — blocked: "API spec unclear"
+     1. [Item Title] [[LEVEL]] [STAGE] — [describe what's needed based on stage doc notes]
+        Involvement mode: [mode] | Use `/synapse:focus "[title]"` to review
+     2. ...
 
-   Use `/synapse:focus "item name"` or `/synapse:focus 2.4` to navigate to a specific item.
+   [If any stage documents have failure notes:]
+   N items have issues:
+     1. [Item Title] [[LEVEL]] [STAGE] — retries exhausted, needs guidance
+        Use `/synapse:focus "[title]"` to see diagnostic report
 
-   [If no blocked items:]
+   [If no pending items:]
    All clear — no items currently need your input.
 
    ### Agent Pool

@@ -10,6 +10,8 @@ allowed-tools:
   - mcp__synapse__store_document
   - mcp__synapse__store_decision
   - mcp__synapse__create_task
+  - mcp__synapse__query_documents
+  - mcp__synapse__update_task
 ---
 
 ## Objective
@@ -93,6 +95,64 @@ Navigate to a specific item in the project hierarchy and present its full contex
      - Binary decisions: Present options directly ("Option A: X, Option B: Y — which direction?")
      - Open-ended decisions: Start conversational engagement ("What factors are most important here?")
    - Store any decision made via `mcp__synapse__store_decision` with `actor: "synapse-orchestrator"`
+
+7. **Handle pending approval (two-tier UX):** After presenting item context (step 4), check if the item has an RPEV stage document with `pending_approval: true`. To check: call `mcp__synapse__query_documents` with category `"plan"`, tags `"rpev-stage"` and look for a document with doc_id matching `"rpev-stage-[task_id]"`.
+
+   If `pending_approval` is true and `proposal_doc_id` is set:
+
+   a. **Load the proposal:** Call `mcp__synapse__get_smart_context` with the `proposal_doc_id` to retrieve the full proposal document.
+
+   b. **Present summary-first view (Tier 1 — quick triage):**
+      ```
+      ## Proposal: [Item Title]
+
+      **Stage:** [current stage] | **Level:** [level] | **Involvement mode:** [mode]
+      **Quality check:** [If Plan Reviewer ran: "Passed" or note]
+
+      ### Summary
+      [2-3 sentence summary extracted from the proposal document]
+
+      ### Key decisions in this proposal
+      - [Decision 1]
+      - [Decision 2]
+
+      ### Options
+      A) **Approve** — proceed with this plan
+      B) **Reject** — send back with your feedback
+      C) **Discuss deeper** — conversational review of the full proposal
+      ```
+
+   c. **If user chooses Approve:**
+      - Update stage document: set `pending_approval: false`, advance `stage` to next phase (e.g., PLANNING -> EXECUTING)
+      - Update task status if needed: call `mcp__synapse__update_task` with `status: "in_progress"`
+      - Confirm: "Approved. The orchestrator will proceed with [next stage]."
+
+   d. **If user chooses Reject:**
+      - Ask for specific feedback: "What should be changed? Your guidance will be passed to the [Decomposer/Planner] for revision."
+      - Update stage document: set `notes` to rejection feedback, keep `pending_approval: true`
+      - The orchestrator will detect this on next session start and re-run the specialist agent with feedback (max 3 review cycles per WFLOW-06)
+
+   e. **If user chooses Discuss Deeper (Tier 2 — conversational review):**
+      - Load and display the full proposal document content
+      - Switch to conversational mode: ask clarifying questions, explore concerns, let the user probe details
+      - After discussion, re-present options A (Approve) and B (Reject)
+
+   If `pending_approval` is true but NO `proposal_doc_id`:
+   - This is a "drives" mode item waiting for user initiation, or a failed item
+   - If stage notes indicate failure: present the Debugger's diagnostic report (fetch via get_smart_context) plus options:
+     ```
+     ### Failed Item: [Title]
+
+     **Diagnostic:** [summary from debugger report]
+     **Retries used:** [N] of [max]
+
+     Options:
+     A) Retry with guidance — provide direction for the next attempt
+     B) Redefine the task — rethink the approach
+     C) Skip and continue — mark as skipped, proceed with other work
+     D) Escalate to parent — push this up to [parent level] for re-evaluation
+     ```
+   - If stage is REFINING/waiting: "This item is waiting for you to refine it. Run `/synapse:refine \"[title]\"` to start."
 
 **Deferred features:**
 - **Agent-based focus** (`/synapse:focus agent C`) is deferred to the Agent Pool phase. If the user tries this pattern, respond: "Agent-based focus will be available when the Agent Pool is active (Phase 21). For now, use item names or path shorthand."

@@ -87,6 +87,8 @@ allowed_tools = [
   "mcp__synapse__query_decisions",
   "mcp__synapse__check_precedent",
   "mcp__synapse__update_task",
+  "mcp__synapse__store_document",
+  "mcp__synapse__link_documents",
 ]
 
 [agents.executor]
@@ -107,6 +109,8 @@ allowed_tools = [
   "mcp__synapse__check_precedent",
   "mcp__synapse__query_decisions",
   "mcp__synapse__search_code",
+  "mcp__synapse__store_document",
+  "mcp__synapse__link_documents",
 ]
 
 [agents.validator]
@@ -123,6 +127,8 @@ allowed_tools = [
   "mcp__synapse__check_precedent",
   "mcp__synapse__update_task",
   "mcp__synapse__search_code",
+  "mcp__synapse__store_document",
+  "mcp__synapse__link_documents",
 ]
 
 [agents.integration-checker]
@@ -140,6 +146,8 @@ allowed_tools = [
   "mcp__synapse__update_task",
   "mcp__synapse__search_code",
   "mcp__synapse__get_index_status",
+  "mcp__synapse__store_document",
+  "mcp__synapse__link_documents",
 ]
 
 [agents.debugger]

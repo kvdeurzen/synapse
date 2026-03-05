@@ -120,6 +120,7 @@ process.stdin.on("end", () => {
     // --- Tier context from trust.toml + agents.toml ---
     let tierContext = "";
     let rpevContext = "";
+    let domainContext = "";
     try {
       const trustPath = resolveConfig("trust.toml");
       const agentsPath = resolveConfig("agents.toml");
@@ -223,6 +224,33 @@ process.stdin.on("end", () => {
 
         rpevContext = rpevLines.join("\n");
       }
+
+      // --- Domain autonomy mode injection ---
+      try {
+        if (trustToml && trustToml.domains) {
+          const domains = trustToml.domains;
+          const domainLines = [
+            "",
+            "## Domain Autonomy Modes (from trust.toml)",
+            "",
+            "Your behavior adapts per domain. Current configuration:",
+          ];
+          for (const [domain, mode] of Object.entries(domains)) {
+            domainLines.push(`  ${domain}: ${mode}`);
+          }
+          domainLines.push(
+            "",
+            "In co-pilot mode: propose first, wait for user approval before proceeding.",
+            "In autopilot mode: proceed without user involvement, report results.",
+            "In advisory mode: store analysis as proposal, flag for user review.",
+          );
+          domainContext = domainLines.join("\n");
+        }
+      } catch (domainErr) {
+        process.stderr.write(
+          `[synapse-startup] Warning: Could not build domain context: ${domainErr.message}\n`,
+        );
+      }
     } catch (configErr) {
       // Graceful degradation: config files unreadable -- log warning, continue without tier context
       process.stderr.write(
@@ -230,13 +258,16 @@ process.stdin.on("end", () => {
       );
     }
 
-    // Build final additionalContext: project context first, then base instructions, then tier context, then RPEV matrix
+    // Build final additionalContext: project context first, then base instructions, then tier context, then RPEV matrix, then domain modes
     const contextParts = [projectContext, baseInstructions];
     if (tierContext) {
       contextParts.push(tierContext);
     }
     if (rpevContext) {
       contextParts.push(rpevContext);
+    }
+    if (domainContext) {
+      contextParts.push(domainContext);
     }
     const additionalContext = contextParts.join("\n\n");
 

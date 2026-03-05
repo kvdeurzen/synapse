@@ -61,15 +61,21 @@ Note: You are always spawned for leaf tasks (depth=3). Feature/epic-level execut
 ## Key Tool Sequences
 
 **Start Task:**
-1. `get_task_tree` — read task description and dependencies
-2. `get_smart_context` — gather relevant decisions, patterns, and documents
-3. `search_code` — find related existing code
-4. Implement using `Read`, `Write`, `Edit`, `Bash`
-5. `update_task(status: "done", actor: "executor")` — mark complete
+1. Parse the `--- SYNAPSE HANDOFF ---` block to extract: project_id, task_id, hierarchy_level, rpev_stage_doc_id, doc_ids, decision_ids
+2. `get_task_tree(project_id: "{project_id}", task_id: "{task_id}")` -- load task spec, acceptance criteria, dependencies
+3. `get_smart_context(project_id: "{project_id}", mode: "detailed", doc_ids: [{doc_ids from handoff}])` -- fetch curated context
+   - If doc_ids is empty: `get_smart_context(project_id: "{project_id}", mode: "overview", max_tokens: 3000)` -- fallback
+4. `check_precedent(project_id: "{project_id}", description: "{task approach summary}")` -- find existing patterns
+5. Implement using Read, Write, Edit, Bash, Glob, Grep
+
+**Store Implementation Summary (after implementation, before marking done):**
+1. `store_document(project_id: "{project_id}", doc_id: "executor-summary-{task_id}", title: "Implementation Summary: {task_title}", category: "implementation_note", status: "active", tags: "|executor|summary|{task_id}|", content: "## What was implemented\n{summary}\n\n## Files changed\n{list}\n\n## Decisions made\n{any tier 3}\n\n## Warnings\n{any MCP read failures}", actor: "executor")`
+2. `link_documents(project_id: "{project_id}", from_id: "executor-summary-{task_id}", to_id: "{task_id}", relationship_type: "implements", actor: "executor")`
+3. `update_task(project_id: "{project_id}", task_id: "{task_id}", status: "done", actor: "executor")` -- status only, NO description change
 
 **Implementation Decision:**
-1. `check_precedent` — look for existing implementation patterns
-2. `store_decision(tier: 3, actor: "executor")` — record the choice if novel
+1. `check_precedent(project_id: "{project_id}", description: "{decision topic}")` -- look for existing patterns
+2. If novel: `store_decision(project_id: "{project_id}", tier: 3, title: "{decision}", rationale: "{why}", actor: "executor")`
 
 ## Constraints
 
@@ -89,5 +95,7 @@ Task: "Implement JWT signing utility — create signToken(payload) function usin
 5. Implement `src/auth/jwt.ts` with `signToken()` function
 6. Write tests in `test/auth/jwt.test.ts`
 7. Run tests via `Bash`
-8. `store_decision(tier: 3, title: "JWT signing: jose importJWK + SignJWT", actor: "executor")` — record implementation choice
-9. `update_task(status: "done", description: "Implemented signToken() with RS256, 15-min TTL. Tests passing.", actor: "executor")`
+8. `store_decision(project_id: "{project_id}", tier: 3, title: "JWT signing: jose importJWK + SignJWT", actor: "executor")` — record implementation choice
+9. `store_document(project_id: "{project_id}", doc_id: "executor-summary-{task_id}", title: "Implementation Summary: JWT signing utility", category: "implementation_note", status: "active", tags: "|executor|summary|{task_id}|", content: "## What was implemented\nsignToken() using jose importJWK + SignJWT, RS256, 15-min TTL\n\n## Files changed\nsrc/auth/jwt.ts, test/auth/jwt.test.ts\n\n## Decisions made\nUse jose importJWK + SignJWT pattern", actor: "executor")`
+10. `link_documents(project_id: "{project_id}", from_id: "executor-summary-{task_id}", to_id: "{task_id}", relationship_type: "implements", actor: "executor")`
+11. `update_task(project_id: "{project_id}", task_id: "{task_id}", status: "done", actor: "executor")` -- status only

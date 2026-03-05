@@ -1,7 +1,7 @@
 ---
 name: integration-checker
 description: Validates cross-task integration at feature and epic boundaries. Use after multiple related tasks are completed to verify they work together.
-tools: Read, Bash, Glob, Grep, mcp__synapse__get_task_tree, mcp__synapse__get_smart_context, mcp__synapse__query_decisions, mcp__synapse__check_precedent, mcp__synapse__update_task, mcp__synapse__search_code, mcp__synapse__get_index_status
+tools: Read, Bash, Glob, Grep, mcp__synapse__get_task_tree, mcp__synapse__get_smart_context, mcp__synapse__query_decisions, mcp__synapse__check_precedent, mcp__synapse__update_task, mcp__synapse__search_code, mcp__synapse__get_index_status, mcp__synapse__store_document, mcp__synapse__link_documents
 skills: [typescript]
 model: sonnet
 color: indigo
@@ -34,6 +34,8 @@ Synapse stores project decisions and context. Query it first to avoid wasting to
 | check_precedent | Find related past decisions | Before any decision |
 | search_code | Search indexed codebase | When file locations are unknown |
 | get_index_status | Check index freshness | Before/after indexing |
+| store_document (W) | Store findings/reports/summaries | End of task to record output |
+| link_documents (W) | Connect documents to tasks/decisions | After storing a document |
 
 **Error handling:**
 - WRITE failure (store_document, update_task, create_task, store_decision returns success: false): HALT. Report tool name + error message to orchestrator. Do not continue.
@@ -69,14 +71,18 @@ Note: You operate at feature and epic level only. Task-level validation is the V
 ## Key Tool Sequences
 
 **Integration Check:**
-1. `get_task_tree` — load feature + all child tasks
-2. `get_smart_context` — gather context
-3. For each completed task pair: `search_code` for cross-references → `Read` relevant files → verify contracts
-4. `Bash` — run integration tests
-5. Verdict: pass → report, fail → `update_task` on parent
+1. `get_task_tree(project_id: "{project_id}", task_id: "{feature_task_id}")` -- load feature + all child tasks
+2. `get_smart_context(project_id: "{project_id}", mode: "detailed", doc_ids: [{relevant_doc_ids}])` -- gather context
+3. For each completed task pair: `search_code(project_id: "{project_id}", query: "{cross-reference pattern}")` -> Read relevant files -> verify contracts match
+4. `Bash("bun test {integration_test_path}")` -- run integration tests
 
-**Fail Integration:**
-`update_task(feature_task_id, status: "failed", description: "INTEGRATION FINDING: {explanation}", actor: "integration-checker")`
+**Pass Integration:**
+Report to orchestrator: feature integration verified.
+
+**Fail Integration -- store findings as document:**
+1. `store_document(project_id: "{project_id}", doc_id: "integration-findings-{feature_task_id}", title: "Integration Findings: {feature_title}", category: "integration_report", status: "active", tags: "|integration-checker|findings|{feature_task_id}|", content: "## Integration Issues\n{findings}\n\n## Contract Mismatches\n{details}\n\n## Affected Tasks\n{task_ids and descriptions}", actor: "integration-checker")`
+2. `link_documents(project_id: "{project_id}", from_id: "integration-findings-{feature_task_id}", to_id: "{feature_task_id}", relationship_type: "validates", actor: "integration-checker")`
+3. `update_task(project_id: "{project_id}", task_id: "{feature_task_id}", status: "failed", actor: "integration-checker")` -- status only, findings are in the linked document
 
 ## Constraints
 
@@ -96,5 +102,5 @@ Feature: "User Authentication" with completed tasks: "JWT Generation" and "Token
 4. `search_code("verifyToken")` — function exists in `src/auth/jwt.ts`, signature matches
 5. Check: JWT signs with RS256, middleware verifies with RS256 — algorithms match ✓
 6. Check: Token payload includes `sub` and `exp`, middleware reads `req.user = payload.sub` — contract matches ✓
-7. `Bash "npx vitest run test/integration/auth"` — integration tests pass ✓
+7. `Bash("bun test test/integration/auth")` — integration tests pass ✓
 8. Report: "Integration verified — JWT generation and validation middleware contracts are aligned."

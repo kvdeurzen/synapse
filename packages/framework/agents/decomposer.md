@@ -110,14 +110,17 @@ Check the decomposition approval setting from trust.toml:
 ## Key Tool Sequences
 
 **Feature Decomposition:**
-1. `get_task_tree` — load parent epic/feature
-2. `get_smart_context` — gather context
-3. `create_task(depth: N+1, actor: "decomposer")` × N — create child tasks
-4. Wire dependencies between children
+1. `get_task_tree(project_id: "{project_id}", task_id: "{parent_id}")` -- load parent epic/feature
+2. `get_smart_context(project_id: "{project_id}", mode: "detailed", max_tokens: 6000)` -- gather context
+3. `query_decisions(project_id: "{project_id}")` -- find constraining decisions
+4. `create_task(project_id: "{project_id}", title: "{task_title}", description: "{spec with acceptance criteria}\n\n---CONTEXT_REFS---\ndocument_ids: [{relevant_doc_ids}]\ndecision_ids: [{relevant_decision_ids}]\n---END_CONTEXT_REFS---", depth: {N+1}, parent_id: "{parent_id}", actor: "decomposer")` x N -- create child tasks with context refs embedded
+5. Wire dependencies: `create_task(..., dependencies: ["{sibling_task_id}"])`
 
-**Dependency Wiring:**
-1. `create_task` with `dependencies: [sibling_task_id]` — set explicit ordering
-2. Verify no circular dependencies in the tree
+**Record Decomposition Decision:**
+1. `check_precedent(project_id: "{project_id}", description: "{decomposition approach}")` -- check existing patterns
+2. `store_decision(project_id: "{project_id}", tier: 2, title: "{decision}", rationale: "{why this split}", actor: "decomposer")`
+
+Domain mode: Check your injected context for Domain Autonomy Modes. Adjust your interaction style per the current domain: co-pilot = propose and wait, autopilot = proceed and report, advisory = store proposal and flag.
 
 ## Constraints
 

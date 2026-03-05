@@ -59,16 +59,16 @@ The `hierarchy_level` field in the handoff block tells you which applies.
 ## Key Tool Sequences
 
 **Update Index:**
-1. `get_index_status` — check current index state
-2. `index_codebase` — run indexing
-3. `get_index_status` — verify update succeeded (compare file counts, timestamps)
+1. `get_index_status(project_id: "{project_id}")` -- check current state
+2. `index_codebase(project_id: "{project_id}")` -- re-index
+3. `get_index_status(project_id: "{project_id}")` -- verify (compare file counts)
 
 **Code Analysis:**
-1. `search_code` — find patterns across the codebase
-2. `Read` — examine relevant files in detail
-3. `get_smart_context` — gather related decisions and documents
-4. `store_document(category: "code_analysis", actor: "codebase-analyst")` — record findings
-5. `link_documents` — connect to relevant context
+1. `search_code(project_id: "{project_id}", query: "{pattern}")` -- find patterns
+2. Read -- examine files in detail
+3. `get_smart_context(project_id: "{project_id}", mode: "detailed", max_tokens: 4000)` -- related decisions
+4. `store_document(project_id: "{project_id}", doc_id: "analyst-findings-{task_id}", title: "Code Analysis: {topic}", category: "code_analysis", status: "active", tags: "|codebase-analyst|findings|{task_id}|", content: "## Findings\n{analysis}\n\n## Patterns Observed\n{patterns}\n\n## Recommendations\n{suggestions}\n\n## Files Examined\n{paths}", actor: "codebase-analyst")`
+5. `link_documents(project_id: "{project_id}", from_id: "analyst-findings-{task_id}", to_id: "{relevant_id}", relationship_type: "analyzes", actor: "codebase-analyst")`
 
 ## Constraints
 
@@ -88,5 +88,5 @@ Task: Update index and analyze import patterns after authentication feature comp
 4. `search_code("import.*from.*auth")` — find all auth imports across codebase
 5. `Read` files with auth imports — check for consistent import patterns
 6. Finding: 3 files import from `src/auth/jwt` directly, 2 import from `src/auth/index` barrel
-7. `store_document(category: "code_analysis", title: "Auth module import inconsistency", content: "## Finding\nInconsistent import paths for auth module. 3 files use direct imports (src/auth/jwt), 2 use barrel (src/auth/index). Recommend standardizing on barrel exports.\n\n## Files\n- src/middleware/auth.ts → direct import\n- src/routes/login.ts → direct import\n- src/routes/refresh.ts → direct import\n- src/app.ts → barrel import\n- src/routes/profile.ts → barrel import", actor: "codebase-analyst")`
-8. `link_documents` — connect to auth feature epic
+7. `store_document(project_id: "{project_id}", doc_id: "analyst-findings-{task_id}", title: "Code Analysis: Auth module import inconsistency", category: "code_analysis", status: "active", tags: "|codebase-analyst|findings|{task_id}|", content: "## Findings\nInconsistent import paths for auth module.\n\n## Patterns Observed\n3 files use direct imports (src/auth/jwt), 2 use barrel (src/auth/index)\n\n## Recommendations\nStandardize on barrel exports via src/auth/index\n\n## Files Examined\nsrc/middleware/auth.ts, src/routes/login.ts, src/routes/refresh.ts, src/app.ts, src/routes/profile.ts", actor: "codebase-analyst")`
+8. `link_documents(project_id: "{project_id}", from_id: "analyst-findings-{task_id}", to_id: "{auth_epic_id}", relationship_type: "analyzes", actor: "codebase-analyst")`

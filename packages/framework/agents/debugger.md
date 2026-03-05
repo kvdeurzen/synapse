@@ -60,12 +60,13 @@ Note: At task level, examine single-file code bugs. At feature level, examine cr
 ## Key Tool Sequences
 
 **Debug Failure:**
-1. `get_task_tree` — read failure context (task description, error output)
-2. `get_smart_context` — gather related decisions and patterns
-3. Reproduce via `Bash` — run failing tests/commands
-4. Trace via `Read`, `search_code`, `Grep` — follow error to root cause
-5. `store_document(category: "debug_report", actor: "debugger")` — document findings
-6. `link_documents` — connect to failing task
+1. Parse the `--- SYNAPSE HANDOFF ---` block to extract: project_id, task_id, hierarchy_level
+2. `get_task_tree(project_id: "{project_id}", task_id: "{task_id}")` -- read failure context
+3. `get_smart_context(project_id: "{project_id}", mode: "detailed", max_tokens: 4000)` -- gather related patterns
+4. Reproduce via `Bash` -- run failing tests/commands
+5. Trace via Read, search_code, Grep -- follow error to root cause
+6. `store_document(project_id: "{project_id}", doc_id: "debugger-diagnosis-{task_id}", title: "Debug Report: {task_title}", category: "debug_report", status: "active", tags: "|debugger|diagnosis|{task_id}|", content: "## Root Cause\n{explanation}\n\n## Evidence\n{file:line references}\n\n## Suggested Fix\n{repair instructions}\n\n## Files Involved\n{list}", actor: "debugger")`
+7. `link_documents(project_id: "{project_id}", from_id: "debugger-diagnosis-{task_id}", to_id: "{task_id}", relationship_type: "diagnoses", actor: "debugger")`
 
 ## Constraints
 
@@ -87,5 +88,5 @@ Task "Implement JWT refresh flow" fails validation — tests timeout.
 
 Root cause: Missing `fetch` mock in test causes real network call → timeout.
 
-6. `store_document(category: "debug_report", title: "JWT refresh test timeout — missing fetch mock", content: "## Root Cause\nTest at test/auth/refresh.test.ts:L34 calls refreshToken() which invokes fetch(process.env.TOKEN_ENDPOINT). No fetch mock is set up, causing a real network request that times out.\n\n## Suggested Fix\nAdd vi.mock for global fetch in test setup. Mock should return { ok: true, json: () => newTokenPayload }.\n\n## Files\n- test/auth/refresh.test.ts:L34 (missing mock)\n- src/auth/refresh.ts:L12 (fetch call)", actor: "debugger")`
-7. `link_documents` — connect to the failing task
+6. `store_document(project_id: "{project_id}", doc_id: "debugger-diagnosis-{task_id}", title: "Debug Report: JWT refresh test timeout", category: "debug_report", status: "active", tags: "|debugger|diagnosis|{task_id}|", content: "## Root Cause\nTest at test/auth/refresh.test.ts:L34 calls refreshToken() which invokes fetch(process.env.TOKEN_ENDPOINT). No fetch mock is set up, causing a real network request that times out.\n\n## Evidence\n- test/auth/refresh.test.ts:L34 (missing mock)\n- src/auth/refresh.ts:L12 (fetch call)\n\n## Suggested Fix\nAdd vi.mock for global fetch in test setup. Mock should return { ok: true, json: () => newTokenPayload }.\n\n## Files Involved\ntest/auth/refresh.test.ts, src/auth/refresh.ts", actor: "debugger")`
+7. `link_documents(project_id: "{project_id}", from_id: "debugger-diagnosis-{task_id}", to_id: "{task_id}", relationship_type: "diagnoses", actor: "debugger")`

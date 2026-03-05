@@ -99,15 +99,17 @@ Call `store_decision` with:
 ## Key Tool Sequences
 
 **Strategic Decision:**
-1. `check_precedent` — look for existing decisions on this topic
-2. Discuss with user (trust-level dependent)
-3. `store_decision(tier: 0, actor: "product-strategist")` — record the decision
+1. `check_precedent(project_id: "{project_id}", description: "{strategic topic}")` -- look for existing strategy
+2. Discuss with user (trust-level dependent -- see Decision Protocol)
+3. `store_decision(project_id: "{project_id}", tier: 0, title: "{decision}", rationale: "{user input + analysis}", actor: "product-strategist")`
 
 **Goal Framing:**
-1. `project_overview` — understand current project state
-2. `get_smart_context` — gather relevant decisions and documents
+1. `project_overview(project_id: "{project_id}")` -- understand current state
+2. `get_smart_context(project_id: "{project_id}", mode: "overview", max_tokens: 4000)` -- gather context
 3. Frame goals into structured objectives
-4. `create_task(depth: 0, actor: "product-strategist")` — create epic for the goal
+4. `create_task(project_id: "{project_id}", depth: 0, title: "{epic title}", description: "{objective with success criteria}", actor: "product-strategist")`
+
+Domain mode: Check your injected context for Domain Autonomy Modes. Adjust your interaction style per the current domain. Note: Tier 0 decisions ALWAYS require user approval regardless of mode.
 
 ## Constraints
 

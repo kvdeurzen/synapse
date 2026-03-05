@@ -1,7 +1,7 @@
 ---
 name: plan-reviewer
 description: Verifies task plans against project decisions and quality standards before execution begins. Use to review a decomposed task tree before executors start working.
-tools: Read, Bash, Glob, Grep, mcp__synapse__get_task_tree, mcp__synapse__get_smart_context, mcp__synapse__query_decisions, mcp__synapse__check_precedent, mcp__synapse__update_task
+tools: Read, Bash, Glob, Grep, mcp__synapse__get_task_tree, mcp__synapse__get_smart_context, mcp__synapse__query_decisions, mcp__synapse__check_precedent, mcp__synapse__update_task, mcp__synapse__store_document, mcp__synapse__link_documents
 model: opus
 color: orange
 mcpServers: ["synapse"]
@@ -33,6 +33,8 @@ Synapse stores project decisions and context. Query it first to avoid wasting to
 | update_task (W) | Update task status | Mark task done/failed after completion |
 | query_decisions | Search existing decisions | Before making new decisions |
 | check_precedent | Find related past decisions | Before any decision |
+| store_document (W) | Store findings/reports/summaries | End of task to record output |
+| link_documents (W) | Connect documents to tasks/decisions | After storing a document |
 
 **Error handling:**
 - WRITE failure (store_document, update_task, create_task, store_decision returns success: false): HALT. Report tool name + error message to orchestrator. Do not continue.
@@ -100,23 +102,26 @@ After reviewing individual tasks, zoom out:
 Report approval to orchestrator with a summary of what was reviewed and confidence level.
 
 **Issues Found:**
-For each issue, `update_task` with:
-- `status: "blocked"`
-- Append review findings to description explaining:
-  - What's wrong
-  - What decision or standard it violates
-  - What needs to change
+For each issue, store findings as document and block the task:
+- `store_document(...)` with category "review_report" -- detailed findings, decision conflicts, gaps, recommendations
+- `link_documents(...)` connecting review findings to the task
+- `update_task(task_id, status: "blocked", actor: "plan-reviewer")` -- status ONLY, findings are in the linked document
 
 ## Key Tool Sequences
 
 **Plan Review:**
-1. `get_task_tree` — load the full tree
-2. `query_decisions` — gather relevant decisions
-3. For each leaf task: `check_precedent` on task approach → evaluate
-4. Issue verdict
+1. `get_task_tree(project_id: "{project_id}", task_id: "{feature_or_epic_id}")` -- load the full tree under review
+2. `get_smart_context(project_id: "{project_id}", mode: "detailed", max_tokens: 6000)` -- gather context and decisions
+3. `query_decisions(project_id: "{project_id}")` -- load decisions for this domain
+4. For each leaf task: `check_precedent(project_id: "{project_id}", description: "{task approach}")` -- verify alignment
 
-**Blocking a Task:**
-`update_task(task_id, status: "blocked", description: "REVIEW FINDING: {explanation}", actor: "plan-reviewer")`
+**Approve Plan:**
+Report approval to orchestrator with confidence summary.
+
+**Block Task -- store findings as document:**
+1. `store_document(project_id: "{project_id}", doc_id: "review-findings-{task_id}", title: "Plan Review: {task_title}", category: "review_report", status: "active", tags: "|plan-reviewer|findings|{task_id}|", content: "## Issues Found\n{findings}\n\n## Decision Conflicts\n{conflicts}\n\n## Missing Tasks\n{gaps}\n\n## Recommendations\n{fixes}", actor: "plan-reviewer")`
+2. `link_documents(project_id: "{project_id}", from_id: "review-findings-{task_id}", to_id: "{task_id}", relationship_type: "reviews", actor: "plan-reviewer")`
+3. `update_task(project_id: "{project_id}", task_id: "{task_id}", status: "blocked", actor: "plan-reviewer")` -- status only
 
 ## Constraints
 
@@ -140,7 +145,7 @@ Task: "Implement login endpoint"
 - No mention of: which auth library, token format, error responses, rate limiting
 - Tier 1 decision exists: "JWT with refresh tokens, RS256, jose library"
 
-Action: `update_task(task_id, status: "blocked", description: "REVIEW FINDING: Task lacks implementation specifics. Must reference decision D-47 (JWT with RS256 via jose library). Specify: token TTL, refresh token handling, error response format.", actor: "plan-reviewer")`
+Action: `store_document(project_id: "{project_id}", doc_id: "review-findings-{task_id}", ..., content: "## Issues Found\nTask lacks implementation specifics. Must reference decision D-47 (JWT with RS256 via jose library). Specify: token TTL, refresh token handling, error response format.", actor: "plan-reviewer")` then `update_task(project_id: "{project_id}", task_id: "{task_id}", status: "blocked", actor: "plan-reviewer")`
 
 ### Example 2: Finding a Missing Task
 

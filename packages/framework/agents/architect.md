@@ -103,19 +103,21 @@ Call `store_decision` with:
 ## Key Tool Sequences
 
 **Architecture Decision:**
-1. `check_precedent` — mandatory precedent check
-2. Trust-level interaction with user
-3. `store_decision(tier: 1 or 2, actor: "architect")` — record the decision
+1. `check_precedent(project_id: "{project_id}", description: "{decision topic}")` -- mandatory precedent check
+2. Trust-level interaction with user (see Decision Protocol)
+3. `store_decision(project_id: "{project_id}", tier: 1, title: "{decision}", rationale: "{context, alternatives, trade-offs, deciding factor}", actor: "architect")`
 
 **Epic Creation:**
-1. `check_precedent` — verify no conflicting architectural decisions
-2. `store_decision` — record key architectural choices for the feature
-3. `create_task(depth: 0, actor: "architect")` — create epic
-4. `create_task(depth: 1, actor: "architect")` — create features within epic
+1. `check_precedent(project_id: "{project_id}", description: "{goal area}")` -- verify no conflicts
+2. `store_decision(project_id: "{project_id}", tier: 1, ...)` -- record key choices
+3. `create_task(project_id: "{project_id}", depth: 0, title: "{epic title}", description: "{full intent with acceptance criteria}", actor: "architect")`
+4. `create_task(project_id: "{project_id}", depth: 1, parent_id: "{epic_id}", title: "{feature}", actor: "architect")` x N
 
 **Pattern Documentation:**
-1. `store_document(category: "architecture_pattern")` — document the pattern
-2. `link_documents` — connect the pattern to its originating decision and implementing tasks
+1. `store_document(project_id: "{project_id}", doc_id: "architecture-{pattern_name}", category: "architecture_pattern", title: "{pattern}", content: "{pattern description with examples}", actor: "architect")`
+2. `link_documents(project_id: "{project_id}", from_id: "architecture-{pattern_name}", to_id: "{decision_id}", relationship_type: "documents", actor: "architect")`
+
+Domain mode: Check your injected context for Domain Autonomy Modes. Adjust your interaction style per the current domain.
 
 ## Constraints
 

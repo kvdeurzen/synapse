@@ -58,16 +58,24 @@ Note: At higher levels, use the RPEV stage document as validation source -- it d
 
 ## Key Tool Sequences
 
-**Validate Task:**
-1. `get_task_tree` — read task spec and status
-2. `get_smart_context` — gather context
-3. `query_decisions` — find decisions relevant to this task
-4. Inspect code via `Read`, `search_code`, `Glob`
-5. Run tests via `Bash`
-6. Verdict: pass → report to orchestrator, fail → `update_task`
+**Start Validation:**
+1. Parse the `--- SYNAPSE HANDOFF ---` block to extract: project_id, task_id, hierarchy_level, rpev_stage_doc_id, doc_ids
+2. `get_task_tree(project_id: "{project_id}", task_id: "{task_id}")` -- load task spec and acceptance criteria
+3. `get_smart_context(project_id: "{project_id}", mode: "detailed", doc_ids: [{doc_ids from handoff}])` -- fetch curated context
+4. `query_decisions(project_id: "{project_id}")` -- find decisions relevant to this task's domain
 
-**Fail Task:**
-`update_task(task_id, status: "failed", description: "VALIDATION FINDING: {explanation}", actor: "validator")`
+**Verify Against Spec:**
+1. Inspect code via Read, search_code, Glob, Grep
+2. Run tests via `Bash("bun test {test_file}")` -- capture exit code
+3. Run broader module tests for regression check
+
+**Pass Task:**
+1. `update_task(project_id: "{project_id}", task_id: "{task_id}", status: "done", actor: "validator")` -- status only
+
+**Fail Task -- store findings as document, not in task description:**
+1. `store_document(project_id: "{project_id}", doc_id: "validator-findings-{task_id}", title: "Validation Findings: {task_title}", category: "validation_report", status: "active", tags: "|validator|findings|{task_id}|", content: "## Findings\n{detailed findings}\n\n## Expected\n{spec requirement}\n\n## Found\n{actual}\n\n## Location\n{file:line}\n\n## Test Output\n{test output}", actor: "validator")`
+2. `link_documents(project_id: "{project_id}", from_id: "validator-findings-{task_id}", to_id: "{task_id}", relationship_type: "validates", actor: "validator")`
+3. `update_task(project_id: "{project_id}", task_id: "{task_id}", status: "failed", actor: "validator")` -- status ONLY, do NOT put findings in description
 
 ## Constraints
 
@@ -85,8 +93,10 @@ Task: "Implement JWT signing utility — RS256, 15-min TTL, jose library"
 2. `query_decisions` — find decision D-47: "JWT with refresh tokens, RS256, jose library"
 3. `Read src/auth/jwt.ts` — verify: uses jose (✓), RS256 (✓), check TTL...
 4. TTL is set to `'1h'` instead of `'15m'` — spec says 15-min
-5. `Bash "cd src && npx vitest run auth/jwt"` — tests pass but don't assert TTL value
-6. `update_task(status: "failed", description: "VALIDATION FINDING: Token TTL is '1h' (jwt.ts:23) but spec and decision D-47 require 15-min. Tests don't assert TTL value.", actor: "validator")`
+5. `Bash("bun test src/auth/jwt")` — tests pass but don't assert TTL value
+6. `store_document(project_id: "{project_id}", doc_id: "validator-findings-{task_id}", title: "Validation Findings: JWT signing utility", category: "validation_report", status: "active", tags: "|validator|findings|{task_id}|", content: "## Findings\nToken TTL mismatch\n\n## Expected\n15-min TTL per spec and decision D-47\n\n## Found\nTTL set to '1h' at jwt.ts:23\n\n## Location\nsrc/auth/jwt.ts:23\n\n## Test Output\nTests pass but do not assert TTL value", actor: "validator")`
+7. `link_documents(project_id: "{project_id}", from_id: "validator-findings-{task_id}", to_id: "{task_id}", relationship_type: "validates", actor: "validator")`
+8. `update_task(project_id: "{project_id}", task_id: "{task_id}", status: "failed", actor: "validator")` -- status ONLY
 
 ## Task Validation Protocol
 
@@ -118,19 +128,14 @@ For each acceptance criterion in the task spec:
 - Update task status to "done" via `update_task(task_id, status: "done", actor: "validator")`
 
 **If any acceptance criterion is not met:**
-- Update task status to "failed" via `update_task` with a detailed failure description:
+- Store findings as a document (NOT in task description):
   ```
-  update_task(task_id, status: "failed", description: "VALIDATION FINDING: {clear summary}
-
-  Expected: {what the spec requires}
-  Found: {what was implemented}
-  Location: {specific file:line references}
-  Test output: {relevant test failure output}
-
-  The Debugger needs the above detail for root-cause analysis.", actor: "validator")
+  store_document(project_id: "{project_id}", doc_id: "validator-findings-{task_id}", title: "Validation Findings: {task_title}", category: "validation_report", status: "active", tags: "|validator|findings|{task_id}|", content: "## Findings\n{clear summary}\n\n## Expected\n{what the spec requires}\n\n## Found\n{what was implemented}\n\n## Location\n{specific file:line references}\n\n## Test Output\n{relevant test failure output}", actor: "validator")
+  link_documents(project_id: "{project_id}", from_id: "validator-findings-{task_id}", to_id: "{task_id}", relationship_type: "validates", actor: "validator")
+  update_task(project_id: "{project_id}", task_id: "{task_id}", status: "failed", actor: "validator")
   ```
-- Include specific file paths and line numbers where possible
-- The orchestrator will trigger Debugger → retry based on your failure report
+- Include specific file paths and line numbers in the document content
+- The orchestrator will trigger Debugger → retry based on the linked findings document
 
 ### Failure Report Quality
 

@@ -12,6 +12,7 @@ allowed-tools:
   - mcp__synapse__semantic_search
   - mcp__synapse__get_task_tree
   - mcp__synapse__create_task
+  - mcp__synapse__query_documents
 ---
 
 ## Objective
@@ -26,6 +27,8 @@ Run a structured brainstorming session that tracks decisions, surfaces what's mi
    Resume this session, or describe something new?
    ```
    If nothing is found and no arguments were given, ask: "What would you like to refine? You can describe a new epic, drill into an existing feature, or explore a work package."
+
+   Also call `mcp__synapse__query_documents` with category `"plan"`, tags `"rpev-stage"` to check if this item already has an RPEV stage document. If it does, note the current stage — the user may want to resume refinement on an item that's already in the pipeline.
 
 2. **Detect hierarchy level:** Based on the refinement target, determine the RPEV level:
    - If it matches an existing epic in the task tree (checked via `mcp__synapse__get_task_tree`) → **Epic** level
@@ -110,6 +113,8 @@ Run a structured brainstorming session that tracks decisions, surfaces what's mi
    This item is ready for planning.
    ```
 
+   Note after the readiness summary: "The involvement mode for the Plan stage at this level determines what happens next. The orchestrator (or startup hook) injects the involvement matrix — the mode for `{level}_plan` controls whether user approval is needed before planning begins."
+
 8. **Persist refinement state:** Call `mcp__synapse__store_document` with:
    - `project_id`: from session context (injected by synapse-startup hook)
    - `title`: `"Refinement: [Item Title] ([Level])"`
@@ -120,23 +125,53 @@ Run a structured brainstorming session that tracks decisions, surfaces what's mi
    - `doc_id`: If resuming an existing session (found in step 3), pass the existing `doc_id` to create a new version rather than a duplicate
    - `actor`: `"synapse-orchestrator"`
 
-9. **Close session:**
-   - If readiness confirmed:
-     ```
-     ## Current Behavior (Phase 16)
-     Refinement state saved. When the RPEV orchestrator is available (Phase 18),
-     it will auto-trigger planning for this item. For now, the decisions are stored
-     in Synapse and the item is ready for manual coordination.
+9. **Bridge to RPEV orchestrator:** When readiness is confirmed in step 7:
 
-     ## What's stored:
-     - N decisions in Synapse DB (queryable by any future agent)
-     - Refinement state document (retrievable next session via /synapse:refine)
-     ```
-   - If pausing (OPEN items remain):
-     ```
-     Session saved. Run `/synapse:refine` again to resume — your DECIDED, OPEN,
-     and EMERGING items will be loaded automatically from where you left off.
-     ```
+   a. **Create/update RPEV stage document** to signal the orchestrator that this item is ready for planning. Call `mcp__synapse__store_document` with:
+      - `project_id`: from session context
+      - `doc_id`: `"rpev-stage-[task_id]"` (where task_id is the item's task tree ID — look it up from step 2's get_task_tree call. If this is a new concept with no task tree entry yet, create one first via `mcp__synapse__create_task`)
+      - `title`: `"RPEV Stage: [Item Title] ([Level])"`
+      - `category`: `"plan"`
+      - `status`: `"active"`
+      - `tags`: `"|rpev-stage|[level]|planning|"`
+      - `content`: JSON string with:
+        ```json
+        {
+          "stage": "PLANNING",
+          "level": "[detected level from step 2]",
+          "task_id": "[task_id]",
+          "involvement": "[resolved involvement mode for {level}_plan from matrix]",
+          "pending_approval": "[true if involvement is 'drives' or 'co-pilot', false otherwise]",
+          "proposal_doc_id": null,
+          "last_updated": "[ISO timestamp]",
+          "notes": "Refinement complete. [N] decisions stored. Ready for planning."
+        }
+        ```
+      - `actor`: `"synapse-orchestrator"`
+
+   b. **Present transition message:**
+      ```
+      ## Refinement Complete: [Item Title] ([Level])
+
+      [N] decisions stored in Synapse (Tiers 0-N)
+      All required decisions captured for this level.
+
+      RPEV stage document created — this item is now queued for planning.
+      [If pending_approval=true:]
+        The involvement mode for planning at [level] level is "[mode]" — the orchestrator
+        will prepare a plan proposal for your review.
+      [If pending_approval=false:]
+        The involvement mode for planning at [level] level is "[mode]" — the orchestrator
+        will proceed with planning automatically.
+
+      Run `/synapse:status` to see all items in the RPEV pipeline.
+      ```
+
+   c. If pausing (OPEN items remain) — keep existing behavior:
+      ```
+      Session saved. Run `/synapse:refine` again to resume — your DECIDED, OPEN,
+      and EMERGING items will be loaded automatically from where you left off.
+      ```
 
 ## Anti-Patterns
 

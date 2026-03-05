@@ -83,9 +83,9 @@ Plans:
 **Plans**: 3 plans
 
 Plans:
-- [ ] 16-01-PLAN.md — /synapse:init + /synapse:map commands (CMD-01, CMD-02)
-- [ ] 16-02-PLAN.md — /synapse:refine + /synapse:status evolution + delete new-goal.md (CMD-03)
-- [ ] 16-03-PLAN.md — /synapse:focus + user journey documentation (CMD-04)
+- [x] 16-01-PLAN.md — /synapse:init + /synapse:map commands (CMD-01, CMD-02)
+- [x] 16-02-PLAN.md — /synapse:refine + /synapse:status evolution + delete new-goal.md (CMD-03)
+- [x] 16-03-PLAN.md — /synapse:focus + user journey documentation (CMD-04)
 
 ### Phase 17: Tech Debt
 **Goal**: The codebase has no known correctness bugs, no duplicated utility code, and no lint warnings — the foundation is clean before RPEV rework
@@ -100,22 +100,28 @@ Plans:
 **Plans**: 2 plans
 
 Plans:
-- [ ] 17-01: Extract shared escapeSQL helper (DEBT-01), fix project_meta.created_at preservation (DEBT-02), resolve INT-02 ULID edges (DEBT-03)
-- [ ] 17-02: Fix lint warnings across both packages (DEBT-04) and normalize autonomy mode ordering (DEBT-05)
+- [x] 17-01: Extract shared escapeSQL helper (DEBT-01), fix project_meta.created_at preservation (DEBT-02), resolve INT-02 ULID edges (DEBT-03)
+- [x] 17-02: Fix lint warnings across both packages (DEBT-04) and normalize autonomy mode ordering (DEBT-05)
 
 ### Phase 18: RPEV Orchestration
 **Goal**: The recursive RPEV engine drives work forward — Refine completion triggers Plan, Plan triggers Execute via work queue, Validate reports results. Trust config controls user involvement at each level.
 **Depends on**: Phase 16
-**Requirements**: TBD (RPEV-xx IDs, research needed)
+**Requirements**: RPEV-01, RPEV-02, RPEV-03, RPEV-04, RPEV-05, RPEV-06, RPEV-07, RPEV-08
 **Success Criteria** (what must be TRUE):
   1. When a Refine session confirms readiness, the system auto-queues a Plan stage for that item — no manual `/synapse:plan` command required
-  2. Trust config (`trust.toml` `[rpev]` section) controls which hierarchy levels require explicit user approval before Plan→Execute transition
+  2. Trust config (`trust.toml` `[rpev.involvement]` section) controls which hierarchy levels require explicit user approval before stage transitions
   3. The synapse-orchestrator agent implements the RPEV flow: Refine→Plan→Execute→Validate with recursive descent at each hierarchy level
   4. Decision state from Refine (DECIDED/OPEN/EMERGING) persists across sessions and feeds into the Plan stage
-**Plans**: TBD (research needed)
+  5. RPEV stage documents (stored via store_document with fixed doc_id pattern) track state per item
+  6. `/synapse:status` queries stage documents and shows items needing approval in "Needs Your Input" section
+  7. `/synapse:focus` implements two-tier approval UX (summary + approve/reject/discuss)
+  8. Failed items with exhausted retries appear as flagged in `/synapse:status` with diagnostic info
+**Plans**: 3 plans
 
 Plans:
-- [ ] 18-01 to 18-xx: TBD (research needed)
+- [ ] 18-01-PLAN.md — Expand trust.toml with involvement matrix, update synapse-startup.js to inject it (RPEV-02)
+- [ ] 18-02-PLAN.md — Update synapse-orchestrator.md and pev-workflow.md for RPEV model (RPEV-01, RPEV-03, RPEV-04, RPEV-05, RPEV-08)
+- [ ] 18-03-PLAN.md — Bridge refine.md to stage documents, update status.md/focus.md for approvals, update agents.toml (RPEV-01, RPEV-06, RPEV-07)
 
 ### Phase 19: Agent Prompts + Level-Awareness
 **Goal**: All agents reliably use Synapse MCP tools, pass context in handoffs, store findings, and adjust behavior based on hierarchy level
@@ -231,8 +237,8 @@ Parallelizable: Phase 17 (Tech Debt) and Phase 20 (Skills) can proceed in parall
 | 14. Quality Gates and PEV Workflow | v2.0 | 4/4 | Complete | 2026-03-02 |
 | 15. Foundation | v3.0 | 2/2 | Complete | 2026-03-03 |
 | 16. User Journey Commands | v3.0 | 3/3 | Complete | 2026-03-05 |
-| 17. Tech Debt | 2/2 | Complete    | 2026-03-05 | - |
-| 18. RPEV Orchestration | v3.0 | 0/~3 | Not started | - |
+| 17. Tech Debt | v3.0 | 2/2 | Complete | 2026-03-05 |
+| 18. RPEV Orchestration | v3.0 | 0/3 | Not started | - |
 | 19. Agent Prompts + Level-Awareness | v3.0 | 0/3 | Not started | - |
 | 20. Skills Completion | v3.0 | 0/2 | Not started | - |
 | 21. Agent Pool | v3.0 | 0/~2 | Not started | - |

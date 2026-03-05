@@ -18,15 +18,19 @@ Requirements for Working Prototype milestone. Each maps to roadmap phases.
 
 - [x] **CMD-01**: `/synapse:init` command creates project.toml, calls init_project, offers opt-in CLAUDE.md amendment
 - [x] **CMD-02**: `/synapse:map` command wraps index_codebase with Ollama health check and progress feedback
-- [x] **CMD-03**: `/synapse:plan` command connects user goal to PEV workflow via orchestrator agent
+- [x] **CMD-03**: `/synapse:refine` command enables brainstorming with DECIDED/OPEN/EMERGING tracking and cross-session persistence
 - [x] **CMD-04**: User journey from install to ongoing use is documented as a step-by-step flow
 
-### Install
+### RPEV Orchestration
 
-- [ ] **INST-01**: install.sh checks prerequisites (Bun, Ollama running, nomic-embed-text model)
-- [ ] **INST-02**: install.sh copies agents, hooks, commands to `.claude/` and generates settings.json and .mcp.json
-- [ ] **INST-03**: install.sh runs smoke test (init_project → store_document → semantic_search) before declaring success
-- [ ] **INST-04**: Usage manual documents the complete user journey, commands reference, and configuration
+- [ ] **RPEV-01**: Refine completion auto-queues Plan stage by creating RPEV stage document with stage=PLANNING
+- [ ] **RPEV-02**: trust.toml `[rpev.involvement]` matrix controls user involvement per hierarchy level and RPEV stage (16 entries)
+- [ ] **RPEV-03**: synapse-orchestrator.md implements full RPEV flow: Refine->Plan->Execute->Validate with involvement matrix enforcement
+- [ ] **RPEV-04**: Decision state from Refine (stored via store_decision) persists and feeds into Plan stage via get_smart_context
+- [ ] **RPEV-05**: RPEV stage documents (doc_id: rpev-stage-[task_id]) track state per item with stage, involvement, pending_approval fields
+- [ ] **RPEV-06**: `/synapse:status` queries stage documents and shows pending approval items in "Needs Your Input" section
+- [ ] **RPEV-07**: `/synapse:focus` implements two-tier approval UX (summary + approve/reject/discuss deeper)
+- [ ] **RPEV-08**: Failed items with exhausted retries appear as flagged in `/synapse:status` with diagnostic info
 
 ### Agent Prompts
 
@@ -42,6 +46,13 @@ Requirements for Working Prototype milestone. Each maps to roadmap phases.
 - [ ] **AGENT-10**: Decomposer populates context_refs (document_ids, decision_ids) on leaf tasks
 - [ ] **AGENT-11**: Executor and Validator fetch context_refs at start of each task
 
+### Install
+
+- [ ] **INST-01**: install.sh checks prerequisites (Bun, Ollama running, nomic-embed-text model)
+- [ ] **INST-02**: install.sh copies agents, hooks, commands to `.claude/` and generates settings.json and .mcp.json
+- [ ] **INST-03**: install.sh runs smoke test (init_project → store_document → semantic_search) before declaring success
+- [ ] **INST-04**: Usage manual documents the complete user journey, commands reference, and configuration
+
 ### Skills
 
 - [ ] **SKILL-01**: synapse.toml `skills` field drives dynamic skill injection via startup hook
@@ -50,13 +61,6 @@ Requirements for Working Prototype milestone. Each maps to roadmap phases.
 - [ ] **SKILL-04**: Thin skills (tailwind, python, sql) fleshed out from community standards
 - [ ] **SKILL-05**: New generic skills added: brainstorming, testing-strategy, architecture-design
 
-### E2E Validation
-
-- [ ] **E2E-01**: Full PEV cycle runs on a real task (decompose → plan review → execute → validate)
-- [ ] **E2E-02**: Hooks verified firing via audit log presence after tool calls
-- [ ] **E2E-03**: Failure log documented with root causes and patches for top-3 issues
-- [ ] **E2E-04**: `/synapse:status` output matches task tree state at completion
-
 ### Tech Debt
 
 - [x] **DEBT-01**: Shared escapeSQL helper extracted (currently duplicated in init-project.ts and index-codebase.ts)
@@ -64,6 +68,13 @@ Requirements for Working Prototype milestone. Each maps to roadmap phases.
 - [x] **DEBT-03**: INT-02 resolved — AST import edges use ULIDs compatible with get_related_documents
 - [x] **DEBT-04**: Linting warnings fixed
 - [x] **DEBT-05**: Autonomy mode ordering consistent across all config and agent files
+
+### E2E Validation
+
+- [ ] **E2E-01**: Full RPEV cycle runs on a real task (refine → plan → execute → validate)
+- [ ] **E2E-02**: Hooks verified firing via audit log presence after tool calls
+- [ ] **E2E-03**: Failure log documented with root causes and patches for top-3 issues
+- [ ] **E2E-04**: `/synapse:status` output matches task tree state at completion
 
 ### Visibility
 
@@ -117,43 +128,51 @@ Which phases cover which requirements. Updated during roadmap creation.
 | CMD-02 | Phase 16 | Complete |
 | CMD-03 | Phase 16 | Complete |
 | CMD-04 | Phase 16 | Complete |
-| INST-01 | Phase 17 | Pending |
-| INST-02 | Phase 17 | Pending |
-| INST-03 | Phase 17 | Pending |
-| INST-04 | Phase 17 | Pending |
-| AGENT-01 | Phase 18 | Pending |
-| AGENT-02 | Phase 18 | Pending |
-| AGENT-03 | Phase 18 | Pending |
-| AGENT-04 | Phase 18 | Pending |
-| AGENT-05 | Phase 18 | Pending |
-| AGENT-06 | Phase 18 | Pending |
-| AGENT-07 | Phase 18 | Pending |
-| AGENT-08 | Phase 18 | Pending |
-| AGENT-09 | Phase 18 | Pending |
-| AGENT-10 | Phase 18 | Pending |
-| AGENT-11 | Phase 18 | Pending |
-| SKILL-01 | Phase 19 | Pending |
-| SKILL-02 | Phase 19 | Pending |
-| SKILL-03 | Phase 19 | Pending |
-| SKILL-04 | Phase 19 | Pending |
-| SKILL-05 | Phase 19 | Pending |
-| DEBT-01 | Phase 20 | Complete |
-| DEBT-02 | Phase 20 | Complete |
-| DEBT-03 | Phase 20 | Complete |
-| DEBT-04 | Phase 20 | Complete |
-| DEBT-05 | Phase 20 | Complete |
-| E2E-01 | Phase 21 | Pending |
-| E2E-02 | Phase 21 | Pending |
-| E2E-03 | Phase 21 | Pending |
-| E2E-04 | Phase 21 | Pending |
-| VIS-01 | Phase 22 | Pending |
-| VIS-02 | Phase 22 | Pending |
+| DEBT-01 | Phase 17 | Complete |
+| DEBT-02 | Phase 17 | Complete |
+| DEBT-03 | Phase 17 | Complete |
+| DEBT-04 | Phase 17 | Complete |
+| DEBT-05 | Phase 17 | Complete |
+| RPEV-01 | Phase 18 | Pending |
+| RPEV-02 | Phase 18 | Pending |
+| RPEV-03 | Phase 18 | Pending |
+| RPEV-04 | Phase 18 | Pending |
+| RPEV-05 | Phase 18 | Pending |
+| RPEV-06 | Phase 18 | Pending |
+| RPEV-07 | Phase 18 | Pending |
+| RPEV-08 | Phase 18 | Pending |
+| AGENT-01 | Phase 19 | Pending |
+| AGENT-02 | Phase 19 | Pending |
+| AGENT-03 | Phase 19 | Pending |
+| AGENT-04 | Phase 19 | Pending |
+| AGENT-05 | Phase 19 | Pending |
+| AGENT-06 | Phase 19 | Pending |
+| AGENT-07 | Phase 19 | Pending |
+| AGENT-08 | Phase 19 | Pending |
+| AGENT-09 | Phase 19 | Pending |
+| AGENT-10 | Phase 19 | Pending |
+| AGENT-11 | Phase 19 | Pending |
+| SKILL-01 | Phase 20 | Pending |
+| SKILL-02 | Phase 20 | Pending |
+| SKILL-03 | Phase 20 | Pending |
+| SKILL-04 | Phase 20 | Pending |
+| SKILL-05 | Phase 20 | Pending |
+| INST-01 | Phase 22 | Pending |
+| INST-02 | Phase 22 | Pending |
+| INST-03 | Phase 22 | Pending |
+| INST-04 | Phase 22 | Pending |
+| VIS-01 | Phase 23 | Pending |
+| VIS-02 | Phase 23 | Pending |
+| E2E-01 | Phase 24 | Pending |
+| E2E-02 | Phase 24 | Pending |
+| E2E-03 | Phase 24 | Pending |
+| E2E-04 | Phase 24 | Pending |
 
 **Coverage:**
-- v3.0 requirements: 39 total
-- Mapped to phases: 39
-- Unmapped: 0 ✓
+- v3.0 requirements: 47 total (39 original + 8 RPEV)
+- Mapped to phases: 47
+- Unmapped: 0
 
 ---
 *Requirements defined: 2026-03-03*
-*Last updated: 2026-03-03 after roadmap creation (traceability complete)*
+*Last updated: 2026-03-05 after Phase 18 planning (RPEV requirements added, traceability corrected)*

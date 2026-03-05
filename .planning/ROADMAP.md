@@ -121,7 +121,7 @@ Plans:
 Plans:
 - [x] 18-01-PLAN.md — Expand trust.toml with involvement matrix, update synapse-startup.js to inject it (RPEV-02)
 - [x] 18-02-PLAN.md — Update synapse-orchestrator.md and pev-workflow.md for RPEV model (RPEV-01, RPEV-03, RPEV-04, RPEV-05, RPEV-08)
-- [ ] 18-03-PLAN.md — Bridge refine.md to stage documents, update status.md/focus.md for approvals, update agents.toml (RPEV-01, RPEV-06, RPEV-07)
+- [x] 18-03-PLAN.md — Bridge refine.md to stage documents, update status.md/focus.md for approvals, update agents.toml (RPEV-01, RPEV-06, RPEV-07)
 
 ### Phase 19: Agent Prompts + Level-Awareness
 **Goal**: All agents reliably use Synapse MCP tools, pass context in handoffs, store findings, and adjust behavior based on hierarchy level
@@ -136,9 +136,9 @@ Plans:
 **Plans**: 3 plans
 
 Plans:
-- [ ] 19-01: Add mcpServers frontmatter (AGENT-03) and "MCP as Single Source of Truth" + error handling sections to all 10 agents (AGENT-01, AGENT-08)
-- [ ] 19-02: Add concrete tool call sequences to all 10 agents (AGENT-02) and domain mode injection section (AGENT-09)
-- [ ] 19-03: Orchestrator subagent handoff protocol (AGENT-04), Validator findings-as-document rule (AGENT-05), Integration Checker and Plan Reviewer persistence (AGENT-06), Executor implementation summaries (AGENT-07), Decomposer context_refs population (AGENT-10), Executor/Validator context_refs fetch (AGENT-11)
+- [ ] 19-01-PLAN.md — Add mcpServers frontmatter + shared MCP header + error handling to all 11 agents (AGENT-01, AGENT-03, AGENT-08)
+- [ ] 19-02-PLAN.md — Expand Key Tool Sequences with literal parameters + domain mode injection (AGENT-02, AGENT-09)
+- [ ] 19-03-PLAN.md — Orchestrator handoff protocol, validator findings-as-document, persistence patterns, context_refs flow (AGENT-04, AGENT-05, AGENT-06, AGENT-07, AGENT-10, AGENT-11)
 
 ### Phase 20: Skills Completion
 **Goal**: Projects declare their stack once in project.toml and agents automatically receive the right skill content — the framework works for any language stack, not just TypeScript/Bun

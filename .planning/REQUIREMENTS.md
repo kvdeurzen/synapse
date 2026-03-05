@@ -37,14 +37,14 @@ Requirements for Working Prototype milestone. Each maps to roadmap phases.
 - [x] **AGENT-01**: Every agent prompt has "MCP as Single Source of Truth" section with query-first principle
 - [x] **AGENT-02**: Every agent prompt has concrete tool call sequences with parameter values and response shapes
 - [x] **AGENT-03**: Every agent `.md` file has `mcpServers: ["synapse"]` in frontmatter
-- [ ] **AGENT-04**: Orchestrator agent has subagent handoff protocol (project_id, task_id, doc_ids in every Task call)
-- [ ] **AGENT-05**: Validator never overwrites task description; stores findings as linked document
-- [ ] **AGENT-06**: Integration Checker and Plan Reviewer persist findings via store_document + link_documents
-- [ ] **AGENT-07**: Executor stores implementation summaries as documents
+- [x] **AGENT-04**: Orchestrator agent has subagent handoff protocol (project_id, task_id, doc_ids in every Task call)
+- [x] **AGENT-05**: Validator never overwrites task description; stores findings as linked document
+- [x] **AGENT-06**: Integration Checker and Plan Reviewer persist findings via store_document + link_documents
+- [x] **AGENT-07**: Executor stores implementation summaries as documents
 - [x] **AGENT-08**: Every agent prompt has MCP error handling protocol (halt on `success: false`, report to orchestrator)
 - [x] **AGENT-09**: Domain mode (co-pilot/autopilot/advisory) injected by startup hook and referenced by all agents
-- [ ] **AGENT-10**: Decomposer populates context_refs (document_ids, decision_ids) on leaf tasks
-- [ ] **AGENT-11**: Executor and Validator fetch context_refs at start of each task
+- [x] **AGENT-10**: Decomposer populates context_refs (document_ids, decision_ids) on leaf tasks
+- [x] **AGENT-11**: Executor and Validator fetch context_refs at start of each task
 
 ### Install
 
@@ -144,14 +144,14 @@ Which phases cover which requirements. Updated during roadmap creation.
 | AGENT-01 | Phase 19-01 | Complete |
 | AGENT-02 | Phase 19 | Complete |
 | AGENT-03 | Phase 19-01 | Complete |
-| AGENT-04 | Phase 19 | Pending |
-| AGENT-05 | Phase 19 | Pending |
-| AGENT-06 | Phase 19 | Pending |
-| AGENT-07 | Phase 19 | Pending |
+| AGENT-04 | Phase 19 | Complete |
+| AGENT-05 | Phase 19 | Complete |
+| AGENT-06 | Phase 19 | Complete |
+| AGENT-07 | Phase 19 | Complete |
 | AGENT-08 | Phase 19-01 | Complete |
 | AGENT-09 | Phase 19 | Complete |
-| AGENT-10 | Phase 19 | Pending |
-| AGENT-11 | Phase 19 | Pending |
+| AGENT-10 | Phase 19 | Complete |
+| AGENT-11 | Phase 19 | Complete |
 | SKILL-01 | Phase 20 | Pending |
 | SKILL-02 | Phase 20 | Pending |
 | SKILL-03 | Phase 20 | Pending |

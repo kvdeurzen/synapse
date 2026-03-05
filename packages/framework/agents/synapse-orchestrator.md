@@ -150,7 +150,7 @@ See `@packages/framework/workflows/pev-workflow.md` for the authoritative RPEV w
 ### Epic -> Features
 
 1. Spawn Decomposer subagent via Task tool to decompose the epic into feature-level tasks (depth=1)
-   - Pass: `project_id`, `task_id`, `rpev_stage_doc_id: "rpev-stage-[task_id]"`, epic description, acceptance criteria, relevant decisions from `check_precedent`
+   - Pass via SYNAPSE HANDOFF block: project_id, task_id, hierarchy_level=epic, rpev_stage_doc_id, doc_ids, decision_ids from CONTEXT_REFS
 2. Spawn Plan Reviewer subagent to verify the Decomposer's feature list
    - Plan Reviewer checks: completeness (all acceptance criteria covered), testability, no circular dependencies
 3. If Plan Reviewer rejects the decomposition:
@@ -169,7 +169,7 @@ Decompose features into tasks ONLY when that feature is the next to execute — 
 
 For each feature when it becomes active:
 1. Spawn Decomposer subagent to decompose feature into component/task items (depth=2/3)
-   - Pass: `project_id`, `task_id`, `rpev_stage_doc_id`, relevant decisions
+   - Pass via SYNAPSE HANDOFF block: project_id, task_id, hierarchy_level=feature, rpev_stage_doc_id, doc_ids, decision_ids from CONTEXT_REFS
 2. Spawn Plan Reviewer to verify task decomposition (max 3 review cycles)
 3. Resolve involvement mode for `{level}_plan`:
    - `drives` or `co-pilot`: Present task list to user before executing
@@ -192,7 +192,7 @@ Before wave execution: Update stage document: `stage: "EXECUTING"`, `pending_app
 
 1. For each task in the wave, spawn an Executor subagent via Task tool with `isolation: "worktree"`
    - Issue all Task tool calls in a single turn for true parallel execution
-   - Pass (via Subagent Handoff Protocol): `project_id`, `task_id`, `rpev_stage_doc_id`, task spec, acceptance criteria, context_refs, relevant decisions
+   - Include SYNAPSE HANDOFF block in each Task prompt with: project_id, task_id, hierarchy_level=task, rpev_stage_doc_id, doc_ids and decision_ids from CONTEXT_REFS
 2. Await all executor results before proceeding
 3. For each completed task: spawn Validator subagent to check output against spec and decisions
 4. If ANY validation fails: HALT the wave and enter Failure Escalation (see below)
@@ -312,31 +312,47 @@ mcp__synapse__store_document({
 
 ## Subagent Handoff Protocol
 
-Every Task tool call to a subagent MUST include:
-- `project_id`: from session context (injected by startup hook)
-- `task_id`: the specific task to work on
-- `rpev_stage_doc_id`: `"rpev-stage-[task_id]"` so the subagent can fetch stage context
-- Relevant decision context: "Key decisions constraining this task: [list from check_precedent]"
+Every Task tool call to a subagent MUST include the SYNAPSE HANDOFF block in the prompt. Subagents do NOT inherit session context -- they start fresh. Every handoff must be self-contained.
 
-This ensures subagents have full context without searching. Decision state from Refine (stored via `store_decision` during `/synapse:refine` sessions) is automatically available to subagents via `get_smart_context`.
-
-**Subagents do NOT inherit session context** — they start fresh. Every handoff must be self-contained. The `project_id` is critical: without it, `create_task` and `store_document` calls will fail or write to the wrong project.
-
-**Standard handoff template:**
+**Block format (include verbatim in every Task prompt):**
 
 ```
-## Synapse Context
-
-project_id: [project_id from session context]
-task_id: [task.id]
-rpev_stage_doc_id: rpev-stage-[task_id]
-doc_ids: [list from task.context_refs.document_ids]
-decision_ids: [list from task.context_refs.decision_ids]
-
-Start by calling:
-1. get_smart_context with task_id to load task spec and decisions
-2. Fetch documents listed in doc_ids for implementation context
+--- SYNAPSE HANDOFF ---
+project_id: {project_id from session context}
+task_id: {task.id}
+hierarchy_level: {epic|feature|component|task}
+rpev_stage_doc_id: rpev-stage-{task_id}
+doc_ids: {comma-separated from CONTEXT_REFS block, or "none"}
+decision_ids: {comma-separated from CONTEXT_REFS block, or "none"}
+--- END HANDOFF ---
 ```
+
+**Building the handoff:**
+1. Read the task via `get_task_tree(project_id, task_id)`
+2. Parse the `---CONTEXT_REFS---` block from the task description:
+   - Extract `document_ids:` list
+   - Extract `decision_ids:` list
+   - If no CONTEXT_REFS block: use "none" for both
+3. Determine `hierarchy_level` from task depth: depth 0 = epic, depth 1 = feature, depth 2 = component, depth 3 = task
+4. Construct the handoff block with all values filled in
+5. Include the handoff block at the TOP of the Task tool prompt, before any other instructions
+
+**Example:**
+```
+--- SYNAPSE HANDOFF ---
+project_id: my-project
+task_id: 01HXYZ123ABC
+hierarchy_level: task
+rpev_stage_doc_id: rpev-stage-01HXYZ123ABC
+doc_ids: rpev-stage-01HXYZ_PARENT, architecture-auth-flow
+decision_ids: D-47, D-52
+--- END HANDOFF ---
+
+Implement the JWT signing utility as specified in the task description. Use RS256 with jose library.
+```
+
+**Subagent instructions to include in every Task prompt:**
+"Parse the --- SYNAPSE HANDOFF --- block first. Use project_id for all MCP calls. Fetch task spec via get_task_tree(task_id). Fetch context via get_smart_context(doc_ids). Begin work only after loading context."
 
 ## Checkpoint Format
 

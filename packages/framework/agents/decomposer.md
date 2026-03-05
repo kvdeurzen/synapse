@@ -101,7 +101,30 @@ Store Tier 2 decisions for significant decomposition choices:
 - Why certain tasks were ordered as dependencies
 - `store_decision(tier: 2, actor: "decomposer")`
 
-### Step 5: Respect Approval Mode
+### Step 5: Attach Context Refs to Leaf Tasks
+
+After calling get_smart_context and query_decisions during decomposition, attach relevant IDs to each leaf task (depth=3) description. Embed a CONTEXT_REFS block at the end of the task description:
+
+```
+{task description and acceptance criteria}
+
+---CONTEXT_REFS---
+document_ids: [{relevant_doc_ids from get_smart_context}]
+decision_ids: [{relevant_decision_ids from query_decisions}]
+---END_CONTEXT_REFS---
+```
+
+**What to include:**
+- `document_ids`: IDs of documents directly relevant to this task (architecture patterns, research findings, RPEV stage docs). Include the parent feature's rpev-stage doc_id if it exists.
+- `decision_ids`: IDs of decisions that constrain this task's implementation (architectural choices, design patterns).
+
+**Rules:**
+- Only include IDs you actually found during decomposition -- do not guess
+- If no relevant docs/decisions: include empty lists `document_ids: []\ndecision_ids: []`
+- The orchestrator parses this block when building handoffs to executor/validator
+- Context refs are a convention embedded in description, NOT a DB column
+
+### Step 6: Respect Approval Mode
 Check the decomposition approval setting from trust.toml:
 - **"always"**: Present each decomposition level for user approval before proceeding deeper
 - **"strategic"**: Present feature-level (depth 1) for approval, auto-decompose depth 2-3

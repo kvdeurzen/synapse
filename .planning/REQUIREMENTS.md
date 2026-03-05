@@ -57,9 +57,9 @@ Requirements for Working Prototype milestone. Each maps to roadmap phases.
 
 - [x] **SKILL-01**: synapse.toml `skills` field drives dynamic skill injection via startup hook
 - [x] **SKILL-02**: Hardcoded TypeScript/Bun skills removed from agents.toml per-agent entries
-- [ ] **SKILL-03**: Agent prompts are language-agnostic (no hardcoded `.ts` examples or `bun test` references)
-- [ ] **SKILL-04**: Thin skills (tailwind, python, sql) fleshed out from community standards
-- [ ] **SKILL-05**: New generic skills added: brainstorming, testing-strategy, architecture-design
+- [x] **SKILL-03**: Agent prompts are language-agnostic (no hardcoded `.ts` examples or `bun test` references)
+- [x] **SKILL-04**: Thin skills (tailwind, python, sql) fleshed out from community standards
+- [x] **SKILL-05**: New generic skills added: brainstorming, testing-strategy, architecture-design
 
 ### Tech Debt
 
@@ -154,9 +154,9 @@ Which phases cover which requirements. Updated during roadmap creation.
 | AGENT-11 | Phase 19 | Complete |
 | SKILL-01 | Phase 20 | Complete |
 | SKILL-02 | Phase 20 | Complete |
-| SKILL-03 | Phase 20 | Pending |
-| SKILL-04 | Phase 20 | Pending |
-| SKILL-05 | Phase 20 | Pending |
+| SKILL-03 | Phase 20 | Complete |
+| SKILL-04 | Phase 20 | Complete |
+| SKILL-05 | Phase 20 | Complete |
 | INST-01 | Phase 22 | Pending |
 | INST-02 | Phase 22 | Pending |
 | INST-03 | Phase 22 | Pending |

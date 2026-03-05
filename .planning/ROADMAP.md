@@ -48,7 +48,7 @@ See [v2.0 Archive](milestones/v2.0-ROADMAP.md) for full details.
 - [x] **Phase 17: Tech Debt** - escapeSQL dedup, created_at fix, INT-02 ULID edges, lint warnings, config ordering (completed 2026-03-05)
 - [x] **Phase 18: RPEV Orchestration** - readiness gating, auto-queue Refine→Plan→Execute, trust config expansion, decision persistence (completed 2026-03-05)
 - [x] **Phase 19: Agent Prompts + Level-Awareness** - MCP-first principle, tool sequences, frontmatter, handoff protocol, level-aware behavior (plan 1/3 complete)
-- [ ] **Phase 20: Skills Completion** - dynamic skill injection from project.toml, language-agnostic agents, fleshed-out skills, new generic skills
+- [x] **Phase 20: Skills Completion** - dynamic skill injection from project.toml, language-agnostic agents, fleshed-out skills, new generic skills (completed 2026-03-05)
 - [ ] **Phase 21: Agent Pool** - configurable slots, auto-assignment, work queue, agent-based focus
 - [ ] **Phase 22: Install Script** - one-command install.sh with prerequisite checks, file wiring, and Ollama smoke test
 - [ ] **Phase 23: Visibility + Notifications** - statusline hook, blocked counter, project_overview progress, configurable notifications
@@ -240,7 +240,7 @@ Parallelizable: Phase 17 (Tech Debt) and Phase 20 (Skills) can proceed in parall
 | 17. Tech Debt | v3.0 | 2/2 | Complete | 2026-03-05 |
 | 18. RPEV Orchestration | 3/3 | Complete    | 2026-03-05 | - |
 | 19. Agent Prompts + Level-Awareness | 3/3 | Complete    | 2026-03-05 | - |
-| 20. Skills Completion | 1/2 | In Progress|  | - |
+| 20. Skills Completion | 2/2 | Complete   | 2026-03-05 | - |
 | 21. Agent Pool | v3.0 | 0/~2 | Not started | - |
 | 22. Install Script | v3.0 | 0/2 | Not started | - |
 | 23. Visibility + Notifications | v3.0 | 0/~2 | Not started | - |

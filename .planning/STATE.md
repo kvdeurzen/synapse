@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v3.0
 milestone_name: Working Prototype
 status: completed
-stopped_at: Completed 20-01-PLAN.md (skill manifest injection + role_skills migration)
-last_updated: "2026-03-05T21:24:57.448Z"
+stopped_at: Completed 20-skills-completion-20-02-PLAN.md
+last_updated: "2026-03-05T21:36:19.013Z"
 last_activity: 2026-03-05 — Completed Phase 19-03 (Structured SYNAPSE HANDOFF + Task Start Protocols + Validator Findings Pattern)
 progress:
   total_phases: 10
-  completed_phases: 5
+  completed_phases: 6
   total_plans: 15
-  completed_plans: 14
+  completed_plans: 15
   percent: 100
 ---
 
@@ -58,6 +58,7 @@ Progress: [██████████] 100%
 | Phase 19 P02 | 4min | 2 tasks | 12 files |
 | Phase 19-agent-prompts P03 | 2 | 2 tasks | 4 files |
 | Phase 20-skills-completion P01 | 15min | 2 tasks | 11 files |
+| Phase 20-skills-completion P02 | 16min | 2 tasks | 23 files |
 
 ## Accumulated Context
 
@@ -109,6 +110,8 @@ Key decisions affecting v3.0:
 - [Phase 19-03]: Task Start Protocol is mandatory pre-work sequence in executor and validator -- parses SYNAPSE HANDOFF block and fetches context before any implementation or validation work
 - [Phase 20-skills-completion]: Project skills listed before role skills in manifest (project.toml order first, then alphabetical) — matches user mental model of stack first, roles second
 - [Phase 20-skills-completion]: role_skills replaces skills in agents.toml entirely — skills field removed from all agents; AgentsConfigSchema updated to include role_skills field with default []
+- [Phase 20-skills-completion]: {test_command} placeholder pattern in agent prompts — validator and integration-checker reference testing skill for test runner command, not hardcoded bun test
+- [Phase 20-skills-completion]: SKILL.md 5-section format established at 60-100 lines: Conventions, Quality Criteria, Vocabulary, Anti-patterns, Commands — all skills conform
 
 ### Blockers/Concerns
 
@@ -122,6 +125,6 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-03-05T21:24:57.447Z
-Stopped at: Completed 20-01-PLAN.md (skill manifest injection + role_skills migration)
+Last session: 2026-03-05T21:36:19.011Z
+Stopped at: Completed 20-skills-completion-20-02-PLAN.md
 Resume file: None

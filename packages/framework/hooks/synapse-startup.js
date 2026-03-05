@@ -119,6 +119,7 @@ process.stdin.on("end", () => {
 
     // --- Tier context from trust.toml + agents.toml ---
     let tierContext = "";
+    let rpevContext = "";
     try {
       const trustPath = resolveConfig("trust.toml");
       const agentsPath = resolveConfig("agents.toml");
@@ -172,6 +173,56 @@ process.stdin.on("end", () => {
 
         tierContext = tierLines.join("\n");
       }
+
+      // --- RPEV involvement matrix injection ---
+      if (trustToml && trustToml.rpev) {
+        const involvement = trustToml.rpev.involvement || {};
+        const domainOverrides = trustToml.rpev.domain_overrides || {};
+        const gateLevels = trustToml.rpev.explicit_gate_levels || ["project", "epic"];
+
+        const rpevLines = [
+          "",
+          "## RPEV Involvement Matrix (from trust.toml)",
+          "",
+          "Your behavior at each RPEV stage is governed by this matrix.",
+          "Modes:",
+          "  drives    = user initiates the action",
+          "  co-pilot  = agent proposes, user approves",
+          "  reviews   = agent does, user reviews output",
+          "  autopilot = agent does, no user involvement",
+          "  monitors  = agent does, user notified + can intervene",
+          "",
+        ];
+
+        // Group by level for readable display
+        const levels = ["project", "epic", "feature", "work_package"];
+        const stages = ["refine", "plan", "execute", "validate"];
+        for (const level of levels) {
+          const entries = stages
+            .map((stage) => {
+              const key = `${level}_${stage}`;
+              return involvement[key] ? `${stage}=${involvement[key]}` : null;
+            })
+            .filter(Boolean);
+          if (entries.length > 0) {
+            rpevLines.push(`  ${level}: ${entries.join(", ")}`);
+          }
+        }
+
+        rpevLines.push(
+          "",
+          `Explicit gate levels (user must signal readiness): ${gateLevels.join(", ")}`,
+        );
+
+        if (Object.keys(domainOverrides).length > 0) {
+          rpevLines.push("", "Domain overrides (escalate involvement for specific domains):");
+          for (const [key, mode] of Object.entries(domainOverrides)) {
+            rpevLines.push(`  ${key}: ${mode}`);
+          }
+        }
+
+        rpevContext = rpevLines.join("\n");
+      }
     } catch (configErr) {
       // Graceful degradation: config files unreadable -- log warning, continue without tier context
       process.stderr.write(
@@ -179,10 +230,13 @@ process.stdin.on("end", () => {
       );
     }
 
-    // Build final additionalContext: project context first, then base instructions, then tier context
+    // Build final additionalContext: project context first, then base instructions, then tier context, then RPEV matrix
     const contextParts = [projectContext, baseInstructions];
     if (tierContext) {
       contextParts.push(tierContext);
+    }
+    if (rpevContext) {
+      contextParts.push(rpevContext);
     }
     const additionalContext = contextParts.join("\n\n");
 

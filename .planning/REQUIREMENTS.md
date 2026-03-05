@@ -23,14 +23,14 @@ Requirements for Working Prototype milestone. Each maps to roadmap phases.
 
 ### RPEV Orchestration
 
-- [ ] **RPEV-01**: Refine completion auto-queues Plan stage by creating RPEV stage document with stage=PLANNING
+- [x] **RPEV-01**: Refine completion auto-queues Plan stage by creating RPEV stage document with stage=PLANNING
 - [x] **RPEV-02**: trust.toml `[rpev.involvement]` matrix controls user involvement per hierarchy level and RPEV stage (16 entries)
-- [ ] **RPEV-03**: synapse-orchestrator.md implements full RPEV flow: Refine->Plan->Execute->Validate with involvement matrix enforcement
-- [ ] **RPEV-04**: Decision state from Refine (stored via store_decision) persists and feeds into Plan stage via get_smart_context
-- [ ] **RPEV-05**: RPEV stage documents (doc_id: rpev-stage-[task_id]) track state per item with stage, involvement, pending_approval fields
+- [x] **RPEV-03**: synapse-orchestrator.md implements full RPEV flow: Refine->Plan->Execute->Validate with involvement matrix enforcement
+- [x] **RPEV-04**: Decision state from Refine (stored via store_decision) persists and feeds into Plan stage via get_smart_context
+- [x] **RPEV-05**: RPEV stage documents (doc_id: rpev-stage-[task_id]) track state per item with stage, involvement, pending_approval fields
 - [ ] **RPEV-06**: `/synapse:status` queries stage documents and shows pending approval items in "Needs Your Input" section
 - [ ] **RPEV-07**: `/synapse:focus` implements two-tier approval UX (summary + approve/reject/discuss deeper)
-- [ ] **RPEV-08**: Failed items with exhausted retries appear as flagged in `/synapse:status` with diagnostic info
+- [x] **RPEV-08**: Failed items with exhausted retries appear as flagged in `/synapse:status` with diagnostic info
 
 ### Agent Prompts
 
@@ -133,14 +133,14 @@ Which phases cover which requirements. Updated during roadmap creation.
 | DEBT-03 | Phase 17 | Complete |
 | DEBT-04 | Phase 17 | Complete |
 | DEBT-05 | Phase 17 | Complete |
-| RPEV-01 | Phase 18 | Pending |
+| RPEV-01 | Phase 18 | Complete |
 | RPEV-02 | Phase 18 | Complete |
-| RPEV-03 | Phase 18 | Pending |
-| RPEV-04 | Phase 18 | Pending |
-| RPEV-05 | Phase 18 | Pending |
+| RPEV-03 | Phase 18 | Complete |
+| RPEV-04 | Phase 18 | Complete |
+| RPEV-05 | Phase 18 | Complete |
 | RPEV-06 | Phase 18 | Pending |
 | RPEV-07 | Phase 18 | Pending |
-| RPEV-08 | Phase 18 | Pending |
+| RPEV-08 | Phase 18 | Complete |
 | AGENT-01 | Phase 19 | Pending |
 | AGENT-02 | Phase 19 | Pending |
 | AGENT-03 | Phase 19 | Pending |

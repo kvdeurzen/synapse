@@ -120,7 +120,7 @@ Plans:
 
 Plans:
 - [x] 18-01-PLAN.md — Expand trust.toml with involvement matrix, update synapse-startup.js to inject it (RPEV-02)
-- [ ] 18-02-PLAN.md — Update synapse-orchestrator.md and pev-workflow.md for RPEV model (RPEV-01, RPEV-03, RPEV-04, RPEV-05, RPEV-08)
+- [x] 18-02-PLAN.md — Update synapse-orchestrator.md and pev-workflow.md for RPEV model (RPEV-01, RPEV-03, RPEV-04, RPEV-05, RPEV-08)
 - [ ] 18-03-PLAN.md — Bridge refine.md to stage documents, update status.md/focus.md for approvals, update agents.toml (RPEV-01, RPEV-06, RPEV-07)
 
 ### Phase 19: Agent Prompts + Level-Awareness

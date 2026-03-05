@@ -3,9 +3,9 @@ gsd_state_version: 1.0
 milestone: v3.0
 milestone_name: Working Prototype
 status: Not started
-stopped_at: Completed 18-01-PLAN.md (RPEV Involvement Matrix)
-last_updated: "2026-03-05T15:53:14Z"
-last_activity: 2026-03-05 — Completed Phase 18-01 (RPEV Involvement Matrix)
+stopped_at: Completed 18-02-PLAN.md (RPEV Orchestration Engine)
+last_updated: "2026-03-05T15:55:45Z"
+last_activity: 2026-03-05 — Completed Phase 18-02 (RPEV Workflow + Orchestrator Update)
 progress:
   total_phases: 10
   completed_phases: 3
@@ -27,9 +27,9 @@ See: .planning/PROJECT.md (updated 2026-03-03)
 ## Current Position
 
 Phase: 18 of 24 (RPEV Orchestration) — in progress
-Plan: 1 of 3 in current phase
+Plan: 2 of 3 in current phase
 Status: In progress
-Last activity: 2026-03-05 — Completed Phase 18-01 (RPEV Involvement Matrix)
+Last activity: 2026-03-05 — Completed Phase 18-02 (RPEV Workflow + Orchestrator Update)
 
 Progress: [██░░░░░░░░] 20%
 
@@ -52,6 +52,7 @@ Progress: [██░░░░░░░░] 20%
 | Phase 16 P02 | 2 | 3 tasks | 3 files |
 | Phase 17-tech-debt P01 | 5 | 2 tasks | 7 files |
 | Phase 17-tech-debt P02 | 5min | 2 tasks | 64 files |
+| Phase 18-rpev-orchestration P02 | 4min | 2 tasks | 2 files |
 
 ## Accumulated Context
 
@@ -86,6 +87,9 @@ Key decisions affecting v3.0:
 - [Phase 18-01]: Flat underscore-separated keys (project_refine) in [rpev.involvement] — dotted keys create nested sub-tables in smol-toml, causing parse errors
 - [Phase 18-01]: rpevContext condition uses trustToml.rpev (not trustToml && agentsToml) — RPEV matrix only requires trust.toml; graceful degradation even when agents.toml absent
 - [Phase 18-01]: TOML sub-table ordering: [rpev.involvement] and [rpev.domain_overrides] declared before [rpev] scalar keys per TOML spec requirement
+- [Phase 18-02]: Stage document schema: fixed doc_id rpev-stage-[task_id] enables store_document upsert versioning (not duplicate creation); pending_approval flag is /synapse:status query key
+- [Phase 18-02]: Involvement mode strictness: drives(5)>co-pilot(4)>reviews(3)>monitors(2)>autopilot(1) — domain overrides always take strictest; prevents silent override failures
+- [Phase 18-02]: Subagent handoff always includes project_id + rpev_stage_doc_id — subagents do NOT inherit session context, must receive explicit handoff
 
 ### Blockers/Concerns
 
@@ -99,6 +103,6 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-03-05T15:53:14Z
-Stopped at: Completed 18-01-PLAN.md (RPEV Involvement Matrix)
-Resume file: .planning/phases/18-rpev-orchestration/18-01-SUMMARY.md
+Last session: 2026-03-05T15:55:45Z
+Stopped at: Completed 18-02-PLAN.md (RPEV Orchestration Engine)
+Resume file: .planning/phases/18-rpev-orchestration/18-02-SUMMARY.md

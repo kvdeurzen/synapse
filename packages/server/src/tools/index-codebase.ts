@@ -4,7 +4,12 @@ import { ulid } from "ulidx";
 import { z } from "zod";
 import { insertBatch } from "../db/batch.js";
 import { connectDb } from "../db/connection.js";
-import { CodeChunkRowSchema, ProjectMetaRowSchema, RelationshipRowSchema } from "../db/schema.js";
+import {
+  CodeChunkRowSchema,
+  DocumentRowSchema,
+  ProjectMetaRowSchema,
+  RelationshipRowSchema,
+} from "../db/schema.js";
 import { escapeSQL } from "../db/sql-helpers.js";
 import { OllamaUnreachableError } from "../errors.js";
 import { createToolLogger, logger } from "../logger.js";
@@ -51,6 +56,61 @@ export interface IndexCodebaseResult {
   files_deleted: number; // files in DB but not on disk anymore
   edges_created: number;
   errors: string[]; // per-file errors (syntax error warnings)
+}
+
+// ────────────────────────────────────────────────────────────────────────────
+// Helpers
+// ────────────────────────────────────────────────────────────────────────────
+
+/**
+ * Upsert a document row for a code file in the documents table.
+ * Uses file path as doc_id for direct lookup compatibility with get_related_documents.
+ * This makes relationships.from_id/to_id (file paths) resolvable via documents.doc_id (DEBT-03).
+ */
+async function upsertCodeFileDocument(
+  db: import("@lancedb/lancedb").Connection,
+  projectId: string,
+  filePath: string,
+  now: string,
+): Promise<void> {
+  const docsTable = await db.openTable("documents");
+
+  // Check if a document already exists for this file path
+  const existing = await docsTable
+    .query()
+    .where(`doc_id = '${escapeSQL(filePath)}' AND project_id = '${escapeSQL(projectId)}'`)
+    .limit(1)
+    .toArray();
+
+  if (existing.length > 0) {
+    // Document already exists — no update needed
+    return;
+  }
+
+  // Insert a new document row for this code file
+  await insertBatch(
+    docsTable,
+    [
+      {
+        doc_id: filePath, // Use file path as doc_id for direct lookup compatibility
+        project_id: projectId,
+        title: filePath,
+        content: `Code file: ${filePath}`,
+        category: "code_file",
+        status: "active",
+        version: 1,
+        created_at: now,
+        updated_at: now,
+        tags: "",
+        phase: null,
+        priority: null,
+        parent_id: null,
+        depth: null,
+        decision_type: null,
+      },
+    ],
+    DocumentRowSchema,
+  );
 }
 
 // ────────────────────────────────────────────────────────────────────────────
@@ -205,6 +265,11 @@ export async function indexCodebase(
       await insertBatch(codeChunksTable, rows, CodeChunkRowSchema);
       files_indexed++;
       chunks_created += rows.length;
+
+      // i2. Upsert a documents table entry for this code file so that
+      // AST import edges (stored with file paths as from_id/to_id) are
+      // resolvable by get_related_documents (DEBT-03)
+      await upsertCodeFileDocument(db, projectId, file.relativePath, now);
 
       // j. Collect import edges for this file
       const fileEdges = resolveImports({

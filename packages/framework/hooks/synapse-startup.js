@@ -258,7 +258,65 @@ process.stdin.on("end", () => {
       );
     }
 
-    // Build final additionalContext: project context first, then base instructions, then tier context, then RPEV matrix, then domain modes
+    // --- Skill manifest injection ---
+    // Build compact manifest from project.toml skills + agents.toml role_skills
+    // Injected into additionalContext so agents know what skills are available and how to load them
+    let skillContext = "";
+    try {
+      const roleSkillsMap = {}; // skillName -> [agentNames]
+      if (agentsToml) {
+        for (const [agentName, agentConfig] of Object.entries(agentsToml.agents || {})) {
+          for (const skillName of (agentConfig.role_skills || [])) {
+            if (!roleSkillsMap[skillName]) roleSkillsMap[skillName] = [];
+            roleSkillsMap[skillName].push(agentName);
+          }
+        }
+      }
+
+      // Project skills first (in project.toml order), then role skills alphabetically
+      // De-duplicate: skills in both lists are listed once under project skills
+      const projectSkillSet = new Set(skills);
+      const roleOnlySkills = Object.keys(roleSkillsMap)
+        .filter((s) => !projectSkillSet.has(s))
+        .sort();
+      const allSkillNames = [...skills, ...roleOnlySkills];
+
+      if (allSkillNames.length > 0) {
+        const manifestLines = [
+          "",
+          "## Available Skills",
+          "",
+          "Read a skill's full content on demand: `.claude/skills/{skill-name}/SKILL.md`",
+          "",
+        ];
+
+        for (const skillName of allSkillNames) {
+          const skillMdPath = path.join(projectRoot, ".claude", "skills", skillName, "SKILL.md");
+          let description = "(no description available)";
+          if (fs.existsSync(skillMdPath)) {
+            const raw = fs.readFileSync(skillMdPath, "utf8");
+            const match = raw.match(/^description:\s*(.+)$/m);
+            if (match) description = match[1].trim();
+          } else {
+            process.stderr.write(
+              `[synapse-startup] Warning: skill "${skillName}" has no SKILL.md at ${skillMdPath}\n`,
+            );
+          }
+          const roleTag = roleSkillsMap[skillName]
+            ? ` *(role: ${roleSkillsMap[skillName].join(", ")})*`
+            : "";
+          manifestLines.push(`- **${skillName}**${roleTag}: ${description}`);
+        }
+
+        skillContext = manifestLines.join("\n");
+      }
+    } catch (skillErr) {
+      process.stderr.write(
+        `[synapse-startup] Warning: Could not build skill manifest: ${skillErr.message}\n`,
+      );
+    }
+
+    // Build final additionalContext: project context first, then base instructions, then tier context, then RPEV matrix, then domain modes, then skill manifest
     const contextParts = [projectContext, baseInstructions];
     if (tierContext) {
       contextParts.push(tierContext);
@@ -268,6 +326,9 @@ process.stdin.on("end", () => {
     }
     if (domainContext) {
       contextParts.push(domainContext);
+    }
+    if (skillContext) {
+      contextParts.push(skillContext);
     }
     const additionalContext = contextParts.join("\n\n");
 

@@ -56,9 +56,9 @@ When the user describes a new goal:
 ## Approval Tiers
 
 Follow the configured approval tier in config/trust.toml:
-- **always** (advisory): Present every decomposition level for user approval
-- **strategic** (co-pilot): Present epic decomposition for approval; handle features->tasks autonomously
 - **none** (autopilot): Decompose fully and report progress; user sees status, not every decision
+- **strategic** (co-pilot): Present epic decomposition for approval; handle features->tasks autonomously
+- **always** (advisory): Present every decomposition level for user approval
 
 ## Parallel Work Streams
 

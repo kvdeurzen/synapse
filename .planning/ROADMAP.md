@@ -39,12 +39,12 @@ See [v2.0 Archive](milestones/v2.0-ROADMAP.md) for full details.
 
 </details>
 
-### 🚧 v3.0 Working Prototype (In Progress)
+### v3.0 Working Prototype (In Progress)
 
 **Milestone Goal:** Wire up all existing pieces into a usable end-to-end product — from install to agent-driven PEV workflow execution on a real project.
 
 - [x] **Phase 15: Foundation** - project.toml schema, project_id injection via startup hook, hook path fixes, config resolution (completed 2026-03-03)
-- [ ] **Phase 16: User Journey Commands** - /synapse:init, /synapse:map, /synapse:plan slash commands and user journey documentation
+- [ ] **Phase 16: User Journey Commands** - /synapse:init, /synapse:map, /synapse:refine, /synapse:status, /synapse:focus slash commands and user journey documentation
 - [ ] **Phase 17: Install Script** - one-command install.sh with prerequisite checks, file wiring, and Ollama smoke test
 - [ ] **Phase 18: Agent Prompt Improvements** - MCP-first principle, tool sequences, frontmatter, handoff protocol, findings persistence, error handling, domain mode, context refs
 - [ ] **Phase 19: Skills Completion** - dynamic skill injection from project.toml, language-agnostic agents, fleshed-out skills, new generic skills
@@ -66,23 +66,24 @@ See [v2.0 Archive](milestones/v2.0-ROADMAP.md) for full details.
 **Plans**: 2 plans
 
 Plans:
-- [ ] 15-01: Create resolveConfig() utility, update synapse-startup.js to read project.toml and inject project_id + skills (FOUND-01, FOUND-02)
-- [ ] 15-02: Update gate hooks to use resolveConfig(), register Synapse hooks in settings.json with $CLAUDE_PROJECT_DIR (FOUND-03, FOUND-04)
+- [x] 15-01: Create resolveConfig() utility, update synapse-startup.js to read project.toml and inject project_id + skills (FOUND-01, FOUND-02)
+- [x] 15-02: Update gate hooks to use resolveConfig(), register Synapse hooks in settings.json with $CLAUDE_PROJECT_DIR (FOUND-03, FOUND-04)
 
 ### Phase 16: User Journey Commands
-**Goal**: A new user has a clear, documented path from zero to running their first PEV workflow — three slash commands cover every step
+**Goal**: A new user has a clear, documented path from zero to running their first RPEV workflow — five slash commands cover every step of the user journey, designed for the recursive RPEV model
 **Depends on**: Phase 15
 **Requirements**: CMD-01, CMD-02, CMD-03, CMD-04
 **Success Criteria** (what must be TRUE):
-  1. Running `/synapse:init` creates `project.toml`, calls `init_project`, and offers an opt-in CLAUDE.md amendment — the project is registered without manual MCP calls
+  1. Running `/synapse:init` creates `project.toml`, calls `init_project`, seeds trust.toml RPEV section, and offers an opt-in CLAUDE.md amendment — the project is registered without manual MCP calls
   2. Running `/synapse:map` verifies Ollama is running, indexes the codebase, and reports progress — the user sees confirmation before and after, not a silent wait
-  3. Running `/synapse:plan` with a goal spawns the orchestrator agent with that goal and project context already wired — the user does not need to pass project_id manually
+  3. Running `/synapse:refine` starts a brainstorming session that tracks decisions (DECIDED/OPEN/EMERGING), persists state via store_document, and checks level-aware readiness criteria — the user shapes work at any hierarchy level
   4. A written user journey document exists describing the complete flow from install to ongoing use as step-by-step instructions
-**Plans**: TBD
+**Plans**: 3 plans
 
 Plans:
-- [ ] 16-01: /synapse:init command — project.toml creation, init_project call, CLAUDE.md opt-in, skill auto-detection
-- [ ] 16-02: /synapse:map and /synapse:plan commands, user journey documentation (CMD-04)
+- [ ] 16-01-PLAN.md — /synapse:init + /synapse:map commands (CMD-01, CMD-02)
+- [ ] 16-02-PLAN.md — /synapse:refine + /synapse:status evolution + delete new-goal.md (CMD-03)
+- [ ] 16-03-PLAN.md — /synapse:focus + user journey documentation (CMD-04)
 
 ### Phase 17: Install Script
 **Goal**: A new user can wire Synapse into any project with a single command and receive actionable feedback at every step
@@ -197,8 +198,8 @@ Note: Phase 16 and Phase 17 can proceed in parallel (no dependency between them)
 | 13. Agent Specialization, Skill Loading, and Trust | v2.0 | 5/5 | Complete | 2026-03-02 |
 | 13.1 Move Separate Modules into a Single Repo | v2.0 | 2/2 | Complete | 2026-03-02 |
 | 14. Quality Gates and PEV Workflow | v2.0 | 4/4 | Complete | 2026-03-02 |
-| 15. Foundation | 2/2 | Complete    | 2026-03-03 | - |
-| 16. User Journey Commands | v3.0 | 0/2 | Not started | - |
+| 15. Foundation | v3.0 | 2/2 | Complete | 2026-03-03 |
+| 16. User Journey Commands | v3.0 | 0/3 | Not started | - |
 | 17. Install Script | v3.0 | 0/2 | Not started | - |
 | 18. Agent Prompt Improvements | v3.0 | 0/3 | Not started | - |
 | 19. Skills Completion | v3.0 | 0/2 | Not started | - |

@@ -1,13 +1,35 @@
 import { afterEach, beforeEach, describe, expect, test } from "bun:test";
-import { mkdtempSync, rmSync } from "node:fs";
+import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import * as lancedb from "@lancedb/lancedb";
 import { insertBatch } from "../../src/db/batch.js";
 import { DocumentRowSchema } from "../../src/db/schema.js";
+import { _setFetchImpl, setOllamaStatus } from "../../src/services/embedder.js";
 import { getRelatedDocuments } from "../../src/tools/get-related-documents.js";
+import { indexCodebase } from "../../src/tools/index-codebase.js";
 import { initProject } from "../../src/tools/init-project.js";
 import { linkDocuments } from "../../src/tools/link-documents.js";
+import type { SynapseConfig } from "../../src/types.js";
+
+// ── Embedder mock helpers ─────────────────────────────────────────────────────
+
+function mockOllamaEmbed(count: number): Response {
+  const vectors = Array.from({ length: count }, (_, vecIdx) =>
+    Array.from({ length: 768 }, (_, dimIdx) => (vecIdx * 768 + dimIdx) * 0.0001),
+  );
+  return new Response(JSON.stringify({ embeddings: vectors }), {
+    status: 200,
+    headers: { "Content-Type": "application/json" },
+  });
+}
+
+const TEST_CONFIG: SynapseConfig = {
+  db: "", // will be set per test
+  ollamaUrl: "http://localhost:11434",
+  embedModel: "nomic-embed-text",
+  logLevel: "error",
+};
 
 // ── Test helpers ──────────────────────────────────────────────────────────────
 
@@ -338,5 +360,184 @@ describe("getRelatedDocuments", () => {
         expect(relB.direction === "outgoing" || relB.direction === "incoming").toBe(true);
       }
     });
+  });
+});
+
+// ── AST import edge resolution (DEBT-03) ─────────────────────────────────────
+// These tests require Ollama mock since indexCodebase needs embeddings.
+
+describe("getRelatedDocuments — AST import edge resolution (DEBT-03)", () => {
+  let codeProjectDir: string;
+  let codeTmpDir: string;
+
+  beforeEach(async () => {
+    codeTmpDir = mkdtempSync(join(tmpdir(), "get-related-ast-test-"));
+    codeProjectDir = join(codeTmpDir, "project");
+    mkdirSync(codeProjectDir, { recursive: true });
+
+    // Set Ollama status to "ok" and mock fetch
+    setOllamaStatus("ok");
+    _setFetchImpl((_url, _init) => {
+      const body = _init?.body;
+      let count = 1;
+      if (typeof body === "string") {
+        try {
+          const parsed = JSON.parse(body) as { input?: string[] };
+          count = parsed.input?.length ?? 1;
+        } catch {
+          count = 1;
+        }
+      }
+      return Promise.resolve(mockOllamaEmbed(count));
+    });
+  });
+
+  afterEach(() => {
+    _setFetchImpl((url, init) => fetch(url, init));
+    setOllamaStatus("unreachable");
+    rmSync(codeTmpDir, { recursive: true, force: true });
+  });
+
+  test("index_codebase creates a documents table entry for each indexed code file", async () => {
+    const dbPath = join(codeTmpDir, "db");
+    await initProject(dbPath, "ast-proj");
+
+    writeFileSync(
+      join(codeProjectDir, "utils.ts"),
+      `export function add(a: number, b: number): number {
+  return a + b;
+}
+`,
+    );
+    writeFileSync(
+      join(codeProjectDir, "math.ts"),
+      `import { add } from "./utils";
+
+export function double(n: number): number {
+  return add(n, n);
+}
+`,
+    );
+
+    const config = { ...TEST_CONFIG, db: dbPath };
+    const result = await indexCodebase(dbPath, "ast-proj", {
+      project_id: "ast-proj",
+      project_root: codeProjectDir,
+    }, config);
+
+    expect(result.files_indexed).toBe(2);
+
+    // Each indexed file should have a corresponding entry in the documents table
+    const db = await lancedb.connect(dbPath);
+    const docsTable = await db.openTable("documents");
+    const codeFileDocs = await docsTable
+      .query()
+      .where("project_id = 'ast-proj' AND category = 'code_file'")
+      .toArray();
+
+    expect(codeFileDocs.length).toBe(2);
+  });
+
+  test("AST import edges have from_id/to_id values matching documents.doc_id", async () => {
+    const dbPath = join(codeTmpDir, "db");
+    await initProject(dbPath, "ast-proj");
+
+    writeFileSync(
+      join(codeProjectDir, "utils.ts"),
+      `export function add(a: number, b: number): number {
+  return a + b;
+}
+`,
+    );
+    writeFileSync(
+      join(codeProjectDir, "math.ts"),
+      `import { add } from "./utils";
+
+export function double(n: number): number {
+  return add(n, n);
+}
+`,
+    );
+
+    const config = { ...TEST_CONFIG, db: dbPath };
+    await indexCodebase(dbPath, "ast-proj", {
+      project_id: "ast-proj",
+      project_root: codeProjectDir,
+    }, config);
+
+    const db = await lancedb.connect(dbPath);
+    const relTable = await db.openTable("relationships");
+    const docsTable = await db.openTable("documents");
+
+    const edges = await relTable
+      .query()
+      .where("project_id = 'ast-proj' AND source = 'ast_import'")
+      .toArray();
+
+    expect(edges.length).toBeGreaterThan(0);
+
+    // For each edge, the from_id and to_id should be resolvable in documents table
+    for (const edge of edges) {
+      const fromId = edge.from_id as string;
+      const toId = edge.to_id as string;
+
+      const fromDocs = await docsTable
+        .query()
+        .where(`doc_id = '${fromId}' AND project_id = 'ast-proj'`)
+        .limit(1)
+        .toArray();
+
+      const toDocs = await docsTable
+        .query()
+        .where(`doc_id = '${toId}' AND project_id = 'ast-proj'`)
+        .limit(1)
+        .toArray();
+
+      expect(fromDocs.length).toBe(1);
+      expect(toDocs.length).toBe(1);
+    }
+  });
+
+  test("get_related_documents returns related code files connected via ast_import edges", async () => {
+    const dbPath = join(codeTmpDir, "db");
+    await initProject(dbPath, "ast-proj");
+
+    // math.ts imports from utils.ts — creates an ast_import edge math.ts -> utils.ts
+    writeFileSync(
+      join(codeProjectDir, "utils.ts"),
+      `export function add(a: number, b: number): number {
+  return a + b;
+}
+`,
+    );
+    writeFileSync(
+      join(codeProjectDir, "math.ts"),
+      `import { add } from "./utils";
+
+export function double(n: number): number {
+  return add(n, n);
+}
+`,
+    );
+
+    const config = { ...TEST_CONFIG, db: dbPath };
+    await indexCodebase(dbPath, "ast-proj", {
+      project_id: "ast-proj",
+      project_root: codeProjectDir,
+    }, config);
+
+    // math.ts should have utils.ts as a related document (via ast_import)
+    const result = await getRelatedDocuments(dbPath, "ast-proj", {
+      project_id: "ast-proj",
+      doc_id: "math.ts",
+    });
+
+    expect(result.related.length).toBeGreaterThan(0);
+
+    const astImportRels = result.related.filter((r) => r.relationship_source === "ast_import");
+    expect(astImportRels.length).toBeGreaterThan(0);
+
+    const relatedIds = astImportRels.map((r) => r.doc_id);
+    expect(relatedIds).toContain("utils.ts");
   });
 });

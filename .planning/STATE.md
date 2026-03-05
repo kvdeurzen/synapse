@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v3.0
 milestone_name: Working Prototype
 status: Not started
-stopped_at: Completed 17-01-PLAN.md — escapeSQL extraction, created_at preservation, AST edge resolvability
-last_updated: "2026-03-05T14:41:03.928Z"
+stopped_at: Completed 17-02-PLAN.md — Biome lint cleanup + autonomy mode ordering fix
+last_updated: "2026-03-05T14:48:32.449Z"
 last_activity: 2026-03-05 — Completed Phase 16 (User Journey Commands)
 progress:
   total_phases: 10
-  completed_phases: 2
+  completed_phases: 3
   total_plans: 7
-  completed_plans: 6
+  completed_plans: 7
   percent: 20
 ---
 
@@ -51,6 +51,7 @@ Progress: [██░░░░░░░░] 20%
 | Phase 16-user-journey-commands P03 | 2 | 2 tasks | 2 files |
 | Phase 16 P02 | 2 | 3 tasks | 3 files |
 | Phase 17-tech-debt P01 | 5 | 2 tasks | 7 files |
+| Phase 17-tech-debt P02 | 5min | 2 tasks | 64 files |
 
 ## Accumulated Context
 
@@ -80,6 +81,8 @@ Key decisions affecting v3.0:
 - [Phase 16]: Refinement state persisted via store_document with doc_id reuse on resume (versioning not duplication)
 - [Phase 17-tech-debt]: File path as doc_id for code files in documents table — direct lookup compat with relationships, no ULID mapping needed (Phase 17-01)
 - [Phase 17-tech-debt]: code_chunks.doc_id stays as file path — consistent with documents.doc_id=filePath; ULID migration deferred (Phase 17-01)
+- [Phase 17-tech-debt]: Explicit null guard over optional chaining for map mutations — if (!entry) throw makes invariant visible; optional chaining silently no-ops .push()/.add()
+- [Phase 17-tech-debt]: Type assertion (value as string) over non-null assertion (value!) in test post-expect assertions — satisfies Biome noNonNullAssertion without semantic change
 
 ### Blockers/Concerns
 
@@ -93,6 +96,6 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-03-05T14:41:03.927Z
-Stopped at: Completed 17-01-PLAN.md — escapeSQL extraction, created_at preservation, AST edge resolvability
+Last session: 2026-03-05T14:48:32.448Z
+Stopped at: Completed 17-02-PLAN.md — Biome lint cleanup + autonomy mode ordering fix
 Resume file: None

@@ -45,7 +45,7 @@ See [v2.0 Archive](milestones/v2.0-ROADMAP.md) for full details.
 
 - [x] **Phase 15: Foundation** - project.toml schema, project_id injection via startup hook, hook path fixes, config resolution (completed 2026-03-03)
 - [x] **Phase 16: User Journey Commands** - /synapse:init, /synapse:map, /synapse:refine, /synapse:status, /synapse:focus slash commands and user journey documentation (completed 2026-03-05)
-- [ ] **Phase 17: Tech Debt** - escapeSQL dedup, created_at fix, INT-02 ULID edges, lint warnings, config ordering
+- [x] **Phase 17: Tech Debt** - escapeSQL dedup, created_at fix, INT-02 ULID edges, lint warnings, config ordering (completed 2026-03-05)
 - [ ] **Phase 18: RPEV Orchestration** - readiness gating, auto-queue Refine→Plan→Execute, trust config expansion, decision persistence
 - [ ] **Phase 19: Agent Prompts + Level-Awareness** - MCP-first principle, tool sequences, frontmatter, handoff protocol, level-aware behavior
 - [ ] **Phase 20: Skills Completion** - dynamic skill injection from project.toml, language-agnostic agents, fleshed-out skills, new generic skills
@@ -231,7 +231,7 @@ Parallelizable: Phase 17 (Tech Debt) and Phase 20 (Skills) can proceed in parall
 | 14. Quality Gates and PEV Workflow | v2.0 | 4/4 | Complete | 2026-03-02 |
 | 15. Foundation | v3.0 | 2/2 | Complete | 2026-03-03 |
 | 16. User Journey Commands | v3.0 | 3/3 | Complete | 2026-03-05 |
-| 17. Tech Debt | 1/2 | In Progress|  | - |
+| 17. Tech Debt | 2/2 | Complete   | 2026-03-05 | - |
 | 18. RPEV Orchestration | v3.0 | 0/~3 | Not started | - |
 | 19. Agent Prompts + Level-Awareness | v3.0 | 0/3 | Not started | - |
 | 20. Skills Completion | v3.0 | 0/2 | Not started | - |

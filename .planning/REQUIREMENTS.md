@@ -59,11 +59,11 @@ Requirements for Working Prototype milestone. Each maps to roadmap phases.
 
 ### Tech Debt
 
-- [ ] **DEBT-01**: Shared escapeSQL helper extracted (currently duplicated in init-project.ts and index-codebase.ts)
-- [ ] **DEBT-02**: project_meta.created_at preserved on re-init (no longer overwritten)
-- [ ] **DEBT-03**: INT-02 resolved — AST import edges use ULIDs compatible with get_related_documents
-- [ ] **DEBT-04**: Linting warnings fixed
-- [ ] **DEBT-05**: Autonomy mode ordering consistent across all config and agent files
+- [x] **DEBT-01**: Shared escapeSQL helper extracted (currently duplicated in init-project.ts and index-codebase.ts)
+- [x] **DEBT-02**: project_meta.created_at preserved on re-init (no longer overwritten)
+- [x] **DEBT-03**: INT-02 resolved — AST import edges use ULIDs compatible with get_related_documents
+- [x] **DEBT-04**: Linting warnings fixed
+- [x] **DEBT-05**: Autonomy mode ordering consistent across all config and agent files
 
 ### Visibility
 
@@ -137,11 +137,11 @@ Which phases cover which requirements. Updated during roadmap creation.
 | SKILL-03 | Phase 19 | Pending |
 | SKILL-04 | Phase 19 | Pending |
 | SKILL-05 | Phase 19 | Pending |
-| DEBT-01 | Phase 20 | Pending |
-| DEBT-02 | Phase 20 | Pending |
-| DEBT-03 | Phase 20 | Pending |
-| DEBT-04 | Phase 20 | Pending |
-| DEBT-05 | Phase 20 | Pending |
+| DEBT-01 | Phase 20 | Complete |
+| DEBT-02 | Phase 20 | Complete |
+| DEBT-03 | Phase 20 | Complete |
+| DEBT-04 | Phase 20 | Complete |
+| DEBT-05 | Phase 20 | Complete |
 | E2E-01 | Phase 21 | Pending |
 | E2E-02 | Phase 21 | Pending |
 | E2E-03 | Phase 21 | Pending |

@@ -34,14 +34,44 @@ codebase-analyst = []
 # [agent_overrides.executor.domains]
 # architecture = "advisory"
 
-# PEV workflow control -- approval thresholds and retry caps
-[pev]
-# Approval threshold: "epic" | "feature" | "task" | "none"
-# "epic" = user approves feature breakdown, execution below is autonomous
-# "feature" = user approves task decomposition per feature
-# "task" = user approves each task plan
-# "none" = fully autonomous end-to-end
-approval_threshold = "epic"
+# RPEV workflow control -- involvement matrix and retry caps
+# Modes: drives | co-pilot | reviews | autopilot | monitors
+#   drives    = user initiates the action
+#   co-pilot  = agent proposes, user approves
+#   reviews   = agent does, user reviews output
+#   autopilot = agent does, no user involvement
+#   monitors  = agent does, user notified + can intervene
+
+[rpev.involvement]
+# Per-level x per-stage involvement matrix (4 levels x 4 stages = 16 entries)
+project_refine   = "drives"
+project_plan     = "co-pilot"
+project_execute  = "monitors"
+project_validate = "monitors"
+
+epic_refine   = "co-pilot"
+epic_plan     = "reviews"
+epic_execute  = "autopilot"
+epic_validate = "monitors"
+
+feature_refine   = "reviews"
+feature_plan     = "autopilot"
+feature_execute  = "autopilot"
+feature_validate = "autopilot"
+
+work_package_refine   = "autopilot"
+work_package_plan     = "autopilot"
+work_package_execute  = "autopilot"
+work_package_validate = "autopilot"
+
+[rpev.domain_overrides]
+# Override involvement for specific domains regardless of level
+# Format: {domain}_{stage} = "mode"
+# Example: security_execute = "co-pilot"
+
+[rpev]
+explicit_gate_levels = ["project", "epic"]
+proactive_notifications = false
 # Maximum parallel executor subagents per wave
 max_parallel_executors = 3
 # Maximum retry attempts per layer before escalation

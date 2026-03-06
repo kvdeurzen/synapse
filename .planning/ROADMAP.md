@@ -188,15 +188,16 @@ Plans:
 ### Phase 23: Visibility + Notifications
 **Goal**: Users see progress in Claude Code and get notified about blocked items per their trust config
 **Depends on**: Phase 21
-**Requirements**: VIS-01, VIS-02, plus notification requirements (TBD)
+**Requirements**: VIS-01, VIS-02
 **Success Criteria** (what must be TRUE):
   1. While an RPEV workflow is running, the Claude Code status line shows the active item, current stage, and task completion ratio
   2. Calling `project_overview` returns a section showing task tree progress (total tasks, completed, blocked, in-progress) alongside the existing document statistics
   3. Blocked items trigger notifications per trust config — pull (shown in /synapse:status) by default, push (proactive) when enabled
-**Plans**: TBD (research needed)
+**Plans**: 2 plans
 
 Plans:
-- [ ] 23-01 to 23-xx: TBD (research needed)
+- [ ] 23-01-PLAN.md — Statusline hook RPEV progress + orchestrator state file write protocol (VIS-01)
+- [ ] 23-02-PLAN.md — Enhanced project_overview with task_progress/pool_status/needs_attention + /synapse:status update (VIS-02)
 
 ### Phase 24: E2E Validation
 **Goal**: The complete **RPEV** cycle runs on a real task — from Refine through Plan, Execute, and Validate — with hooks verified, failure modes documented, and status accurately reflected
@@ -244,5 +245,5 @@ Parallelizable: Phase 17 (Tech Debt) and Phase 20 (Skills) can proceed in parall
 | 20. Skills Completion | 3/3 | Complete    | 2026-03-06 | - |
 | 21. Agent Pool | 2/2 | Complete    | 2026-03-06 | - |
 | 22. Install Script | 2/2 | Complete    | 2026-03-06 | - |
-| 23. Visibility + Notifications | v3.0 | 0/~2 | Not started | - |
+| 23. Visibility + Notifications | v3.0 | 0/2 | Not started | - |
 | 24. E2E Validation | v3.0 | 0/2 | Not started | - |

@@ -245,9 +245,14 @@ log_header "Locating Synapse source files..."
 SYNAPSE_SOURCE=""
 
 # Development mode: if run from the synapse repo itself, use local files
+# Check both TARGET_DIR (running from repo root) and the script's directory (running via ../install.sh)
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 if [ -f "$TARGET_DIR/packages/server/src/index.ts" ]; then
   log_info "Running from Synapse repo — using local files (development mode)"
   SYNAPSE_SOURCE="$TARGET_DIR"
+elif [ -f "$SCRIPT_DIR/packages/server/src/index.ts" ]; then
+  log_info "Synapse repo detected at $SCRIPT_DIR — using local files (development mode)"
+  SYNAPSE_SOURCE="$SCRIPT_DIR"
 else
   # Determine the version to download
   if [ "$VERSION" = "latest" ]; then
@@ -365,13 +370,21 @@ done
 log_step "Skills: $SKILL_COUNT directories"
 
 # Copy server (entire packages/server/)
-cp -r "$SYNAPSE_SOURCE/packages/server/." "$TARGET_DIR/.claude/server/"
-log_step "Server: copied to .claude/server/"
+# In dev mode, symlink to the repo's server (already has node_modules with native binaries built)
+if [ "$SYNAPSE_SOURCE" = "$SCRIPT_DIR" ] || [ "$SYNAPSE_SOURCE" = "$TARGET_DIR" ]; then
+  # Dev mode — symlink to avoid re-building native deps
+  rm -rf "$TARGET_DIR/.claude/server"
+  ln -sf "$SYNAPSE_SOURCE/packages/server" "$TARGET_DIR/.claude/server"
+  log_step "Server: symlinked to repo (development mode)"
+else
+  cp -r "$SYNAPSE_SOURCE/packages/server/." "$TARGET_DIR/.claude/server/"
+  log_step "Server: copied to .claude/server/"
 
-# Install server dependencies (native tree-sitter binaries require bun install)
-log_info "Installing server dependencies (native binaries)..."
-(cd "$TARGET_DIR/.claude/server" && bun install --production 2>&1 | tail -3)
-log_step "Server dependencies installed"
+  # Install server dependencies (native tree-sitter binaries require bun install)
+  log_info "Installing server dependencies (native binaries)..."
+  (cd "$TARGET_DIR/.claude/server" && bun install --production 2>&1 | tail -3)
+  log_step "Server dependencies installed"
+fi
 
 # Copy config templates (only if not already present — preserve user customizations)
 for config_file in trust.toml agents.toml synapse.toml; do

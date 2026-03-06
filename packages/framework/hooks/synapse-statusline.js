@@ -36,8 +36,8 @@ process.stdin.on("end", () => {
     let rpevSection = "";
     if (projectTomlPath) {
       try {
-        // Project root is two levels up from .synapse/config/project.toml
-        const projectRoot = path.dirname(path.dirname(projectTomlPath));
+        // Project root is three levels up from .synapse/config/project.toml
+        const projectRoot = path.dirname(path.dirname(path.dirname(projectTomlPath)));
         const statePath = path.join(projectRoot, ".synapse", "state", "statusline.json");
         const raw = fs.readFileSync(statePath, "utf8");
         const state = JSON.parse(raw);
@@ -54,15 +54,20 @@ process.stdin.on("end", () => {
 
         // Build blocked counter string
         const buildBlockedStr = (approval, failed) => {
-          const parts = [];
-          if (approval > 0) parts.push(`${approval}\x1b[33m\u26a0\x1b[0m`);
-          if (failed > 0) parts.push(`${failed}\x1b[31m\u2718\x1b[0m`);
-          if (parts.length === 0) return "";
-          const inner = `(${parts.join(" ")})`;
           if (proactiveNotifications) {
-            return `\x1b[5;31m${inner}\x1b[0m`;
+            // Blinking red — no inner color resets to avoid breaking blink
+            const parts = [];
+            if (approval > 0) parts.push(`${approval}\u26a0`);
+            if (failed > 0) parts.push(`${failed}\u2718`);
+            if (parts.length === 0) return "";
+            return `\x1b[5;31m(${parts.join(" ")})\x1b[0m`;
           }
-          return `\x1b[2m${inner}\x1b[0m`;
+          // Dim with colored symbols — re-apply dim after each symbol
+          const parts = [];
+          if (approval > 0) parts.push(`${approval}\x1b[33m\u26a0\x1b[0m\x1b[2m`);
+          if (failed > 0) parts.push(`${failed}\x1b[31m\u2718\x1b[0m\x1b[2m`);
+          if (parts.length === 0) return "";
+          return `\x1b[2m(${parts.join(" ")})\x1b[0m`;
         };
 
         const approval = state.blocked?.approval ?? 0;
@@ -85,11 +90,11 @@ process.stdin.on("end", () => {
             parts.push(blockedStr);
           }
 
-          rpevSection = ` \x1b[2m│\x1b[0m ` + parts.join(" ");
+          rpevSection = parts.join(" ");
         } else if (hasBlocked) {
           // Idle state with blocked items — show only blocked counter
           const blockedStr = buildBlockedStr(approval, failed);
-          rpevSection = ` \x1b[2m│\x1b[0m ` + blockedStr;
+          rpevSection = blockedStr;
         }
         // Idle state with no blocked items: rpevSection stays empty
       } catch {
@@ -121,7 +126,7 @@ process.stdin.on("end", () => {
     }
 
     const dirname = path.basename(dir);
-    process.stdout.write(`${synapse}${rpevSection ? rpevSection + " \x1b[2m│\x1b[0m " : ""}\x1b[2m${model}\x1b[0m │ \x1b[2m${dirname}\x1b[0m${ctx}`);
+    process.stdout.write(`${synapse}${rpevSection ? rpevSection + " \x1b[2m│\x1b[0m " : ""}\x1b[2m${model}\x1b[0m \x1b[2m│\x1b[0m \x1b[2m${dirname}\x1b[0m${ctx}`);
   } catch {
     // Silent fail — don't break statusline
   }

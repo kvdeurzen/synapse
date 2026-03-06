@@ -50,8 +50,8 @@ Requirements for Working Prototype milestone. Each maps to roadmap phases.
 
 - [x] **POOL-01**: Pool config in `trust.toml` defines max concurrent agent slots (`max_pool_slots`) — the system respects the configured limit
 - [x] **POOL-02**: Unblocked work items are auto-assigned to available agent slots by priority (finish-first, epic priority, wave order, cross-epic fill) — no manual agent dispatch required
-- [ ] **POOL-03**: `/synapse:focus agent C` shows what agent C is working on and allows interaction (detail view + cancel with requeue/skip)
-- [ ] **POOL-04**: `/synapse:status` displays agent pool activity (active agents, current tasks, idle slots, queue count) and token usage aggregates on epic/feature lines
+- [x] **POOL-03**: `/synapse:focus agent C` shows what agent C is working on and allows interaction (detail view + cancel with requeue/skip)
+- [x] **POOL-04**: `/synapse:status` displays agent pool activity (active agents, current tasks, idle slots, queue count) and token usage aggregates on epic/feature lines
 
 ### Install
 
@@ -166,8 +166,8 @@ Which phases cover which requirements. Updated during roadmap creation.
 | SKILL-05 | Phase 20 | Complete |
 | POOL-01 | Phase 21-01 | Complete |
 | POOL-02 | Phase 21-01 | Complete |
-| POOL-03 | Phase 21-02 | Pending |
-| POOL-04 | Phase 21-02 | Pending |
+| POOL-03 | Phase 21-02 | Complete |
+| POOL-04 | Phase 21-02 | Complete |
 | INST-01 | Phase 22 | Pending |
 | INST-02 | Phase 22 | Pending |
 | INST-03 | Phase 22 | Pending |

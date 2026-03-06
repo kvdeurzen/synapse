@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v3.0
 milestone_name: Working Prototype
 status: completed
-stopped_at: Completed 21-agent-pool-21-01-PLAN.md
-last_updated: "2026-03-06T08:32:25.812Z"
+stopped_at: Completed 21-agent-pool-21-02-PLAN.md
+last_updated: "2026-03-06T08:36:41.439Z"
 last_activity: 2026-03-05 — Completed Phase 19-03 (Structured SYNAPSE HANDOFF + Task Start Protocols + Validator Findings Pattern)
 progress:
   total_phases: 10
-  completed_phases: 6
+  completed_phases: 7
   total_plans: 18
-  completed_plans: 17
+  completed_plans: 18
   percent: 100
 ---
 
@@ -61,6 +61,7 @@ Progress: [██████████] 100%
 | Phase 20-skills-completion P02 | 16min | 2 tasks | 23 files |
 | Phase 20-skills-completion P03 | 2min | 1 tasks | 1 files |
 | Phase 21-agent-pool P01 | 4min | 3 tasks | 6 files |
+| Phase 21-agent-pool P02 | 2min | 2 tasks | 2 files |
 
 ## Accumulated Context
 
@@ -117,6 +118,8 @@ Key decisions affecting v3.0:
 - [Phase 20-skills-completion]: trustToml and agentsToml hoisted to outer scope in synapse-startup.js — follows established tierContext/rpevContext/domainContext pattern, eliminates ReferenceError in skillContext block so role_skills manifest is correctly injected into additionalContext
 - [Phase 21-agent-pool]: max_pool_slots replaces max_parallel_executors as canonical pool capacity config key -- covers all agent types sharing the pool
 - [Phase 21-agent-pool]: Pool state document doc_id: pool-state-[project_id] -- fixed pattern enables store_document upsert versioning; finish-first policy: validator for completed task gets next slot before new execution dispatch
+- [Phase 21-agent-pool]: Agent-based detection checked first in focus.md -- /^agent\s+[A-Z]$/i precedes name-based check since 'agent A' is valid name-based input
+- [Phase 21-agent-pool]: Cancel action in /synapse:focus updates pool-state document directly and calls update_task -- slot cleared immediately, pool dispatch tick fills it on next cycle
 
 ### Blockers/Concerns
 
@@ -130,6 +133,6 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-03-06T08:32:25.810Z
-Stopped at: Completed 21-agent-pool-21-01-PLAN.md
+Last session: 2026-03-06T08:36:41.437Z
+Stopped at: Completed 21-agent-pool-21-02-PLAN.md
 Resume file: None

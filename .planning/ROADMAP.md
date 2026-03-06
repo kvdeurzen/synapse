@@ -49,7 +49,7 @@ See [v2.0 Archive](milestones/v2.0-ROADMAP.md) for full details.
 - [x] **Phase 18: RPEV Orchestration** - readiness gating, auto-queue Refine→Plan→Execute, trust config expansion, decision persistence (completed 2026-03-05)
 - [x] **Phase 19: Agent Prompts + Level-Awareness** - MCP-first principle, tool sequences, frontmatter, handoff protocol, level-aware behavior (plan 1/3 complete)
 - [x] **Phase 20: Skills Completion** - dynamic skill injection from project.toml, language-agnostic agents, fleshed-out skills, new generic skills (completed 2026-03-05)
-- [ ] **Phase 21: Agent Pool** - configurable slots, auto-assignment, work queue, agent-based focus
+- [x] **Phase 21: Agent Pool** - configurable slots, auto-assignment, work queue, agent-based focus (completed 2026-03-06)
 - [ ] **Phase 22: Install Script** - one-command install.sh with prerequisite checks, file wiring, and Ollama smoke test
 - [ ] **Phase 23: Visibility + Notifications** - statusline hook, blocked counter, project_overview progress, configurable notifications
 - [ ] **Phase 24: E2E Validation** - full RPEV cycle on a real task, hook verification, failure log, status verification
@@ -242,7 +242,7 @@ Parallelizable: Phase 17 (Tech Debt) and Phase 20 (Skills) can proceed in parall
 | 18. RPEV Orchestration | 3/3 | Complete    | 2026-03-05 | - |
 | 19. Agent Prompts + Level-Awareness | 3/3 | Complete    | 2026-03-05 | - |
 | 20. Skills Completion | 3/3 | Complete    | 2026-03-06 | - |
-| 21. Agent Pool | 1/2 | In Progress|  | - |
+| 21. Agent Pool | 2/2 | Complete   | 2026-03-06 | - |
 | 22. Install Script | v3.0 | 0/2 | Not started | - |
 | 23. Visibility + Notifications | v3.0 | 0/~2 | Not started | - |
 | 24. E2E Validation | v3.0 | 0/2 | Not started | - |

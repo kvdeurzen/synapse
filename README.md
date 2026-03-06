@@ -89,61 +89,63 @@ Synapse MCP Server
 
 ## Prerequisites
 
-- **Bun** (runtime and package manager)
-- **Ollama** running locally with the `nomic-embed-text` model
+- **Bun** — [bun.sh](https://bun.sh) (any version)
+- **Ollama** — [ollama.ai](https://ollama.ai) running locally with the `nomic-embed-text` model
 
 ```sh
-# Install Ollama and pull the embedding model
 ollama pull nomic-embed-text
 ```
 
 ## Installation
 
+One command installs Synapse into your project:
+
 ```sh
-git clone https://github.com/your-org/synapse-mcp.git
-cd synapse-mcp
-bun install
+curl -fsSL https://raw.githubusercontent.com/kvdeurzen/synapse/main/install.sh | bash
 ```
 
-## Usage
+This checks prerequisites, copies agents/hooks/commands/skills/server into `.claude/`, generates `settings.json` and `.mcp.json`, installs server dependencies, and runs a smoke test.
 
-### As an MCP server (Claude Code)
+### What gets created
 
-Add to your Claude Code MCP settings:
-
-```json
-{
-  "mcpServers": {
-    "synapse": {
-      "command": "bun",
-      "args": ["run", "src/index.ts"],
-      "env": {
-        "SYNAPSE_DB_PATH": "/path/to/your/project/.synapse"
-      }
-    }
-  }
-}
 ```
+.claude/
+  agents/          # 11 agent definitions
+  hooks/           # 7 hook scripts + lib/
+  commands/synapse/ # 5 slash commands
+  skills/          # 18 skill definitions
+  server/          # Synapse MCP server
+  settings.json    # Hook configuration (gitignored)
+.synapse/
+  config/          # Project configuration (committed)
+.mcp.json          # MCP server entry (gitignored)
+```
+
+Each developer runs `install.sh` — `.claude/settings.json` and `.mcp.json` are gitignored.
+
+### Install options
+
+| Flag | Description |
+|------|-------------|
+| `--local` | Install into current project only (default) |
+| `--global` | Install to `~/.synapse/` as shared source, then wire into current project |
+| `--quiet` | Suppress step-by-step output, only errors and final pass/fail |
+| `--smoke-test` | Run only the smoke test (skip install) |
+| `--version TAG` | Install a specific release (default: latest) |
+
+Re-running `install.sh` detects an existing install, prompts before updating, and preserves your `.synapse/config/` customizations.
 
 ### Configuration
 
 | Variable | Default | Description |
 |----------|---------|-------------|
-| `SYNAPSE_DB_PATH` | `./.synapse` | LanceDB database directory |
+| `SYNAPSE_DB_PATH` | `.synapse/data/synapse.db` | LanceDB database directory |
 | `OLLAMA_URL` | `http://localhost:11434` | Ollama service endpoint |
 | `EMBED_MODEL` | `nomic-embed-text` | Embedding model (768 dimensions) |
 
-These can also be passed as CLI arguments: `--db /path/to/db`.
+### Getting started
 
-### Full workflow experience
-
-The MCP config above gives you raw tool access. For the guided RPEV workflow — from project init through agent-driven execution — see the [User Journey](docs/user-journey.md).
-
-### Running directly
-
-```sh
-bun run start
-```
+After install, run `/synapse:init` in Claude Code to initialize your project. For the full walkthrough — from install to daily use — see the [User Journey](docs/user-journey.md).
 
 ## Tech Stack
 
@@ -180,11 +182,11 @@ bun test
 
 - [x] User journey definition — install → init → map → refine → status → focus (Phase 16)
 - [x] Tech debt resolution (Phase 17)
-- [ ] RPEV orchestration — readiness gating, auto-queue, trust config expansion (Phase 18)
-- [ ] Agent prompts — MCP-first, level-aware behavior, handoff protocol (Phase 19)
-- [ ] Skill system — dynamic injection, language-agnostic agents (Phase 20)
-- [ ] Agent pool — configurable slots, auto-assignment, work queue (Phase 21)
-- [ ] Installation & setup — install script, first-run experience (Phase 22)
+- [x] RPEV orchestration — readiness gating, auto-queue, trust config expansion (Phase 18)
+- [x] Agent prompts — MCP-first, level-aware behavior, handoff protocol (Phase 19)
+- [x] Skill system — dynamic injection, language-agnostic agents (Phase 20)
+- [x] Agent pool — configurable slots, auto-assignment, work queue (Phase 21)
+- [x] Installation & setup — install script, smoke test, usage manual (Phase 22)
 - [ ] Visibility + notifications — statusline, blocked counter (Phase 23)
 - [ ] E2E workflow validation — full RPEV cycle on a real project (Phase 24)
 

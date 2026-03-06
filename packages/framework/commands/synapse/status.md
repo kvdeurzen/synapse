@@ -24,6 +24,12 @@ Display the full RPEV project dashboard: epics in priority order, blocked items 
    - Blocked items: tasks with status `"blocked"` and their block reasons
    - Items needing user input: blocked items where the block reason involves a decision or user action (not a technical dependency)
 
+   **Token aggregation:** For each task in the tree, check its `tags` field for the pattern `|tokens_used=N|` using regex `/\|tokens_used=(\d+)\|/`. Sum token counts:
+   - Per feature: sum all child task tokens
+   - Per epic: sum all child feature tokens
+
+   Format as `Nk tokens` (divide by 1000, round to nearest integer). Only show token count if > 0.
+
 3. **Get recent context:** Call `mcp__synapse__get_smart_context` in overview mode to retrieve recent decisions and activity.
 
 4. **Query RPEV stage documents:** Call `mcp__synapse__query_documents` with:
@@ -43,14 +49,35 @@ Display the full RPEV project dashboard: epics in priority order, blocked items 
 
    When displaying RPEV stage badges for epics, use stage document data when available — it is more authoritative than task tree status for RPEV stage. If a stage document exists for an epic (matched by `rpev-stage-[task_id]`), use its `stage` field for the stage badge. If no stage document exists, fall back to inferring stage from task tree status.
 
+   Update the epic/feature display to include token aggregates:
+
+   ```
+   **Epic: {title}** [{STAGE}] ({percent}% complete){token_display}
+     - Feature: {title} [{STATUS}]{token_display} -- {done}/{total} tasks done
+   ```
+
+   Where `{token_display}` is:
+   - If total tokens > 0: ` -- {N}k tokens used`
+   - If total tokens = 0: omit entirely
+
+   Example:
+   ```
+   **Epic: Auth System** [EXECUTING] (65% complete) -- 142k tokens used
+     - Feature: Login flow [DONE] -- 48k tokens used
+     - Feature: JWT refresh [EXECUTING] -- 31k tokens used (2/4 tasks done)
+     - Feature: Session mgmt [QUEUED]
+   ```
+
+   Full dashboard format:
+
    ```
    ## Synapse Dashboard
 
    ### Epics (by priority)
 
-   **Epic A** [EXECUTING] (65% complete)
-     - Feature 1 [DONE]
-     - Feature 2 [IN PROGRESS] — 2/4 work packages done
+   **Epic A** [EXECUTING] (65% complete) -- 142k tokens used
+     - Feature 1 [DONE] -- 48k tokens used
+     - Feature 2 [IN PROGRESS] -- 31k tokens used (2/4 work packages done)
      - Feature 3 [PENDING]
 
    **Epic B** [REFINING] (0% complete)
@@ -77,8 +104,40 @@ Display the full RPEV project dashboard: epics in priority order, blocked items 
    All clear — no items currently need your input.
 
    ### Agent Pool
-   [Phase 21 stub] Agent pool not yet active. When available, this section will show
-   active agents and their current tasks.
+
+   Query the pool-state document:
+   ```
+   mcp__synapse__query_documents({
+     project_id: "[project_id]",
+     category: "plan",
+     tags: "|pool-state|"
+   })
+   ```
+
+   If a pool-state document is found, parse its JSON content and render:
+
+   ```
+   ### Agent Pool ({active_count}/{max_slots} active, {queue_length} queued)
+   - **A** [{agent_type}] {task_title} (Epic: {epic_title}) -- {minutes_running}m
+   - **B** [{agent_type}] {task_title} (Epic: {epic_title}) -- {minutes_running}m
+   - **C** idle
+   Queued ({queue_length}): {top 3 queue item titles}, +{remaining} more
+   ```
+
+   Where:
+   - active_count = number of non-null slots
+   - For each non-null slot: show letter, agent_type in brackets, task_title, parent epic, and running time computed as (now - started_at) in minutes
+   - For each null slot: show "idle"
+   - Queue display: show count + first 3 queued item titles by priority order. If more than 3 items, append "+N more"
+   - If queue is empty, omit the "Queued" line
+
+   Use `/synapse:focus agent [letter]` to inspect an agent.
+
+   If no pool-state document exists:
+   ```
+   ### Agent Pool
+   Agent pool not yet active. The orchestrator will start the pool when work is dispatched.
+   ```
 
    ### Recent Decisions
    - [Decision title] (Tier N, [date])

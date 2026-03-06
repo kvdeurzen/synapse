@@ -121,12 +121,11 @@ process.stdin.on("end", () => {
     let tierContext = "";
     let rpevContext = "";
     let domainContext = "";
+    let trustToml = null;
+    let agentsToml = null;
     try {
       const trustPath = resolveConfig("trust.toml");
       const agentsPath = resolveConfig("agents.toml");
-
-      let trustToml = null;
-      let agentsToml = null;
 
       if (trustPath && agentsPath) {
         trustToml = parseToml(fs.readFileSync(trustPath, "utf8"));

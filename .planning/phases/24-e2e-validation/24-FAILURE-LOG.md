@@ -18,6 +18,8 @@
 |---|------|-------|------------|----------|--------|
 | 1 | Install | install.sh fails with 404 on tarball download | `/releases/latest` API returns empty for prerelease-only repos; fallback hardcoded to non-existent `v3.0` tag | BLOCKER | PATCHED |
 | 2 | Install | tree-sitter native build fails during `bun install` | Node.js 24 headers require C++20 but tree-sitter binding.gyp defaults to C++17; `CXXFLAGS` not set | BLOCKER | PATCHED |
+| 3 | Init | MCP tools not available after install — agent fell back to calling server via bun | MCP servers load at session start; running /synapse:init in the same session as install.sh means the synapse MCP server isn't registered yet. Cascades into map failure (agent can't call index_codebase without MCP context) | BLOCKER | OPEN |
+| 4 | Status | tool-allowlist hook denies all MCP calls from user's main session as "(unknown)" | Hook expects `actor` field in tool_input but main session never sets it; fail-closed treats missing actor as unauthorized | BLOCKER | PATCHED |
 
 ## Verification Results
 

@@ -46,6 +46,13 @@ process.stdin.on("end", () => {
     const toolInput = data.tool_input || {};
     const actor = toolInput.actor || "";
 
+    // No actor = user's main session or slash command — always allow
+    // Agents pass their identity via the actor field in tool input;
+    // the main session never sets actor, so it should be unrestricted.
+    if (!actor) {
+      process.exit(0);
+    }
+
     // Load agents.toml — fail-closed on missing or unparseable file
     const agentsTomlPath = resolveConfig("agents.toml");
     if (!agentsTomlPath) {

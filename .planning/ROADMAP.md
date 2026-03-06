@@ -110,7 +110,7 @@ Plans:
 **Success Criteria** (what must be TRUE):
   1. When a Refine session confirms readiness, the system auto-queues a Plan stage for that item — no manual `/synapse:plan` command required
   2. Trust config (`trust.toml` `[rpev.involvement]` section) controls which hierarchy levels require explicit user approval before stage transitions
-  3. The synapse-orchestrator agent implements the RPEV flow: Refine→Plan→Execute→Validate with recursive descent at each hierarchy level
+  3. The synapse-orchestrator agent implements the RPEV flow: Refine->Plan->Execute->Validate with recursive descent at each hierarchy level
   4. Decision state from Refine (DECIDED/OPEN/EMERGING) persists across sessions and feeds into the Plan stage
   5. RPEV stage documents (stored via store_document with fixed doc_id pattern) track state per item
   6. `/synapse:status` queries stage documents and shows items needing approval in "Needs Your Input" section
@@ -211,8 +211,8 @@ Plans:
 **Plans**: 2 plans
 
 Plans:
-- [ ] 24-01: Run serial RPEV cycle on a real task, verify hook audit log, document failures (E2E-01, E2E-02, E2E-03)
-- [ ] 24-02: Patch top-3 E2E failures and verify /synapse:status matches task tree state (E2E-04)
+- [ ] 24-01-PLAN.md — Alpha release (commit framework files, tag v3.0.0-alpha.1, gh release) + pre-run fix (init.md trust schema) + install on rpi-camera-py + run RPEV cycle (E2E-01, E2E-02, E2E-03)
+- [ ] 24-02-PLAN.md — Patch BLOCKER failures + tag v3.0.0-alpha.2 + abbreviated re-run verification + SC1-SC4 checklist (E2E-03, E2E-04)
 
 ## Progress
 

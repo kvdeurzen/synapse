@@ -197,7 +197,7 @@ Plans:
 
 Plans:
 - [x] 23-01-PLAN.md — Statusline hook RPEV progress + orchestrator state file write protocol (VIS-01)
-- [ ] 23-02-PLAN.md — Enhanced project_overview with task_progress/pool_status/needs_attention + /synapse:status update (VIS-02)
+- [x] 23-02-PLAN.md — Enhanced project_overview with task_progress/pool_status/needs_attention + /synapse:status update (VIS-02)
 
 ### Phase 24: E2E Validation
 **Goal**: The complete **RPEV** cycle runs on a real task — from Refine through Plan, Execute, and Validate — with hooks verified, failure modes documented, and status accurately reflected
@@ -245,5 +245,5 @@ Parallelizable: Phase 17 (Tech Debt) and Phase 20 (Skills) can proceed in parall
 | 20. Skills Completion | 3/3 | Complete    | 2026-03-06 | - |
 | 21. Agent Pool | 2/2 | Complete    | 2026-03-06 | - |
 | 22. Install Script | 2/2 | Complete    | 2026-03-06 | - |
-| 23. Visibility + Notifications | v3.0 | 1/2 | In progress | - |
+| 23. Visibility + Notifications | v3.0 | 2/2 | Complete | 2026-03-06 |
 | 24. E2E Validation | v3.0 | 0/2 | Not started | - |

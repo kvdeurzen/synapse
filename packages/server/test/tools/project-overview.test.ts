@@ -5,8 +5,11 @@ import { join } from "node:path";
 import * as lancedb from "@lancedb/lancedb";
 import { insertBatch } from "../../src/db/batch.js";
 import { ActivityLogRowSchema, DocumentRowSchema } from "../../src/db/schema.js";
+import { _setFetchImpl } from "../../src/services/embedder.js";
+import { createTask } from "../../src/tools/create-task.js";
 import { initProject } from "../../src/tools/init-project.js";
 import { projectOverview } from "../../src/tools/project-overview.js";
+import type { SynapseConfig } from "../../src/types.js";
 
 // ── Test helpers ──────────────────────────────────────────────────────────────
 
@@ -82,10 +85,42 @@ async function insertActivityLog(
   );
 }
 
+function mockOllamaEmbed(count: number): Response {
+  const vectors = Array.from({ length: count }, () =>
+    Array.from({ length: 768 }, (_, i) => i * 0.001),
+  );
+  return new Response(JSON.stringify({ embeddings: vectors }), {
+    status: 200,
+    headers: { "Content-Type": "application/json" },
+  });
+}
+
+const TEST_CONFIG: SynapseConfig = {
+  db: "",
+  ollamaUrl: "http://localhost:11434",
+  embedModel: "nomic-embed-text",
+  logLevel: "error",
+};
+
 let tmpDir: string;
+let config: SynapseConfig;
 
 beforeEach(async () => {
   tmpDir = mkdtempSync(join(tmpdir(), "project-overview-test-"));
+  config = { ...TEST_CONFIG, db: tmpDir };
+  _setFetchImpl((_url, _init) => {
+    const body = _init?.body;
+    let count = 1;
+    if (typeof body === "string") {
+      try {
+        const parsed = JSON.parse(body) as { input?: string[] };
+        count = parsed.input?.length ?? 1;
+      } catch {
+        count = 1;
+      }
+    }
+    return Promise.resolve(mockOllamaEmbed(count));
+  });
   await initProject(tmpDir, "test-proj");
 });
 
@@ -131,6 +166,17 @@ describe("projectOverview", () => {
       expect(typeof result.counts_by_status).toBe("object");
       expect(Array.isArray(result.recent_activity)).toBe(true);
       expect(Array.isArray(result.key_documents)).toBe(true);
+    });
+
+    test("task_progress is undefined on new project with no tasks", async () => {
+      const result = await projectOverview(tmpDir, "test-proj");
+      // No tasks table rows — task_progress should be undefined
+      expect(result.task_progress).toBeUndefined();
+    });
+
+    test("pool_status is undefined on new project with no pool-state doc", async () => {
+      const result = await projectOverview(tmpDir, "test-proj");
+      expect(result.pool_status).toBeUndefined();
     });
   });
 
@@ -373,6 +419,382 @@ describe("projectOverview", () => {
     test("project_id matches input", async () => {
       const result = await projectOverview(tmpDir, "test-proj");
       expect(result.project_id).toBe("test-proj");
+    });
+  });
+
+  // ── 8. task_progress ─────────────────────────────────────────────────────
+
+  describe("task_progress", () => {
+    test("task_progress returns epics array with one entry when one epic exists", async () => {
+      await createTask(
+        tmpDir,
+        "test-proj",
+        { project_id: "test-proj", title: "Epic Alpha", description: "First epic", depth: 0 },
+        config,
+      );
+
+      const result = await projectOverview(tmpDir, "test-proj");
+
+      expect(result.task_progress).toBeDefined();
+      expect(result.task_progress?.epics).toHaveLength(1);
+      expect(result.task_progress?.total_epics).toBe(1);
+    });
+
+    test("task_progress epic entry has required fields", async () => {
+      await createTask(
+        tmpDir,
+        "test-proj",
+        {
+          project_id: "test-proj",
+          title: "Epic Beta",
+          description: "Second epic",
+          depth: 0,
+          priority: "high",
+        },
+        config,
+      );
+
+      const result = await projectOverview(tmpDir, "test-proj");
+
+      const epic = result.task_progress?.epics[0];
+      expect(epic).toBeDefined();
+      if (epic) {
+        expect(typeof epic.task_id).toBe("string");
+        expect(typeof epic.title).toBe("string");
+        expect(epic.title).toBe("Epic Beta");
+        expect(typeof epic.status).toBe("string");
+        expect(epic.rpev_stage).toBeNull(); // no stage doc yet
+        expect(typeof epic.rollup).toBe("object");
+        expect(typeof epic.rollup.total_descendants).toBe("number");
+        expect(typeof epic.rollup.done_count).toBe("number");
+        expect(typeof epic.rollup.blocked_count).toBe("number");
+        expect(typeof epic.rollup.in_progress_count).toBe("number");
+        expect(typeof epic.rollup.completion_percentage).toBe("number");
+      }
+    });
+
+    test("task_progress rollup includes child task counts", async () => {
+      const epic = await createTask(
+        tmpDir,
+        "test-proj",
+        { project_id: "test-proj", title: "Epic Gamma", description: "", depth: 0 },
+        config,
+      );
+      // Add a child feature
+      await createTask(
+        tmpDir,
+        "test-proj",
+        {
+          project_id: "test-proj",
+          title: "Feature 1",
+          description: "",
+          depth: 1,
+          parent_id: epic.task_id,
+        },
+        config,
+      );
+
+      const result = await projectOverview(tmpDir, "test-proj");
+      const epicEntry = result.task_progress?.epics.find((e) => e.title === "Epic Gamma");
+      expect(epicEntry).toBeDefined();
+      // Epic has 1 child feature
+      expect(epicEntry?.rollup.total_descendants).toBeGreaterThanOrEqual(1);
+    });
+
+    test("task_progress sets rpev_stage from stage document when it exists", async () => {
+      const epic = await createTask(
+        tmpDir,
+        "test-proj",
+        { project_id: "test-proj", title: "Epic Delta", description: "", depth: 0 },
+        config,
+      );
+
+      // Insert a stage document for this epic
+      const stageContent = JSON.stringify({
+        stage: "PLANNING",
+        level: "epic",
+        task_id: epic.task_id,
+        involvement: "autopilot",
+        pending_approval: false,
+        proposal_doc_id: null,
+        last_updated: new Date().toISOString(),
+        notes: "",
+      });
+      await insertDoc(tmpDir, "test-proj", {
+        doc_id: `rpev-stage-${epic.task_id}`,
+        category: "plan",
+        status: "active",
+        tags: "|rpev-stage|epic|planning|",
+        content: stageContent,
+        title: "Stage doc for Epic Delta",
+      });
+
+      const result = await projectOverview(tmpDir, "test-proj");
+      const epicEntry = result.task_progress?.epics.find((e) => e.title === "Epic Delta");
+      expect(epicEntry?.rpev_stage).toBe("PLANNING");
+    });
+
+    test("task_progress rpev_stage_counts counts stages of child task stage docs", async () => {
+      const epic = await createTask(
+        tmpDir,
+        "test-proj",
+        { project_id: "test-proj", title: "Epic Epsilon", description: "", depth: 0 },
+        config,
+      );
+      const feature1 = await createTask(
+        tmpDir,
+        "test-proj",
+        {
+          project_id: "test-proj",
+          title: "Feature A",
+          description: "",
+          depth: 1,
+          parent_id: epic.task_id,
+        },
+        config,
+      );
+      const feature2 = await createTask(
+        tmpDir,
+        "test-proj",
+        {
+          project_id: "test-proj",
+          title: "Feature B",
+          description: "",
+          depth: 1,
+          parent_id: epic.task_id,
+        },
+        config,
+      );
+
+      // Insert stage docs for features
+      await insertDoc(tmpDir, "test-proj", {
+        doc_id: `rpev-stage-${feature1.task_id}`,
+        category: "plan",
+        status: "active",
+        tags: "|rpev-stage|feature|executing|",
+        content: JSON.stringify({
+          stage: "EXECUTING",
+          level: "feature",
+          task_id: feature1.task_id,
+          involvement: "autopilot",
+          pending_approval: false,
+          proposal_doc_id: null,
+          last_updated: new Date().toISOString(),
+          notes: "",
+        }),
+        title: `Stage doc for Feature A`,
+      });
+      await insertDoc(tmpDir, "test-proj", {
+        doc_id: `rpev-stage-${feature2.task_id}`,
+        category: "plan",
+        status: "active",
+        tags: "|rpev-stage|feature|planning|",
+        content: JSON.stringify({
+          stage: "PLANNING",
+          level: "feature",
+          task_id: feature2.task_id,
+          involvement: "autopilot",
+          pending_approval: false,
+          proposal_doc_id: null,
+          last_updated: new Date().toISOString(),
+          notes: "",
+        }),
+        title: `Stage doc for Feature B`,
+      });
+
+      const result = await projectOverview(tmpDir, "test-proj");
+      const epicEntry = result.task_progress?.epics.find((e) => e.title === "Epic Epsilon");
+      expect(epicEntry?.rpev_stage_counts).toBeDefined();
+      expect(epicEntry?.rpev_stage_counts?.executing).toBe(1);
+      expect(epicEntry?.rpev_stage_counts?.planning).toBe(1);
+    });
+  });
+
+  // ── 9. pool_status ───────────────────────────────────────────────────────
+
+  describe("pool_status", () => {
+    test("pool_status is populated when a pool-state document exists", async () => {
+      const poolContent = JSON.stringify({
+        project_id: "test-proj",
+        max_slots: 3,
+        slots: {
+          A: {
+            task_id: "task-001",
+            task_title: "Implementing auth",
+            agent_type: "executor",
+            epic_title: "Auth Epic",
+            epic_id: "epic-001",
+            started_at: new Date().toISOString(),
+            rpev_stage: "EXECUTING",
+            recent_tool_calls: [],
+          },
+          B: null,
+          C: null,
+        },
+        queue: [{ task_id: "task-002", task_title: "Setup CI", epic_id: "epic-001", type: "executor" }],
+        tokens_by_task: {},
+        last_updated: new Date().toISOString(),
+      });
+
+      await insertDoc(tmpDir, "test-proj", {
+        doc_id: "pool-state-test-proj",
+        category: "plan",
+        status: "active",
+        tags: "|pool-state|active|",
+        content: poolContent,
+        title: "Pool state",
+      });
+
+      const result = await projectOverview(tmpDir, "test-proj");
+
+      expect(result.pool_status).toBeDefined();
+      expect(result.pool_status?.active_slots).toBe(1);
+      expect(result.pool_status?.total_slots).toBe(3);
+      expect(result.pool_status?.queued_count).toBe(1);
+      expect(result.pool_status?.slots).toHaveLength(3);
+
+      const slotA = result.pool_status?.slots.find((s) => s.letter === "A");
+      expect(slotA?.task_id).toBe("task-001");
+      expect(slotA?.task_title).toBe("Implementing auth");
+      expect(slotA?.agent_type).toBe("executor");
+      expect(slotA?.epic_title).toBe("Auth Epic");
+
+      const slotB = result.pool_status?.slots.find((s) => s.letter === "B");
+      expect(slotB?.task_id).toBeNull();
+    });
+
+    test("pool_status is undefined when no pool-state document exists", async () => {
+      const result = await projectOverview(tmpDir, "test-proj");
+      expect(result.pool_status).toBeUndefined();
+    });
+  });
+
+  // ── 10. needs_attention ──────────────────────────────────────────────────
+
+  describe("needs_attention", () => {
+    test("needs_attention has empty arrays when no blocked items exist", async () => {
+      // Create an epic but no stage docs with pending_approval or failure
+      await createTask(
+        tmpDir,
+        "test-proj",
+        { project_id: "test-proj", title: "Epic Zeta", description: "", depth: 0 },
+        config,
+      );
+
+      const result = await projectOverview(tmpDir, "test-proj");
+
+      expect(result.needs_attention).toBeDefined();
+      expect(result.needs_attention?.approval_needed).toEqual([]);
+      expect(result.needs_attention?.failed).toEqual([]);
+    });
+
+    test("needs_attention.approval_needed lists items where pending_approval=true", async () => {
+      const epic = await createTask(
+        tmpDir,
+        "test-proj",
+        { project_id: "test-proj", title: "Epic Eta", description: "", depth: 0 },
+        config,
+      );
+
+      // Insert stage doc with pending_approval=true
+      await insertDoc(tmpDir, "test-proj", {
+        doc_id: `rpev-stage-${epic.task_id}`,
+        category: "plan",
+        status: "active",
+        tags: "|rpev-stage|epic|planning|",
+        content: JSON.stringify({
+          stage: "PLANNING",
+          level: "epic",
+          task_id: epic.task_id,
+          involvement: "co-pilot",
+          pending_approval: true,
+          proposal_doc_id: null,
+          last_updated: new Date().toISOString(),
+          notes: "",
+        }),
+        title: `Stage doc for Epic Eta`,
+      });
+
+      const result = await projectOverview(tmpDir, "test-proj");
+
+      expect(result.needs_attention?.approval_needed).toHaveLength(1);
+      const item = result.needs_attention?.approval_needed[0];
+      expect(item?.task_id).toBe(epic.task_id);
+      expect(item?.stage).toBe("PLANNING");
+      expect(item?.involvement).toBe("co-pilot");
+      expect(item?.level).toBe("epic");
+    });
+
+    test("needs_attention.failed lists items with failure notes", async () => {
+      const epic = await createTask(
+        tmpDir,
+        "test-proj",
+        { project_id: "test-proj", title: "Epic Theta", description: "", depth: 0 },
+        config,
+      );
+
+      await insertDoc(tmpDir, "test-proj", {
+        doc_id: `rpev-stage-${epic.task_id}`,
+        category: "plan",
+        status: "active",
+        tags: "|rpev-stage|epic|executing|",
+        content: JSON.stringify({
+          stage: "EXECUTING",
+          level: "epic",
+          task_id: epic.task_id,
+          involvement: "autopilot",
+          pending_approval: false,
+          proposal_doc_id: null,
+          last_updated: new Date().toISOString(),
+          notes: "retries exhausted after 3 attempts",
+        }),
+        title: `Stage doc for Epic Theta`,
+      });
+
+      const result = await projectOverview(tmpDir, "test-proj");
+
+      expect(result.needs_attention?.failed).toHaveLength(1);
+      const failedItem = result.needs_attention?.failed[0];
+      expect(failedItem?.task_id).toBe(epic.task_id);
+      expect(failedItem?.level).toBe("epic");
+      expect(failedItem?.notes).toContain("retries exhausted");
+    });
+
+    test("needs_attention is defined with empty arrays when task_progress exists but no issues", async () => {
+      await createTask(
+        tmpDir,
+        "test-proj",
+        { project_id: "test-proj", title: "Epic Iota", description: "", depth: 0 },
+        config,
+      );
+
+      const result = await projectOverview(tmpDir, "test-proj");
+      expect(result.needs_attention).toBeDefined();
+      expect(Array.isArray(result.needs_attention?.approval_needed)).toBe(true);
+      expect(Array.isArray(result.needs_attention?.failed)).toBe(true);
+    });
+  });
+
+  // ── 11. backward compatibility ───────────────────────────────────────────
+
+  describe("backward compatibility", () => {
+    test("still returns all existing fields with tasks present", async () => {
+      await createTask(
+        tmpDir,
+        "test-proj",
+        { project_id: "test-proj", title: "Epic Kappa", description: "", depth: 0 },
+        config,
+      );
+
+      const result = await projectOverview(tmpDir, "test-proj");
+
+      // All original fields still present
+      expect(result.project_id).toBe("test-proj");
+      expect(typeof result.total_documents).toBe("number");
+      expect(typeof result.counts_by_category).toBe("object");
+      expect(typeof result.counts_by_status).toBe("object");
+      expect(Array.isArray(result.recent_activity)).toBe(true);
+      expect(Array.isArray(result.key_documents)).toBe(true);
     });
   });
 });

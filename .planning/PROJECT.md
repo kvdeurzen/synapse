@@ -40,18 +40,16 @@ Agents get the right context for any task — from both project decisions and ac
 
 ### Active
 
-- [ ] User journey from install to ongoing use fully defined
-- [ ] Claude Code integration — `.claude/` directory, hooks, MCP server wired up
-- [ ] User-facing commands — `/synapse:init`, `/synapse:map`, `/synapse:plan`
-- [ ] Agent prompts — MCP usage instructions, tool knowledge, single-source-of-truth principle
-- [ ] Installation & setup — install script, first-run experience, docs
-- [ ] E2E workflow validation — PEV loop on a real project
-- [ ] Skill system — project-specific config, flesh out thin skills, add missing skills
-- [ ] Agent prompt improvements — domain mode injection, decomposer context refs, language-agnostic, dynamic skill injection
-- [ ] project_id seamless injection and MCP error handling guidance
-- [ ] Consistency & benchmarking across config and agents
-- [ ] Tech debt — escapeSQL dedup, created_at fix, INT-02 AST edges, lint warnings
-- [ ] Progress visibility — task tree progress in Claude Code
+- [x] User journey from install to ongoing use fully defined (Phase 16)
+- [x] User-facing commands — `/synapse:init`, `/synapse:map`, `/synapse:refine`, `/synapse:status`, `/synapse:focus` (Phase 16)
+- [ ] Tech debt — escapeSQL dedup, created_at fix, INT-02 AST edges, lint warnings (Phase 17)
+- [ ] RPEV orchestration — readiness gating, auto-queue Refine→Plan→Execute, trust config expansion (Phase 18)
+- [ ] Agent prompts + level-awareness — MCP-first, tool sequences, handoff protocol, level-aware behavior (Phase 19)
+- [ ] Skill system — dynamic injection from project.toml, language-agnostic agents, flesh out skills (Phase 20)
+- [ ] Agent pool — configurable slots, auto-assignment, work queue (Phase 21)
+- [ ] Installation & setup — install script, first-run experience, docs (Phase 22)
+- [ ] Visibility + notifications — statusline, blocked counter, project_overview progress (Phase 23)
+- [ ] E2E workflow validation — full RPEV cycle on a real project (Phase 24)
 
 ### Out of Scope
 
@@ -118,17 +116,15 @@ Agents get the right context for any task — from both project decisions and ac
 **Goal:** Wire up all existing pieces into a usable end-to-end product — from install to agent-driven workflow execution.
 
 **Target features:**
-- Complete user journey definition (install → init → index → goal → plan → execute → validate)
-- Claude Code integration (`.claude/` wiring, hooks, MCP server config)
-- User-facing commands (`/synapse:init`, `/synapse:map`, `/synapse:plan`)
-- Agent MCP usage instructions and single-source-of-truth principle
-- Installation script and first-run experience
-- E2E PEV workflow validation on a real project
-- Skill system completion (project-specific config, dynamic injection, flesh out stubs)
-- Agent prompt improvements (domain mode, context refs, language-agnostic)
-- project_id injection and MCP error handling
+- Complete user journey definition (install → init → map → refine → status → focus) — Phase 16 ✓
+- RPEV orchestration engine (readiness gating, auto-queue, trust config, recursive descent)
+- Agent prompts with MCP-first principle, level-aware behavior, and handoff protocol
+- Skill system completion (dynamic injection from project.toml, language-agnostic agents)
+- Agent pool (configurable slots, auto-assignment, work queue)
+- Installation script and first-run experience (after files stabilize)
+- Visibility + notifications (statusline, blocked counter, configurable notifications)
+- E2E RPEV workflow validation on a real project
 - Tech debt resolution (escapeSQL, created_at, INT-02, lint)
-- Progress visibility in Claude Code
 
 ---
-*Last updated: 2026-03-03 after v3.0 milestone start*
+*Last updated: 2026-03-05 after v3.0 phase restructure (RPEV model)*

@@ -89,3 +89,9 @@ None - no external service configuration required.
 ---
 *Phase: 20-skills-completion*
 *Completed: 2026-03-06*
+
+## Self-Check: PASSED
+
+- `packages/framework/hooks/synapse-startup.js` — FOUND
+- Commit `56f503c` (task) — FOUND
+- Commit `35d48bf` (metadata) — FOUND

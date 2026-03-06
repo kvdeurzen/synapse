@@ -100,6 +100,13 @@ None - no external service configuration required.
 - install.sh flags and both install modes (--local, --global) documented
 - Ready for Phase 22-03 (install.sh implementation, INST-01 through INST-03)
 
+## Self-Check: PASSED
+
+- FOUND: `/home/kanter/code/synapse/docs/user-journey.md` (633 lines)
+- FOUND: `/home/kanter/code/synapse/.planning/phases/22-install-script/22-02-SUMMARY.md`
+- FOUND: task commit c707316 (feat: expand user-journey.md)
+- FOUND: metadata commit dab59aa (docs: complete plan)
+
 ---
 *Phase: 22-install-script*
 *Completed: 2026-03-06*

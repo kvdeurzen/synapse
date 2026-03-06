@@ -5,29 +5,31 @@
         "hooks": [
           {
             "type": "command",
-            "command": "node .claude/hooks/gsd-check-update.js"
-          },
-          {
-            "type": "command",
-            "command": "bun $CLAUDE_PROJECT_DIR/packages/framework/hooks/synapse-startup.js"
+            "command": "bun $CLAUDE_PROJECT_DIR/.claude/hooks/synapse-startup.js"
           }
         ]
       }
     ],
     "PreToolUse": [
       {
+        "matcher": "mcp__synapse__store_decision",
         "hooks": [
           {
             "type": "command",
-            "command": "bun $CLAUDE_PROJECT_DIR/packages/framework/hooks/tier-gate.js"
+            "command": "bun $CLAUDE_PROJECT_DIR/.claude/hooks/tier-gate.js"
           },
           {
             "type": "command",
-            "command": "bun $CLAUDE_PROJECT_DIR/packages/framework/hooks/tool-allowlist.js"
-          },
+            "command": "bun $CLAUDE_PROJECT_DIR/.claude/hooks/precedent-gate.js"
+          }
+        ]
+      },
+      {
+        "matcher": "mcp__synapse__.*",
+        "hooks": [
           {
             "type": "command",
-            "command": "bun $CLAUDE_PROJECT_DIR/packages/framework/hooks/precedent-gate.js"
+            "command": "bun $CLAUDE_PROJECT_DIR/.claude/hooks/tool-allowlist.js"
           }
         ]
       }
@@ -37,11 +39,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "node .claude/hooks/gsd-context-monitor.js"
-          },
-          {
-            "type": "command",
-            "command": "bun $CLAUDE_PROJECT_DIR/packages/framework/hooks/audit-log.js"
+            "command": "bun $CLAUDE_PROJECT_DIR/.claude/hooks/audit-log.js"
           }
         ]
       }

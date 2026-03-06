@@ -16,3 +16,5 @@ coverage/
 *.lcov
 .cache
 .idea/
+.synapse/config/local.toml
+.synapse/data/

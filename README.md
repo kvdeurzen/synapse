@@ -20,12 +20,29 @@ AI agents working on codebases face two problems:
 
 Synapse solves both. It stores project knowledge persistently in LanceDB and lets agents retrieve only what's relevant via semantic search — so they get the context they need without burning tokens on everything else.
 
+## How It Works
+
+Synapse organizes work into a recursive hierarchy — **Project > Epic > Feature > Work Package** — where every layer goes through the same cycle:
+
+**Refine → Plan → Execute → Done**
+
+- **Refine**: Brainstorm, set requirements, make decisions. User involvement is highest here at upper layers.
+- **Plan**: Decompose into children, resolve dependencies, ensure children can execute autonomously.
+- **Execute**: At every layer except Work Package, this means spawning children that each run their own RPEV cycle. At Work Package level, it means writing code.
+- **Done**: The item meets its requirements.
+
+The system drives, the user unblocks. After initial project setup, agents work autonomously on the highest-priority items they can. Your primary interaction is making decisions that require human judgment — the system surfaces what needs your attention, and you navigate to those moments.
+
+For the full walkthrough from install to daily use, see the [User Journey](docs/user-journey.md).
+
 ## Key Principles
 
 - **Unified vector memory.** All project information — documents, code, decisions, tasks — lives in one embedded database. Agents query it semantically instead of ingesting whole repos.
 - **Decision precedent ("Case Law").** Architectural choices are stored as searchable decision objects with tier-based authority (Tier 0: product strategy through Tier 3: implementation). Agents check precedent before acting, maintaining architectural consistency across sessions.
 - **Macro-to-micro refinement.** Work decomposes recursively — epics to features to components to tasks — with each level small enough to fit a context window.
 - **Adaptive oversight.** User involvement is a gradient, not a toggle. A Trust-Knowledge Matrix configures per-domain autonomy levels (autopilot / co-pilot / advisory) based on domain and decision impact.
+- **Agent pool execution.** A configurable number of agent slots work autonomously on the highest-priority unblocked items. The system assigns work automatically — you shape vision and make decisions, agents handle implementation.
+- **Escalation, not guessing.** Agents follow the plan. If execution surfaces something the plan didn't cover, agents escalate to their parent layer — and ultimately to you — rather than deciding on their own.
 - **Fail-fast writes, graceful reads.** Write operations (storing documents, indexing code) require the embedding service and fail immediately if it's unavailable — no silent data corruption. Read operations continue working on existing data.
 
 ## Architecture
@@ -118,6 +135,10 @@ Add to your Claude Code MCP settings:
 
 These can also be passed as CLI arguments: `--db /path/to/db`.
 
+### Full workflow experience
+
+The MCP config above gives you raw tool access. For the guided RPEV workflow — from project init through agent-driven execution — see the [User Journey](docs/user-journey.md).
+
 ### Running directly
 
 ```sh
@@ -145,17 +166,29 @@ bun test
 
 ## Project Status
 
-**v1.0 Data Layer** — shipped. 18 MCP tools, 6 LanceDB tables, complete document and code search pipeline.
+**v1.0 Data Layer** — shipped. 21 MCP tools, 8 LanceDB tables, complete document and code search pipeline.
 
-**v2.0 Agentic Framework** — in progress. Building a coordination layer on top of the data layer:
+**v2.0 Agentic Framework** — shipped. Coordination layer on top of the data layer:
 
 - [x] Decision tracking with semantic precedent search (Phase 10)
 - [x] Recursive task hierarchy with cascade propagation (Phase 11)
 - [x] Framework bootstrap with TOML config and test harness (Phase 12)
 - [x] 10 specialized agents, skill loading system, trust matrix (Phase 13)
-- [ ] Quality gates and Plan-Execute-Validate workflow (Phase 14)
+- [x] Quality gates and Plan-Execute-Validate workflow (Phase 14)
 
-The v2.0 framework defines 10 specialized agents (Product Strategist, Researcher, Architect, Decomposer, Plan Reviewer, Executor, Validator, Integration Checker, Debugger, Codebase Analyst) coordinated through a skill loading system and configurable trust tiers — built as a Claude Code framework with agents, skills, hooks, and workflows.
+**v3.0 Working Prototype** — in progress. Wiring everything into a usable end-to-end product:
+
+- [x] User journey definition — install → init → map → refine → status → focus (Phase 16)
+- [x] Tech debt resolution (Phase 17)
+- [ ] RPEV orchestration — readiness gating, auto-queue, trust config expansion (Phase 18)
+- [ ] Agent prompts — MCP-first, level-aware behavior, handoff protocol (Phase 19)
+- [ ] Skill system — dynamic injection, language-agnostic agents (Phase 20)
+- [ ] Agent pool — configurable slots, auto-assignment, work queue (Phase 21)
+- [ ] Installation & setup — install script, first-run experience (Phase 22)
+- [ ] Visibility + notifications — statusline, blocked counter (Phase 23)
+- [ ] E2E workflow validation — full RPEV cycle on a real project (Phase 24)
+
+Agents are level-aware: Brainstorm, Planner, Executor, Validator, and others adjust their rigor, criteria, and focus based on hierarchy level (Project → Epic → Feature → Work Package). Coordinated through a skill loading system, configurable trust tiers, and the recursive RPEV cycle.
 
 ## License
 

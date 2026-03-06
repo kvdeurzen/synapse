@@ -251,6 +251,7 @@ On session start:
 4. Clear all slots in pool state (set to null)
 5. Emit recovery message: "Found [N] abandoned in-flight tasks from previous session. Re-queuing them."
 6. Run dispatch tick to fill slots with available work
+7. Write statusline state file to reflect recovered state
 
 ### Priority Algorithm (Dispatch Tick)
 
@@ -294,6 +295,7 @@ When a Task tool call completes:
 4. Update pool-state document: set `tokens_by_task[task_id] = total`, update slot assignment
 5. Free the slot (set to null)
 6. Run dispatch tick to fill the opened slot
+7. Write statusline state file (see Statusline State File Protocol)
 
 ### Token Usage Storage
 
@@ -411,6 +413,55 @@ mcp__synapse__store_document({
   actor: "synapse-orchestrator"
 })
 ```
+
+## Statusline State File Protocol
+
+After every RPEV state change (stage transition, pool slot change, task completion, blocked item change), write the statusline state file so the Claude Code statusline hook can display real-time progress.
+
+**File path:** `.synapse/state/statusline.json` (relative to project root)
+
+**When to write:**
+1. After every `store_document` call that creates/updates an RPEV stage document (`rpev-stage-*`)
+2. After every pool-state document update (`pool-state-*`)
+3. After any `update_task` call that changes task status (done, failed, blocked, in_progress)
+4. At session start after pool recovery (see Session Start Recovery section)
+
+**How to write:**
+Use the Write tool to create/overwrite the file. Create `.synapse/state/` directory if it does not exist.
+
+**Schema:**
+```json
+{
+  "project_id": "{project_id}",
+  "project_name": "{project name from project.toml or get_smart_context}",
+  "top_epic": {
+    "title": "{highest-priority epic with active work}",
+    "done_count": "{done tasks in epic}",
+    "total_count": "{total tasks in epic}",
+    "completion_pct": "{completion percentage}"
+  },
+  "pool": {
+    "active": "{non-null slots count}",
+    "total": "{max_pool_slots}"
+  },
+  "blocked": {
+    "approval": "{count of stage docs with pending_approval=true}",
+    "failed": "{count of stage docs with notes containing failure/retry exhaustion}"
+  },
+  "updated_at": "{ISO timestamp}"
+}
+```
+
+**Computing the state:**
+1. **top_epic**: Query epics via `get_task_tree`. Select the highest-priority epic (priority ordering: critical > high > medium > low > null) that has status "in_progress" or has active descendants. Use its rollup stats for done_count, total_count, completion_pct. If no epic is active, set `top_epic` to `null`.
+2. **pool**: Read from the current pool-state document. `active` = count of non-null slots. `total` = max_pool_slots. If no pool-state document exists, set `pool` to `null`.
+3. **blocked.approval**: Count stage documents where `pending_approval: true`. These are items in co-pilot/reviews involvement modes waiting for user action.
+4. **blocked.failed**: Count stage documents where notes contain failure/retry exhaustion indicators (e.g., "retries exhausted", "failed", "needs guidance").
+5. **updated_at**: Current ISO timestamp.
+
+**On session start:** After pool recovery, compute and write the state file to ensure the statusline reflects the recovered state.
+
+**On idle (all work complete):** Write the state file with `top_epic: null`, `pool: null`, and current blocked counts. This lets the statusline fall back to basic display or show only blocked items.
 
 ## Subagent Handoff Protocol
 

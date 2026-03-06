@@ -10,7 +10,7 @@ RPEV behavior is controlled by `config/trust.toml` under the `[rpev]` and `[rpev
 - `rpev.proactive_notifications`: Whether to push notifications outside `/synapse:status` (default: false)
 - `rpev.involvement`: Per-level × per-stage involvement matrix (see Involvement Resolution below)
 - `rpev.domain_overrides`: Domain-specific involvement overrides (e.g., security tasks escalated to co-pilot)
-- `rpev.max_parallel_executors`: Maximum concurrent executor subagents per wave (default: 3)
+- `rpev.max_pool_slots`: Maximum concurrent agent slots in the pool -- all agent types share this limit (default: 3)
 - `rpev.max_retries_task`: Task-level retry cap (default: 3)
 - `rpev.max_retries_feature`: Feature-level retry cap (default: 2)
 - `rpev.max_retries_epic`: Epic-level retry cap (default: 1)
@@ -184,7 +184,7 @@ For each feature:
 
 1. Analyze task dependencies within the feature
 2. Group independent tasks into waves (tasks with no unmet dependencies = Wave 1, etc.)
-3. Cap parallel executors at `rpev.max_parallel_executors` per wave
+3. Cap parallel agents at `rpev.max_pool_slots` -- all Task tool calls go through the orchestrator's Pool Manager
 
 ### Entering Execution
 
@@ -192,14 +192,20 @@ Update stage document: `stage: "EXECUTING"`, `pending_approval: false`, `last_up
 
 ### Wave N Processing
 
-1. For each task in the wave, spawn executor subagent via Task tool:
-   - Use `isolation: "worktree"` for git isolation
-   - Pass: `project_id`, `task_id`, `rpev_stage_doc_id`, task spec, acceptance criteria, context_refs, relevant decisions
-   - Issue all Task tool calls in a single turn for true parallel execution
-2. Await all executor results
-3. For each completed task: spawn Validator subagent to check output against spec
-4. If any validation fails: HALT wave, trigger Failure Escalation (Phase 4)
-5. If all validations pass: proceed to next wave
+1. Dispatch wave tasks via the Pool Manager Protocol (defined in synapse-orchestrator.md):
+   - For each task in the wave, assign to an available pool slot
+   - Pool slots are capped at max_pool_slots (default 3)
+   - If more tasks than slots: excess tasks queue and dispatch as slots free up
+   - Each executor subagent spawned via Task tool with `isolation: "worktree"`
+   - Include SYNAPSE HANDOFF block in each Task prompt
+   - The Pool Manager handles slot assignment, not this workflow
+2. As each executor completes:
+   - Pool Manager captures token usage from Task result
+   - Pool Manager frees the slot and runs dispatch tick
+   - Dispatch tick assigns next queued task (or validator per finish-first policy)
+3. Finish-first policy: when a task completes, its Validator gets the next available slot before any new execution starts
+4. After all wave tasks are executed AND validated: proceed to next wave
+5. If any validation fails: HALT wave, trigger Failure Escalation (Phase 4)
 6. After all feature waves complete: spawn Integration Checker for feature-level validation
 7. If integration passes: merge feature branch to main (sequential merge of task branches into feature branch first)
 8. Update stage document: `stage: "VALIDATING"`
@@ -307,3 +313,4 @@ For each active stage document:
 - Fresh executor per retry (not resumed original) — pass debugger's document in context for continuity
 - Decomposer and Plan Reviewer are separate agents (Decomposer cannot review its own work)
 - All subagents receive `project_id`, `task_id`, and `rpev_stage_doc_id` in every Task call handoff
+- All Task tool calls are mediated by the Pool Manager -- the orchestrator never issues Task calls directly outside the pool dispatch loop

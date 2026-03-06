@@ -3,8 +3,8 @@ gsd_state_version: 1.0
 milestone: v3.0
 milestone_name: Working Prototype
 status: completed
-stopped_at: Completed 22-install-script-01-PLAN.md
-last_updated: "2026-03-06T11:15:02.580Z"
+stopped_at: Completed 23-visibility-notifications-01-PLAN.md
+last_updated: "2026-03-06T14:14:27Z"
 last_activity: 2026-03-05 — Completed Phase 19-03 (Structured SYNAPSE HANDOFF + Task Start Protocols + Validator Findings Pattern)
 progress:
   total_phases: 10
@@ -26,10 +26,10 @@ See: .planning/PROJECT.md (updated 2026-03-03)
 
 ## Current Position
 
-Phase: 19 of 24 (Agent Prompts + Level Awareness) — all 3 plans complete
-Plan: 3 of 3 in current phase (phase complete)
-Status: Phase 19 complete, ready for Phase 20
-Last activity: 2026-03-05 — Completed Phase 19-03 (Structured SYNAPSE HANDOFF + Task Start Protocols + Validator Findings Pattern)
+Phase: 23 of 24 (Visibility + Notifications) — plan 1 of 2 complete
+Plan: 1 of 2 in current phase (1 plan complete, 1 remaining)
+Status: Phase 23 plan 01 complete, ready for Phase 23 plan 02
+Last activity: 2026-03-06 — Completed Phase 23-01 (Statusline RPEV Progress + Orchestrator State File Protocol)
 
 Progress: [██████████] 100%
 
@@ -64,6 +64,7 @@ Progress: [██████████] 100%
 | Phase 21-agent-pool P02 | 2min | 2 tasks | 2 files |
 | Phase 22-install-script P02 | 3min | 1 tasks | 1 files |
 | Phase 22-install-script P01 | 3min | 2 tasks | 2 files |
+| Phase 23-visibility-notifications P01 | 2min | 2 tasks | 2 files |
 
 ## Accumulated Context
 
@@ -125,6 +126,9 @@ Key decisions affecting v3.0:
 - [Phase 22-install-script]: bun -e inline script for JSON merge — avoids jq/sed/python dependencies; Bun already required
 - [Phase 22-install-script]: Local dev mode: detect packages/server/src/index.ts to skip tarball download when running from repo
 - [Phase 22-install-script]: Hook dedup by command filename signature not full object equality — robust to whitespace changes between versions
+- [Phase 23-visibility-notifications]: State file approach (.synapse/state/statusline.json) for statusline data — synchronous readFileSync on <1KB file is effectively instantaneous; no async complexity needed
+- [Phase 23-visibility-notifications]: proactive_notifications=true uses ANSI blink (\x1b[5;31m), false uses dim (\x1b[2m) — visual-only, no terminal bell
+- [Phase 23-visibility-notifications]: projectRoot derived from path.dirname(path.dirname(projectTomlPath)) — goes up from .synapse/config/ to project root
 
 ### Blockers/Concerns
 
@@ -138,6 +142,6 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-03-06T11:11:30.367Z
-Stopped at: Completed 22-install-script-01-PLAN.md
+Last session: 2026-03-06T14:14:27Z
+Stopped at: Completed 23-visibility-notifications-01-PLAN.md
 Resume file: None

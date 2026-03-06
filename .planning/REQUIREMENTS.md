@@ -85,7 +85,7 @@ Requirements for Working Prototype milestone. Each maps to roadmap phases.
 
 ### Visibility
 
-- [ ] **VIS-01**: Progress statusline hook shows active epic, wave count, and task completion in Claude Code
+- [x] **VIS-01**: Progress statusline hook shows active epic, wave count, and task completion in Claude Code
 - [ ] **VIS-02**: project_overview enhanced to show task tree progress alongside document stats
 
 ## Future Requirements
@@ -172,7 +172,7 @@ Which phases cover which requirements. Updated during roadmap creation.
 | INST-02 | Phase 22 | Complete |
 | INST-03 | Phase 22 | Complete |
 | INST-04 | Phase 22 | Complete |
-| VIS-01 | Phase 23 | Pending |
+| VIS-01 | Phase 23-01 | Complete |
 | VIS-02 | Phase 23 | Pending |
 | E2E-01 | Phase 24 | Pending |
 | E2E-02 | Phase 24 | Pending |

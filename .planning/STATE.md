@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v3.0
 milestone_name: Working Prototype
 status: completed
-stopped_at: Completed 20-skills-completion-20-03-PLAN.md
-last_updated: "2026-03-06T05:56:56.613Z"
+stopped_at: Completed 21-agent-pool-21-01-PLAN.md
+last_updated: "2026-03-06T08:32:25.812Z"
 last_activity: 2026-03-05 — Completed Phase 19-03 (Structured SYNAPSE HANDOFF + Task Start Protocols + Validator Findings Pattern)
 progress:
   total_phases: 10
   completed_phases: 6
-  total_plans: 16
-  completed_plans: 16
+  total_plans: 18
+  completed_plans: 17
   percent: 100
 ---
 
@@ -60,6 +60,7 @@ Progress: [██████████] 100%
 | Phase 20-skills-completion P01 | 15min | 2 tasks | 11 files |
 | Phase 20-skills-completion P02 | 16min | 2 tasks | 23 files |
 | Phase 20-skills-completion P03 | 2min | 1 tasks | 1 files |
+| Phase 21-agent-pool P01 | 4min | 3 tasks | 6 files |
 
 ## Accumulated Context
 
@@ -114,6 +115,8 @@ Key decisions affecting v3.0:
 - [Phase 20-skills-completion]: {test_command} placeholder pattern in agent prompts — validator and integration-checker reference testing skill for test runner command, not hardcoded bun test
 - [Phase 20-skills-completion]: SKILL.md 5-section format established at 60-100 lines: Conventions, Quality Criteria, Vocabulary, Anti-patterns, Commands — all skills conform
 - [Phase 20-skills-completion]: trustToml and agentsToml hoisted to outer scope in synapse-startup.js — follows established tierContext/rpevContext/domainContext pattern, eliminates ReferenceError in skillContext block so role_skills manifest is correctly injected into additionalContext
+- [Phase 21-agent-pool]: max_pool_slots replaces max_parallel_executors as canonical pool capacity config key -- covers all agent types sharing the pool
+- [Phase 21-agent-pool]: Pool state document doc_id: pool-state-[project_id] -- fixed pattern enables store_document upsert versioning; finish-first policy: validator for completed task gets next slot before new execution dispatch
 
 ### Blockers/Concerns
 
@@ -127,6 +130,6 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-03-06T05:53:57.230Z
-Stopped at: Completed 20-skills-completion-20-03-PLAN.md
+Last session: 2026-03-06T08:32:25.810Z
+Stopped at: Completed 21-agent-pool-21-01-PLAN.md
 Resume file: None

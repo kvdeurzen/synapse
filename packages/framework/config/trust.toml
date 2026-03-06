@@ -19,6 +19,7 @@ decomposition = "strategic"
 # Decision tier authority -- which tiers each agent can store decisions at
 # Tier 0 = Product Strategy, Tier 1 = Architecture, Tier 2 = Functional Design, Tier 3 = Execution
 [tier_authority]
+synapse-orchestrator = [0, 1, 2, 3]
 product-strategist = [0, 1]
 architect = [1, 2]
 decomposer = [2]

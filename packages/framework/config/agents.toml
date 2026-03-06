@@ -1,5 +1,37 @@
 # Agent registry -- model assignments and configuration
 
+[agents.synapse-orchestrator]
+model = "opus"
+tier = 0
+role_skills = ["architecture-design", "brainstorming", "defining-requirements"]
+allowed_tools = [
+  "Read",
+  "Write",
+  "Edit",
+  "Bash",
+  "Glob",
+  "Grep",
+  "Task",
+  "SendMessage",
+  "mcp__synapse__store_decision",
+  "mcp__synapse__query_decisions",
+  "mcp__synapse__check_precedent",
+  "mcp__synapse__create_task",
+  "mcp__synapse__update_task",
+  "mcp__synapse__get_task_tree",
+  "mcp__synapse__get_smart_context",
+  "mcp__synapse__project_overview",
+  "mcp__synapse__store_document",
+  "mcp__synapse__update_document",
+  "mcp__synapse__query_documents",
+  "mcp__synapse__semantic_search",
+  "mcp__synapse__link_documents",
+  "mcp__synapse__index_codebase",
+  "mcp__synapse__search_code",
+  "mcp__synapse__get_index_status",
+  "mcp__synapse__init_project",
+]
+
 [agents.product-strategist]
 model = "opus"
 tier = 0

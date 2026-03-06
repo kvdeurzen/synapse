@@ -57,6 +57,12 @@ process.stdin.on("end", () => {
     const actor = toolInput.actor || "";
     const requestedTier = typeof toolInput.tier === "number" ? toolInput.tier : 99;
 
+    // No actor = user's main session or slash command — allow all tiers
+    // (Tier 0 still prompts below since it always requires user approval)
+    if (!actor && requestedTier !== 0) {
+      process.exit(0);
+    }
+
     // Tier 0 always requires user approval regardless of actor
     if (requestedTier === 0) {
       process.stdout.write(

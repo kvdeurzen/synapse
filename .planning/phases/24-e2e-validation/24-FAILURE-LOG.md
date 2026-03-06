@@ -20,6 +20,9 @@
 | 2 | Install | tree-sitter native build fails during `bun install` | Node.js 24 headers require C++20 but tree-sitter binding.gyp defaults to C++17; `CXXFLAGS` not set | BLOCKER | PATCHED |
 | 3 | Init | MCP tools not available after install — agent fell back to calling server via bun | MCP servers load at session start; running /synapse:init in the same session as install.sh means the synapse MCP server isn't registered yet. Cascades into map failure (agent can't call index_codebase without MCP context) | BLOCKER | OPEN |
 | 4 | Status | tool-allowlist hook denies all MCP calls from user's main session as "(unknown)" | Hook expects `actor` field in tool_input but main session never sets it; fail-closed treats missing actor as unauthorized | BLOCKER | PATCHED |
+| 5 | Status | /synapse:status layout is inconsistent between runs | status.md gives the agent too much formatting discretion; output structure varies depending on data found and LLM interpretation | DEGRADED | OPEN |
+| 6 | Refine | Agent queries get_smart_context (code overview, 32 items) then immediately spawns Explore agent to read all files anyway (28 tool uses, 58k tokens) | refine.md doesn't instruct agent to trust code index results as sufficient; agent defaults to filesystem exploration even when Synapse already returned code summaries | DEGRADED | OPEN |
+| 7 | Refine | store_decision denied for synapse-orchestrator — both tool-allowlist and tier-gate block it | synapse-orchestrator missing from agents.toml (tool-allowlist) and trust.toml [tier_authority] (tier-gate); slash commands pass actor="synapse-orchestrator" but it was never registered | BLOCKER | PATCHED |
 
 ## Verification Results
 

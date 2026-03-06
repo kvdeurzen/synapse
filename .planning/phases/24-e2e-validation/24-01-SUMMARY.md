@@ -42,24 +42,28 @@ patterns-established:
   - "Alpha release flow: commit all framework files, tag, push, gh release create --prerelease"
 
 metrics:
-  duration: "3min"
-  completed: "2026-03-06T15:39:00Z"
-  tasks_completed: 1
+  duration: "~3h total (Task 1: 3min, Task 2: ~3h user RPEV run)"
+  completed: "2026-03-06T19:00:00Z"
+  tasks_completed: 2
   tasks_total: 2
-  files_changed: 67
+  files_changed: 72
+  failures_logged: 38
+  blocker_patches: 4
+  audit_log_entries: 471
+  audit_log_tokens: 628085
 ---
 
-# Phase 24 Plan 01: Pre-flight + Alpha Release Summary
+# Phase 24 Plan 01: Alpha Release + Full RPEV E2E Run
 
-**Fixed init.md trust.toml schema to full 16-entry involvement matrix, committed 67 framework files, created v3.0.0-alpha.1 GitHub prerelease with tarball verified accessible**
+**Created v3.0.0-alpha.1, installed on rpi-camera-py, ran full RPEV cycle (Refine→Plan→Execute→Validate). 38 failures documented, 4 BLOCKERs patched live. Orchestrator completed full epic with 15 tasks.**
 
 ## Performance
 
-- **Duration:** 3 min
+- **Duration:** ~3h total (Task 1: 3min auto, Task 2: ~3h user-driven RPEV run)
 - **Started:** 2026-03-06T15:36:29Z
-- **Completed:** 2026-03-06T15:39:48Z
-- **Tasks:** 1 of 2 (Task 2 is checkpoint:human-action for user RPEV run)
-- **Files modified:** 67
+- **Completed:** 2026-03-06T19:00:00Z
+- **Tasks:** 2 of 2
+- **Files modified:** 72 (67 framework + 5 live patches)
 
 ## Accomplishments
 
@@ -112,20 +116,71 @@ metrics:
 - **Type:** Pre-release
 - **Commit:** d7c90f5
 
-## Task 2: Checkpoint (human-action)
+## Task 2: RPEV Cycle on rpi-camera-py (Completed)
 
-Task 2 requires the user to install Synapse on rpi-camera-py and run the full RPEV cycle. This is a `checkpoint:human-action` task — the user must participate in drives/co-pilot mode at project and epic levels. Checkpoint details returned to orchestrator.
+Full RPEV cycle ran on rpi-camera-py with user in drives/co-pilot mode.
+
+### RPEV Run Results
+
+**Scope:** 1 epic (Codebase Refactoring), 2 features, 11 work packages + 2 validators + epic integration
+**rpi-camera-py task tree:** 15/15 tasks marked done (orchestrator reported 100%)
+**Audit log:** 471 entries, ~628k estimated tokens across 117 Synapse MCP calls + 354 general tool calls
+
+### Deliverables on rpi-camera-py
+
+- 7 new/refactored modules (adapters/, config.py, device_manager.py, image_processing.py)
+- 100 tests (90 unit + 10 hardware integration via SSH)
+- Type annotations on all public methods
+- Thin gRPC handler layer in camera_server.py
+
+### Live Patches Applied During Run
+
+4 BLOCKER issues patched live (without waiting for 24-02):
+
+| # | Issue | Fix | Commit |
+|---|-------|-----|--------|
+| 1 | install.sh 404 on prerelease tarball | Fallback to `/releases?per_page=1` | 79125f7 |
+| 2 | tree-sitter C++20 build failure | `CXXFLAGS="-std=c++20"` in install.sh | 6838706 |
+| 4 | tool-allowlist denies main session | Allow empty actor pass-through | 6838706 |
+| 7 | store_decision denied for synapse-orchestrator | Add to agents.toml + trust.toml | 79c4426 |
+
+### Failure Log
+
+38 total issues documented in 24-FAILURE-LOG.md:
+- **BLOCKER:** 4 (all PATCHED)
+- **DEGRADED:** 27 (all OPEN)
+- **COSMETIC:** 7 (all OPEN)
+
+Top themes:
+1. No RPEV stage discipline — stages blend without gates or boundary persistence
+2. Orchestrator as bottleneck — does too much bookkeeping instead of delegating
+3. Stale Synapse state — task tree blocked counts and code index diverge from reality
+4. Redundant queries — skills/phases don't share context
+5. No git discipline — no branches, no commits, no scaffolding versioning
+6. Broken observability — 91% of audit entries have agent="unknown"
+
+### Agent Attribution (from audit log)
+
+| Agent | Calls | Tokens | % |
+|-------|-------|--------|---|
+| unknown (main session) | 430 | 611,098 | 97.3% |
+| executor | 26 | 11,903 | 1.9% |
+| architect | 7 | 2,272 | 0.4% |
+| decomposer | 3 | 1,152 | 0.2% |
+| validator | 3 | 275 | 0.04% |
+| integration_checker | 2 | 1,385 | 0.2% |
 
 ## Issues Encountered
 
-- None during Task 1 execution. All steps completed as planned.
+- Task 1: None (all steps completed as planned)
+- Task 2: 38 failures documented — see 24-FAILURE-LOG.md for full details
 
 ## Next Phase Readiness
 
-- v3.0.0-alpha.1 release is live and tarball is accessible
-- User needs to run RPEV cycle on rpi-camera-py (Task 2 checkpoint)
-- After RPEV run: failures documented in 24-FAILURE-LOG.md feed into Plan 24-02 (patch + verify)
+- 24-01 complete: release live, RPEV ran, failures documented
+- 24-02 scope: remaining BLOCKER #3 (session restart instruction), tag alpha.2, abbreviated re-run, SC1-SC4 verification
+- All 4 original BLOCKERs already patched; 24-02 Task 1 mainly needs to commit failure log updates and tag
 
 ---
 *Phase: 24-e2e-validation*
-*Completed: 2026-03-06 (Task 1 only; Task 2 awaiting user action)*
+*Plan 24-01 completed: 2026-03-06*

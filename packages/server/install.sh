@@ -252,11 +252,18 @@ else
   # Determine the version to download
   if [ "$VERSION" = "latest" ]; then
     log_info "Fetching latest release tag from GitHub..."
+    # Try /releases/latest first (stable releases only)
     LATEST_TAG=$(curl -sf "https://api.github.com/repos/kvdeurzen/synapse/releases/latest" \
       2>/dev/null | grep '"tag_name"' | head -1 | sed 's/.*"tag_name": *"\([^"]*\)".*/\1/' || echo "")
+    # Fall back to first release (includes prereleases) if /latest returns nothing
     if [ -z "$LATEST_TAG" ]; then
-      log_warn "Could not fetch latest tag; falling back to v3.0"
-      LATEST_TAG="v3.0"
+      LATEST_TAG=$(curl -sf "https://api.github.com/repos/kvdeurzen/synapse/releases?per_page=1" \
+        2>/dev/null | grep '"tag_name"' | head -1 | sed 's/.*"tag_name": *"\([^"]*\)".*/\1/' || echo "")
+    fi
+    if [ -z "$LATEST_TAG" ]; then
+      log_error "Could not fetch any release tag from GitHub."
+      log_error "Use --version TAG to specify a version manually."
+      exit 1
     fi
     VERSION="$LATEST_TAG"
   fi

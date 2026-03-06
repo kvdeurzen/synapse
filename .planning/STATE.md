@@ -3,9 +3,9 @@ gsd_state_version: 1.0
 milestone: v3.0
 milestone_name: Working Prototype
 status: in_progress
-stopped_at: Phase 24 context gathered
-last_updated: "2026-03-06T18:00:00Z"
-last_activity: 2026-03-06 — Phase 24 context gathered (E2E Validation — rpi-camera-py, full install flow, alpha release)
+stopped_at: "Phase 24-01 Task 1 complete, awaiting user RPEV run on rpi-camera-py (Task 2 checkpoint)"
+last_updated: "2026-03-06T15:40:00Z"
+last_activity: 2026-03-06 — Phase 24-01 Task 1 complete (v3.0.0-alpha.1 released, init.md fixed, 67 framework files committed)
 progress:
   total_phases: 10
   completed_phases: 9
@@ -21,15 +21,15 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-03)
 
 **Core value:** Agents get the right context for any task — from both project decisions and actual code — without wasting tokens on irrelevant content. The orchestrator ensures agents respect established decisions and decompose work to context-window-sized executable units.
-**Current focus:** Phase 24 — E2E Validation (context gathered, ready for planning)
+**Current focus:** Phase 24 — E2E Validation (Plan 24-01 Task 1 complete, awaiting user RPEV run)
 **Previous milestones:** v1.0 Data Layer (shipped 2026-03-01), v2.0 Agentic Framework (shipped 2026-03-02)
 
 ## Current Position
 
-Phase: 24 of 24 (E2E Validation) — context gathered, 0/2 plans complete
-Plan: 0 of 2 in current phase
-Status: Phase 24 context gathered, ready for planning
-Last activity: 2026-03-06 — Phase 24 context gathered (E2E Validation on rpi-camera-py)
+Phase: 24 of 24 (E2E Validation) — Plan 24-01 in progress, 0/2 plans complete
+Plan: 1 of 2 in current phase (24-01 at checkpoint, awaiting user RPEV run)
+Status: v3.0.0-alpha.1 released, awaiting user RPEV run on rpi-camera-py
+Last activity: 2026-03-06 — Phase 24-01 Task 1 complete (alpha release + init.md fix)
 
 Progress: [██████████] 100%
 
@@ -66,6 +66,7 @@ Progress: [██████████] 100%
 | Phase 22-install-script P01 | 3min | 2 tasks | 2 files |
 | Phase 23-visibility-notifications P01 | 2min | 2 tasks | 2 files |
 | Phase 23-visibility-notifications P02 | 6min | 2 tasks | 3 files |
+| Phase 24-e2e-validation P01 | 3min | 1 task (of 2) | 67 files |
 
 ## Accumulated Context
 
@@ -133,6 +134,8 @@ Key decisions affecting v3.0:
 - [Phase 23-02]: project_overview composes getTaskTree per epic internally — callers no longer need separate get_task_tree calls for epic-level rollup stats
 - [Phase 23-02]: needs_attention always initialized when task_progress exists (even if both arrays empty) — callers can safely access without null check
 - [Phase 23-02]: rpev_stage_counts only added to epic entry when at least one child task has a stage doc — avoids empty zero-filled objects
+- [Phase 24-01]: init.md updated to full 16-entry [rpev.involvement] matrix (drives/co-pilot/reviews/monitors/autopilot x 4 levels) — replaces stale 4-key [rpev] section. Both tracked and untracked copies updated
+- [Phase 24-01]: v3.0.0-alpha.1 GitHub prerelease created with 67 committed framework files — tarball includes packages/framework/ (agents, hooks, commands, skills) + packages/server/install.sh
 
 ### Blockers/Concerns
 
@@ -146,6 +149,6 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-03-06T18:00:00Z
-Stopped at: Phase 24 context gathered
-Resume file: .planning/phases/24-e2e-validation/24-CONTEXT.md
+Last session: 2026-03-06T15:40:00Z
+Stopped at: Phase 24-01 Task 1 complete, awaiting user RPEV run on rpi-camera-py (Task 2 checkpoint)
+Resume file: .planning/phases/24-e2e-validation/24-01-SUMMARY.md

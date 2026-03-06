@@ -17,6 +17,7 @@
 | # | When | Issue | Root Cause | Severity | Status |
 |---|------|-------|------------|----------|--------|
 | 1 | Install | install.sh fails with 404 on tarball download | `/releases/latest` API returns empty for prerelease-only repos; fallback hardcoded to non-existent `v3.0` tag | BLOCKER | PATCHED |
+| 2 | Install | tree-sitter native build fails during `bun install` | Node.js 24 headers require C++20 but tree-sitter binding.gyp defaults to C++17; `CXXFLAGS` not set | BLOCKER | PATCHED |
 
 ## Verification Results
 

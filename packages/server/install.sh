@@ -376,8 +376,13 @@ cp -r "$SYNAPSE_SOURCE/packages/server/." "$TARGET_DIR/.claude/server/"
 log_step "Server: copied to .claude/server/"
 
 # Install server dependencies (native tree-sitter binaries require bun install)
+# Node.js 24 headers require C++20; tree-sitter's binding.gyp defaults to C++17
 log_info "Installing server dependencies (native binaries)..."
-(cd "$TARGET_DIR/.claude/server" && bun install --production 2>&1 | tail -3)
+if ! (cd "$TARGET_DIR/.claude/server" && CXXFLAGS="-std=c++20" bun install --production 2>&1 | tail -5); then
+  log_warn "bun install had errors — attempting to continue."
+  log_info "If tree-sitter failed to build, /synapse:map (code indexing) may not work."
+  log_info "Fix: cd $TARGET_DIR/.claude/server && CXXFLAGS=-std=c++20 bun install"
+fi
 log_step "Server dependencies installed"
 
 # Copy config templates (only if not already present — preserve user customizations)

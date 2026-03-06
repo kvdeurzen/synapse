@@ -303,8 +303,7 @@ async function runSmokeTest() {
       name: "store_document",
       arguments: {
         project_id: projectId,
-        doc_id: "smoke-doc",
-        category: "note",
+        category: "technical_context",
         title: "Smoke Test",
         content: "This is a smoke test document for Synapse installation verification.",
       },
@@ -347,8 +346,9 @@ async function runSmokeTest() {
     return false;
   }
 
-  // Verify results array is non-empty
-  const results = /** @type {any} */ (searchResult).results;
+  // Verify results array is non-empty (response shape: { success, data: { results, total, search_type } })
+  const data = /** @type {any} */ (searchResult).data;
+  const results = data?.results ?? /** @type {any} */ (searchResult).results;
   if (!Array.isArray(results) || results.length === 0) {
     console.error(`  Smoke: semantic_search... FAILED`);
     console.error(`  Error: Expected non-empty results array, got: ${JSON.stringify(results)}`);

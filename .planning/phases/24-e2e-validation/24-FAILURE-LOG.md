@@ -16,7 +16,7 @@
 
 | # | When | Issue | Root Cause | Severity | Status |
 |---|------|-------|------------|----------|--------|
-| — | — | — | — | — | — |
+| 1 | Install | install.sh fails with 404 on tarball download | `/releases/latest` API returns empty for prerelease-only repos; fallback hardcoded to non-existent `v3.0` tag | BLOCKER | PATCHED |
 
 ## Verification Results
 

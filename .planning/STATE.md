@@ -3,8 +3,8 @@ gsd_state_version: 1.0
 milestone: v3.0
 milestone_name: Working Prototype
 status: completed
-stopped_at: Completed 22-02-PLAN.md
-last_updated: "2026-03-06T11:10:59.170Z"
+stopped_at: Completed 22-install-script-01-PLAN.md
+last_updated: "2026-03-06T11:11:30.371Z"
 last_activity: 2026-03-05 — Completed Phase 19-03 (Structured SYNAPSE HANDOFF + Task Start Protocols + Validator Findings Pattern)
 progress:
   total_phases: 10
@@ -63,6 +63,7 @@ Progress: [██████████] 100%
 | Phase 21-agent-pool P01 | 4min | 3 tasks | 6 files |
 | Phase 21-agent-pool P02 | 2min | 2 tasks | 2 files |
 | Phase 22-install-script P02 | 3min | 1 tasks | 1 files |
+| Phase 22-install-script P01 | 3min | 2 tasks | 2 files |
 
 ## Accumulated Context
 
@@ -121,6 +122,9 @@ Key decisions affecting v3.0:
 - [Phase 21-agent-pool]: Pool state document doc_id: pool-state-[project_id] -- fixed pattern enables store_document upsert versioning; finish-first policy: validator for completed task gets next slot before new execution dispatch
 - [Phase 21-agent-pool]: Agent-based detection checked first in focus.md -- /^agent\s+[A-Z]$/i precedes name-based check since 'agent A' is valid name-based input
 - [Phase 21-agent-pool]: Cancel action in /synapse:focus updates pool-state document directly and calls update_task -- slot cleared immediately, pool dispatch tick fills it on next cycle
+- [Phase 22-install-script]: bun -e inline script for JSON merge — avoids jq/sed/python dependencies; Bun already required
+- [Phase 22-install-script]: Local dev mode: detect packages/server/src/index.ts to skip tarball download when running from repo
+- [Phase 22-install-script]: Hook dedup by command filename signature not full object equality — robust to whitespace changes between versions
 
 ### Blockers/Concerns
 
@@ -134,6 +138,6 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-03-06T11:10:59.167Z
-Stopped at: Completed 22-02-PLAN.md
+Last session: 2026-03-06T11:11:30.367Z
+Stopped at: Completed 22-install-script-01-PLAN.md
 Resume file: None

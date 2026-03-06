@@ -55,9 +55,9 @@ Requirements for Working Prototype milestone. Each maps to roadmap phases.
 
 ### Install
 
-- [ ] **INST-01**: install.sh checks prerequisites (Bun, Ollama running, nomic-embed-text model)
-- [ ] **INST-02**: install.sh copies agents, hooks, commands to `.claude/` and generates settings.json and .mcp.json
-- [ ] **INST-03**: install.sh runs smoke test (init_project → store_document → semantic_search) before declaring success
+- [x] **INST-01**: install.sh checks prerequisites (Bun, Ollama running, nomic-embed-text model)
+- [x] **INST-02**: install.sh copies agents, hooks, commands to `.claude/` and generates settings.json and .mcp.json
+- [x] **INST-03**: install.sh runs smoke test (init_project → store_document → semantic_search) before declaring success
 - [x] **INST-04**: Usage manual documents the complete user journey, commands reference, and configuration
 
 ### Skills
@@ -168,9 +168,9 @@ Which phases cover which requirements. Updated during roadmap creation.
 | POOL-02 | Phase 21-01 | Complete |
 | POOL-03 | Phase 21-02 | Complete |
 | POOL-04 | Phase 21-02 | Complete |
-| INST-01 | Phase 22 | Pending |
-| INST-02 | Phase 22 | Pending |
-| INST-03 | Phase 22 | Pending |
+| INST-01 | Phase 22 | Complete |
+| INST-02 | Phase 22 | Complete |
+| INST-03 | Phase 22 | Complete |
 | INST-04 | Phase 22 | Complete |
 | VIS-01 | Phase 23 | Pending |
 | VIS-02 | Phase 23 | Pending |

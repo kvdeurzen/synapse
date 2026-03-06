@@ -182,8 +182,8 @@ Plans:
 **Plans**: 2 plans
 
 Plans:
-- [ ] 22-01: install.sh — prerequisite checks, file copy, settings.json generation, .synapse/config/ skeleton
-- [ ] 22-02: Ollama smoke test integration and usage manual (INST-04)
+- [ ] 22-01-PLAN.md — install.sh + smoke-test.mjs: prerequisite checks, file copy, settings.json/mcp.json generation and merge, smoke test (INST-01, INST-02, INST-03)
+- [ ] 22-02-PLAN.md — Usage manual: expand docs/user-journey.md with install, commands, config, troubleshooting (INST-04)
 
 ### Phase 23: Visibility + Notifications
 **Goal**: Users see progress in Claude Code and get notified about blocked items per their trust config

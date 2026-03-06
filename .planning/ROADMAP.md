@@ -51,7 +51,7 @@ See [v2.0 Archive](milestones/v2.0-ROADMAP.md) for full details.
 - [x] **Phase 20: Skills Completion** - dynamic skill injection from project.toml, language-agnostic agents, fleshed-out skills, new generic skills (completed 2026-03-05)
 - [x] **Phase 21: Agent Pool** - configurable slots, auto-assignment, work queue, agent-based focus (completed 2026-03-06)
 - [x] **Phase 22: Install Script** - one-command install.sh with prerequisite checks, file wiring, and Ollama smoke test (completed 2026-03-06)
-- [ ] **Phase 23: Visibility + Notifications** - statusline hook, blocked counter, project_overview progress, configurable notifications
+- [x] **Phase 23: Visibility + Notifications** - statusline hook, blocked counter, project_overview progress, configurable notifications (completed 2026-03-06)
 - [ ] **Phase 24: E2E Validation** - full RPEV cycle on a real task, hook verification, failure log, status verification
 
 ## Phase Details

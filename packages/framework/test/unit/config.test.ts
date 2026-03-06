@@ -391,7 +391,7 @@ decomposition = "strategic"
 
 [pev]
 approval_threshold = "feature"
-max_parallel_executors = 4
+max_pool_slots = 4
 max_retries_task = 2
 max_retries_feature = 1
 max_retries_epic = 0
@@ -400,7 +400,7 @@ max_retries_epic = 0
 
     const config = loadTrustConfig(configPath);
     expect(config.pev.approval_threshold).toBe("feature");
-    expect(config.pev.max_parallel_executors).toBe(4);
+    expect(config.pev.max_pool_slots).toBe(4);
     expect(config.pev.max_retries_task).toBe(2);
     expect(config.pev.max_retries_feature).toBe(1);
     expect(config.pev.max_retries_epic).toBe(0);
@@ -422,7 +422,7 @@ decomposition = "strategic"
 
     const config = loadTrustConfig(configPath);
     expect(config.pev.approval_threshold).toBe("epic");
-    expect(config.pev.max_parallel_executors).toBe(3);
+    expect(config.pev.max_pool_slots).toBe(3);
     expect(config.pev.max_retries_task).toBe(3);
     expect(config.pev.max_retries_feature).toBe(2);
     expect(config.pev.max_retries_epic).toBe(1);
@@ -451,14 +451,14 @@ approval_threshold = "invalid"
     expect(threwConfigError).toBe(true);
   });
 
-  test("pev.max_parallel_executors must be positive (min 1)", () => {
+  test("pev.max_pool_slots must be positive (min 1)", () => {
     tmpDir = makeTmpDir();
     const configPath = join(tmpDir, "trust.toml");
     writeFileSync(
       configPath,
       `
 [pev]
-max_parallel_executors = 0
+max_pool_slots = 0
 `,
     );
 

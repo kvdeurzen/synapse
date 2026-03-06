@@ -46,6 +46,13 @@ Requirements for Working Prototype milestone. Each maps to roadmap phases.
 - [x] **AGENT-10**: Decomposer populates context_refs (document_ids, decision_ids) on leaf tasks
 - [x] **AGENT-11**: Executor and Validator fetch context_refs at start of each task
 
+### Agent Pool
+
+- [ ] **POOL-01**: Pool config in `trust.toml` defines max concurrent agent slots (`max_pool_slots`) — the system respects the configured limit
+- [ ] **POOL-02**: Unblocked work items are auto-assigned to available agent slots by priority (finish-first, epic priority, wave order, cross-epic fill) — no manual agent dispatch required
+- [ ] **POOL-03**: `/synapse:focus agent C` shows what agent C is working on and allows interaction (detail view + cancel with requeue/skip)
+- [ ] **POOL-04**: `/synapse:status` displays agent pool activity (active agents, current tasks, idle slots, queue count) and token usage aggregates on epic/feature lines
+
 ### Install
 
 - [ ] **INST-01**: install.sh checks prerequisites (Bun, Ollama running, nomic-embed-text model)
@@ -157,6 +164,10 @@ Which phases cover which requirements. Updated during roadmap creation.
 | SKILL-03 | Phase 20 | Complete |
 | SKILL-04 | Phase 20 | Complete |
 | SKILL-05 | Phase 20 | Complete |
+| POOL-01 | Phase 21-01 | Pending |
+| POOL-02 | Phase 21-01 | Pending |
+| POOL-03 | Phase 21-02 | Pending |
+| POOL-04 | Phase 21-02 | Pending |
 | INST-01 | Phase 22 | Pending |
 | INST-02 | Phase 22 | Pending |
 | INST-03 | Phase 22 | Pending |
@@ -169,10 +180,10 @@ Which phases cover which requirements. Updated during roadmap creation.
 | E2E-04 | Phase 24 | Pending |
 
 **Coverage:**
-- v3.0 requirements: 47 total (39 original + 8 RPEV)
-- Mapped to phases: 47
+- v3.0 requirements: 51 total (39 original + 8 RPEV + 4 Agent Pool)
+- Mapped to phases: 51
 - Unmapped: 0
 
 ---
 *Requirements defined: 2026-03-03*
-*Last updated: 2026-03-05 after Phase 18 planning (RPEV requirements added, traceability corrected)*
+*Last updated: 2026-03-06 after Phase 21 planning (POOL requirements added)*

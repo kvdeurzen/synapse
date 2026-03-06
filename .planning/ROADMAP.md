@@ -158,16 +158,17 @@ Plans:
 ### Phase 21: Agent Pool
 **Goal**: Configurable pool of agent slots that auto-assigns to highest-priority unblocked work, enabling the "system drives, user unblocks" model
 **Depends on**: Phase 18, Phase 19
-**Requirements**: TBD (POOL-xx IDs, research needed)
+**Requirements**: POOL-01, POOL-02, POOL-03, POOL-04
 **Success Criteria** (what must be TRUE):
   1. Pool config in `trust.toml` defines max concurrent agent slots — the system respects the configured limit
   2. Unblocked work items are auto-assigned to available agent slots by priority — no manual agent dispatch required
   3. `/synapse:focus agent C` shows what agent C is working on and allows interaction
   4. `/synapse:status` displays agent pool activity (active agents, their current tasks, idle slots)
-**Plans**: TBD (research needed)
+**Plans**: 2 plans
 
 Plans:
-- [ ] 21-01 to 21-xx: TBD (research needed)
+- [ ] 21-01-PLAN.md — Config + pool manager core: trust.toml max_pool_slots, startup injection, orchestrator Pool Manager Protocol, pev-workflow pool dispatch (POOL-01, POOL-02)
+- [ ] 21-02-PLAN.md — Visibility + agent interaction: status.md live pool section + token aggregates, focus.md agent detail view + cancel action (POOL-03, POOL-04)
 
 ### Phase 22: Install Script
 **Goal**: A new user can wire Synapse into any project with a single command and receive actionable feedback at every step
@@ -241,7 +242,7 @@ Parallelizable: Phase 17 (Tech Debt) and Phase 20 (Skills) can proceed in parall
 | 18. RPEV Orchestration | 3/3 | Complete    | 2026-03-05 | - |
 | 19. Agent Prompts + Level-Awareness | 3/3 | Complete    | 2026-03-05 | - |
 | 20. Skills Completion | 3/3 | Complete    | 2026-03-06 | - |
-| 21. Agent Pool | v3.0 | 0/~2 | Not started | - |
+| 21. Agent Pool | v3.0 | 0/2 | Not started | - |
 | 22. Install Script | v3.0 | 0/2 | Not started | - |
 | 23. Visibility + Notifications | v3.0 | 0/~2 | Not started | - |
 | 24. E2E Validation | v3.0 | 0/2 | Not started | - |

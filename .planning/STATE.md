@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v3.0
 milestone_name: Working Prototype
 status: completed
-stopped_at: Completed 20-skills-completion-20-02-PLAN.md
-last_updated: "2026-03-05T21:36:19.013Z"
+stopped_at: Completed 20-skills-completion-20-03-PLAN.md
+last_updated: "2026-03-06T05:53:57.232Z"
 last_activity: 2026-03-05 — Completed Phase 19-03 (Structured SYNAPSE HANDOFF + Task Start Protocols + Validator Findings Pattern)
 progress:
   total_phases: 10
   completed_phases: 6
-  total_plans: 15
-  completed_plans: 15
+  total_plans: 16
+  completed_plans: 16
   percent: 100
 ---
 
@@ -59,6 +59,7 @@ Progress: [██████████] 100%
 | Phase 19-agent-prompts P03 | 2 | 2 tasks | 4 files |
 | Phase 20-skills-completion P01 | 15min | 2 tasks | 11 files |
 | Phase 20-skills-completion P02 | 16min | 2 tasks | 23 files |
+| Phase 20-skills-completion P03 | 2min | 1 tasks | 1 files |
 
 ## Accumulated Context
 
@@ -112,6 +113,7 @@ Key decisions affecting v3.0:
 - [Phase 20-skills-completion]: role_skills replaces skills in agents.toml entirely — skills field removed from all agents; AgentsConfigSchema updated to include role_skills field with default []
 - [Phase 20-skills-completion]: {test_command} placeholder pattern in agent prompts — validator and integration-checker reference testing skill for test runner command, not hardcoded bun test
 - [Phase 20-skills-completion]: SKILL.md 5-section format established at 60-100 lines: Conventions, Quality Criteria, Vocabulary, Anti-patterns, Commands — all skills conform
+- [Phase 20-skills-completion]: trustToml and agentsToml hoisted to outer scope in synapse-startup.js — follows established tierContext/rpevContext/domainContext pattern, eliminates ReferenceError in skillContext block so role_skills manifest is correctly injected into additionalContext
 
 ### Blockers/Concerns
 
@@ -125,6 +127,6 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-03-05T21:36:19.011Z
-Stopped at: Completed 20-skills-completion-20-02-PLAN.md
+Last session: 2026-03-06T05:53:57.230Z
+Stopped at: Completed 20-skills-completion-20-03-PLAN.md
 Resume file: None

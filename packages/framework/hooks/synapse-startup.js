@@ -221,6 +221,14 @@ process.stdin.on("end", () => {
           }
         }
 
+        // Pool config
+        const maxPoolSlots = trustToml.rpev.max_pool_slots ?? 3;
+        rpevLines.push(
+          "",
+          "## Agent Pool Config",
+          `  max_pool_slots: ${maxPoolSlots}  (default: 3, all agent types share this limit)`,
+        );
+
         rpevContext = rpevLines.join("\n");
       }
 

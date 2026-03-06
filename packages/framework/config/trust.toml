@@ -72,8 +72,8 @@ work_package_validate = "autopilot"
 [rpev]
 explicit_gate_levels = ["project", "epic"]
 proactive_notifications = false
-# Maximum parallel executor subagents per wave
-max_parallel_executors = 3
+# Maximum concurrent agent slots in the pool (all agent types share this limit)
+max_pool_slots = 3
 # Maximum retry attempts per layer before escalation
 max_retries_task = 3
 max_retries_feature = 2

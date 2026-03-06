@@ -21,11 +21,17 @@ Navigate to a specific item in the project hierarchy and present its full contex
 ## Process
 
 1. **Parse input:** The user provides either:
+   - **Agent-based**: `/synapse:focus agent A` or `/synapse:focus agent B`
    - **Name-based**: `/synapse:focus "JWT token refresh"` or `/synapse:focus auth strategy`
    - **Path shorthand**: `/synapse:focus 2.3.1` (digits separated by dots)
    - **No argument**: Ask "What would you like to focus on? You can use a name (fuzzy matched) or a path like 2.3 (Epic 2, Feature 3)."
 
-   Detect which mode by checking if the argument matches `/^\d+(\.\d+)*$/` (path shorthand) or is text (name-based).
+   Detect which mode by checking in this order:
+   1. Agent-based FIRST: if argument matches `/^agent\s+[A-Z]$/i` — go to step 8
+   2. Path shorthand: if argument matches `/^\d+(\.\d+)*$/` — go to step 2
+   3. Name-based: any other text — go to step 3
+
+   (Agent-based must be checked first since "agent A" would otherwise be treated as a name search.)
 
 2. **Resolve item — Path shorthand mode:**
    - Call `mcp__synapse__get_task_tree` with `actor: "synapse-orchestrator"` to get the full task tree
@@ -154,8 +160,76 @@ Navigate to a specific item in the project hierarchy and present its full contex
      ```
    - If stage is REFINING/waiting: "This item is waiting for you to refine it. Run `/synapse:refine \"[title]\"` to start."
 
-**Deferred features:**
-- **Agent-based focus** (`/synapse:focus agent C`) is deferred to the Agent Pool phase. If the user tries this pattern, respond: "Agent-based focus will be available when the Agent Pool is active (Phase 21). For now, use item names or path shorthand."
+8. **Handle agent-based focus:** When the argument matches `/^agent\s+[A-Z]$/i`:
+
+   a. Extract the slot letter (uppercase).
+
+   b. Query the pool-state document:
+      ```
+      mcp__synapse__query_documents({
+        project_id: "[project_id]",
+        category: "plan",
+        tags: "|pool-state|"
+      })
+      ```
+
+   c. If no pool-state document found:
+      ```
+      Agent pool is not yet active. The orchestrator will start the pool when work is dispatched.
+      Use `/synapse:status` for current project state.
+      ```
+
+   d. Parse the pool-state document JSON. Look up the requested slot letter in the `slots` map.
+
+   e. If the slot letter exceeds max_slots (e.g., user asks for Agent D when max_slots=3):
+      ```
+      Agent pool has {max_slots} slots (A through {last_letter}). Slot {letter} does not exist.
+      Use `/synapse:status` to see active agents.
+      ```
+
+   f. If the slot is null (idle):
+      ```
+      ## Agent {letter}: idle
+
+      No task currently assigned to this slot.
+      Use `/synapse:status` to see overall pool activity.
+      ```
+
+   g. If the slot has an assigned task, render the detail view:
+      ```
+      ## Agent {letter}: [{agent_type}]
+
+      **Task:** {task_title}
+      **Epic:** {epic_title}
+      **Running:** {minutes}m {seconds}s
+      **Stage:** {rpev_stage}
+
+      ### Recent Activity
+      {For each entry in recent_tool_calls (last 3-5), newest first:}
+      - {tool} {arg} ({time_ago} ago)
+
+      {If recent_tool_calls is empty:}
+      No activity recorded yet.
+
+      ### Actions
+      A) Cancel this agent
+      B) Back to status (`/synapse:status`)
+      ```
+
+      Computing running time: subtract `started_at` from current time.
+      Computing time_ago for tool calls: subtract `at` from current time.
+
+   h. **Cancel action flow:** If the user selects Cancel (option A):
+      1. Confirm: "Cancel Agent {letter} running '{task_title}'? This will stop the agent."
+      2. After user confirms, prompt: "What should happen to the task?"
+         - **Requeue**: "Returning task to queue. It will be picked up by the next available slot."
+           Call `mcp__synapse__update_task({ project_id, task_id: [slot.task_id], status: "ready", actor: "synapse-orchestrator" })`
+           Note: the executor's git worktree is discarded automatically (isolation: "worktree" handles cleanup).
+         - **Skip**: "Marking task as skipped."
+           Call `mcp__synapse__update_task({ project_id, task_id: [slot.task_id], status: "done", tags: "[existing_tags]|skipped=true|", actor: "synapse-orchestrator" })`
+      3. Update pool-state document: set the slot to null, remove from queue if present.
+         Call `mcp__synapse__store_document` with the updated pool-state JSON.
+      4. Confirm: "Agent {letter} cancelled. Task '{task_title}' has been [requeued/skipped]. The pool manager will fill the slot on next dispatch."
 
 **Anti-patterns:**
 - Do NOT show raw task_ids to the user — show titles and path shorthand only

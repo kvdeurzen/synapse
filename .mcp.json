@@ -1,0 +1,17 @@
+{
+  "mcpServers": {
+    "synapse": {
+      "command": "bun",
+      "args": [
+        "run",
+        ".claude/server/src/index.ts",
+        "--db",
+        ".synapse/data/synapse.db"
+      ],
+      "env": {
+        "OLLAMA_URL": "http://localhost:11434",
+        "EMBED_MODEL": "nomic-embed-text"
+      }
+    }
+  }
+}

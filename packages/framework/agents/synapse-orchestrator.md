@@ -184,14 +184,14 @@ For each feature when it becomes active:
 
 1. Analyze task dependencies within the active feature
 2. Tasks with no unmet dependencies = Wave 1; their dependents = Wave 2; and so on
-3. Cap parallel executors at `rpev.max_parallel_executors` concurrent subagents per wave
+3. Cap parallel agents at `max_pool_slots` concurrent subagents (managed by the Pool Manager)
 
 ### Executing a Wave
 
 Before wave execution: Update stage document: `stage: "EXECUTING"`, `pending_approval: false`
 
 1. For each task in the wave, spawn an Executor subagent via Task tool with `isolation: "worktree"`
-   - Issue all Task tool calls in a single turn for true parallel execution
+   - Dispatch wave tasks via the Pool Manager Protocol -- do NOT issue all Task calls in one turn. Assign tasks to available pool slots up to max_pool_slots. When a slot completes, the dispatch tick pulls the next queued task automatically.
    - Include SYNAPSE HANDOFF block in each Task prompt with: project_id, task_id, hierarchy_level=task, rpev_stage_doc_id, doc_ids and decision_ids from CONTEXT_REFS
 2. Await all executor results before proceeding
 3. For each completed task: spawn Validator subagent to check output against spec and decisions
@@ -208,6 +208,108 @@ After validation passes: Update stage document: `stage: "DONE"`, `pending_approv
 8. Emit wave checkpoint status block (see Checkpoint Format section)
 
 Wave N+1 starts ONLY after ALL tasks in wave N are validated complete.
+
+## Pool Manager Protocol
+
+The orchestrator manages a pool of N agent slots (N = max_pool_slots from session context, default 3). Every subagent spawned via Task tool consumes a slot. Slots are named A, B, C (up to N). When all slots are busy, new work queues. The pool replaces the old "issue all Task calls in one turn" pattern.
+
+### Pool State Document
+
+The pool state document tracks slot assignments, the work queue, and token usage across all active agents.
+
+- **doc_id:** `pool-state-[project_id]` (fixed pattern, enables upsert versioning)
+- **Store via:** `mcp__synapse__store_document` with `category: "plan"`, `tags: "|pool-state|active|"`, `actor: "synapse-orchestrator"`
+- **Schema:**
+
+```json
+{
+  "project_id": "string",
+  "max_slots": 3,
+  "slots": {
+    "A": { "task_id": "string", "task_title": "string", "agent_type": "string",
+            "epic_title": "string", "epic_id": "string", "started_at": "ISO string",
+            "rpev_stage": "string", "recent_tool_calls": [] },
+    "B": null,
+    "C": null
+  },
+  "queue": [{ "task_id": "string", "task_title": "string", "epic_id": "string", "type": "string" }],
+  "tokens_by_task": { "task_id": "number" },
+  "last_updated": "ISO string"
+}
+```
+
+- **When to write:** On every slot assignment change (task assigned, task completed, task cancelled)
+- **When to read:** At session start for recovery, by `/synapse:status` and `/synapse:focus agent X`
+
+### Session Start Recovery
+
+On session start:
+
+1. Read pool-state document via `query_documents(category: "plan", tags: "|pool-state|")`
+2. If it exists and shows slots with non-null task assignments: those Task tool calls are orphaned (previous session ended)
+3. For each orphaned slot: check task status via `get_task_tree`. If task is still "in_progress", mark it as interrupted: call `update_task(status: "ready")` to re-queue it
+4. Clear all slots in pool state (set to null)
+5. Emit recovery message: "Found [N] abandoned in-flight tasks from previous session. Re-queuing them."
+6. Run dispatch tick to fill slots with available work
+
+### Priority Algorithm (Dispatch Tick)
+
+Run a dispatch tick when: a slot opens (task completes/cancelled) OR new work arrives (task created/unblocked).
+
+Priority order (finish-first policy):
+
+1. **Pending validators** for tasks with status "done" that have not yet been validated (check for completed tasks without a validator-findings document linked). Finish-first scoped to current wave only -- once all current-wave validations pass, move on.
+2. **Pending integration checks** for features where all child tasks are validated complete
+3. **Highest-priority epic's next unblocked task** by wave order (lowest wave number first, then creation order within wave). Only pull from features already in EXECUTING stage (already decomposed into tasks).
+4. **Cross-epic fill** -- repeat step 3 for lower-priority epics. Only pull tasks from features that are already decomposed and in wave execution. Do NOT trigger JIT decomposition of a lower-priority epic's features to fill slots.
+5. **Idle** -- if nothing remains to dispatch, check if all pending work is blocked:
+   - All blocked: emit proactive message "All unblocked work assigned. Items waiting for your approval: [list pending_approval items]"
+   - All done: emit "All work complete for this epic/project."
+
+### Dispatch Loop Pseudocode
+
+```
+On dispatch tick:
+1. available_slots = [s for s in slots if s.value is null]
+2. If no available slots: stop
+3. Build work_queue via priority algorithm (steps 1-4 above)
+4. For each item in work_queue (up to len(available_slots)):
+   a. Assign to next available slot (A before B before C)
+   b. Determine agent_type from task context:
+      - Task needing validation -> "validator"
+      - Feature needing integration check -> "integration-checker"
+      - Task ready for execution -> "executor"
+   c. Spawn Task tool call with SYNAPSE HANDOFF block and appropriate agent
+   d. Update pool-state document with slot assignment
+5. If work_queue empty after fill: check blocked/done state (step 5 above)
+```
+
+### On Task Completion
+
+When a Task tool call completes:
+
+1. Identify which slot completed (by tracking which Task call maps to which slot)
+2. Extract token usage if available: if the Task result contains usage data, compute total = input_tokens + output_tokens
+3. Store token count: call `update_task` with tags updated to include `|tokens_used=[total]|`. Pattern for existing tags: `tags.replace(/\|tokens_used=\d+\|/, '') + '|tokens_used=' + total + '|'` (replace existing if re-run)
+4. Update pool-state document: set `tokens_by_task[task_id] = total`, update slot assignment
+5. Free the slot (set to null)
+6. Run dispatch tick to fill the opened slot
+
+### Token Usage Storage
+
+- After each Task tool completes, extract `usage.input_tokens + usage.output_tokens` from the result
+- Store on the task via `update_task` with the `|tokens_used=N|` tag pattern
+- Also write to pool-state document's `tokens_by_task` map for quick aggregate access
+- Token parsing regex: `/\|tokens_used=(\d+)\|/` -- extract the number from tags string
+- If `update_task` already has a tokens_used tag (retry scenario), replace the existing value
+
+### Anti-Patterns
+
+- NEVER spawn Task tool calls outside the pool manager -- ALL Task calls go through pool dispatch
+- NEVER issue all wave Task calls in one turn -- the pool caps at max_pool_slots
+- Slot letters (A, B, C) map to slot indices, NOT task identity. A = slot 0 always
+- Cross-epic fill: only pull from features already in EXECUTING stage. Do NOT trigger JIT decomposition just to fill a slot
+- If pool-state shows in-flight tasks at session start, don't wait for them -- they are orphaned. Re-queue and continue.
 
 ## Failure Escalation Protocol
 

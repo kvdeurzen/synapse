@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v3.0
 milestone_name: Working Prototype
 status: in_progress
-stopped_at: "Phase 25 expanded — plans 25-05 (research-driven decisions) and 25-06 (PR workflow) added"
-last_updated: "2026-03-07T15:30:00Z"
-last_activity: 2026-03-07 — Phase 25 expanded to 6 plans. Plans 01-03 complete. New plans 05-06 added for research capabilities and PR workflow.
+stopped_at: "Completed 25-06-PLAN.md (PR workflow for orchestrator)"
+last_updated: "2026-03-07T08:20:00Z"
+last_activity: 2026-03-07 — Phase 25 plan 06 complete. PR workflow added to orchestrator replacing direct merge with gh pr create, involvement-mode merge gate, and explicit git revert rollback commands.
 progress:
   total_phases: 11
   completed_phases: 10
   total_plans: 28
-  completed_plans: 25
-  percent: 89
+  completed_plans: 26
+  percent: 93
 ---
 
 # Project State
@@ -21,15 +21,15 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-03)
 
 **Core value:** Agents get the right context for any task — from both project decisions and actual code — without wasting tokens on irrelevant content. The orchestrator ensures agents respect established decisions and decompose work to context-window-sized executable units.
-**Current focus:** Phase 25 — Agent Behavior Hardening (executing, 3/6 plans complete)
+**Current focus:** Phase 25 — Agent Behavior Hardening (executing, 5/6 plans complete)
 **Previous milestones:** v1.0 Data Layer (shipped 2026-03-01), v2.0 Agentic Framework (shipped 2026-03-02)
 
 ## Current Position
 
 Phase: 25 of 25 (Agent Behavior Hardening) — executing
-Plan: 3 of 6 in current phase (25-01, 25-02, 25-03 complete)
-Status: Phase 25 expanded to 6 plans. Wave 1: 01-03 done, 05-06 ready. Wave 2: 04 (E2E re-validation, blocked on all Wave 1). New scope: research-driven decisions (ABH-07), PR workflow (ABH-08).
-Last activity: 2026-03-07 — Phase 25 expanded with plans 05 (research capabilities) and 06 (PR workflow)
+Plan: 6 of 6 in current phase (25-01, 25-02, 25-03, 25-05, 25-06 complete; 25-04 pending E2E re-validation)
+Status: Wave 1 complete (01, 02, 03, 05, 06 done). Wave 2: 04 (E2E re-validation) is the remaining plan.
+Last activity: 2026-03-07 — Plan 25-06 complete: PR workflow added to orchestrator (gh pr create, merge gate, explicit git revert rollback)
 
 Progress: [██████████] 100%
 
@@ -70,6 +70,7 @@ Progress: [██████████] 100%
 | Phase 25-agent-behavior-hardening P01 | 5min | 2 tasks | 3 files |
 | Phase 25-agent-behavior-hardening P02 | 3min | 2 tasks | 6 files |
 | Phase 25-agent-behavior-hardening P03 | 5min | 2 tasks | 14 files |
+| Phase 25-agent-behavior-hardening P06 | 4min | 1 task | 1 file |
 
 ## Accumulated Context
 
@@ -151,6 +152,9 @@ Key decisions affecting v3.0:
 - [Phase 25-03]: Per-tool actor listing pattern in Attribution sections — every MCP tool listed with explicit actor parameter example, replacing generic "include actor" instruction
 - [Phase 25-03]: Task tool heuristic in audit-log.js — Task tool calls attributed to synapse-orchestrator since only orchestrator spawns Task
 - [Phase 25-03]: has_actor boolean field added to audit log entries — true = explicit actor, false = heuristic/unknown; enables attribution gap visibility
+- [Phase 25-06]: PR workflow replaces direct merge to main — feature completion creates gh pr create with structured template linking RPEV stage doc, task commits, and decision references
+- [Phase 25-06]: Merge gate is involvement-mode dependent — autopilot/monitors auto-merge (gh pr merge --merge --delete-branch); co-pilot/reviews/drives set pending_approval=true and await user action
+- [Phase 25-06]: Rollback uses git revert not git reset — explicit revert commands for task rollback, feature rollback (pre-merge), and post-merge rollback; NEVER force-push to main
 
 ### Roadmap Evolution
 
@@ -168,6 +172,6 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-03-07T07:54:11Z
-Stopped at: Completed 25-03-PLAN.md (audit attribution & session summary)
-Resume file: .planning/phases/25-agent-behavior-hardening/25-01-SUMMARY.md
+Last session: 2026-03-07T08:20:00Z
+Stopped at: Completed 25-06-PLAN.md (PR workflow for orchestrator)
+Resume file: .planning/phases/25-agent-behavior-hardening/25-06-SUMMARY.md

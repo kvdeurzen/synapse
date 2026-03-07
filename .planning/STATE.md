@@ -70,6 +70,7 @@ Progress: [██████████] 100%
 | Phase 25-agent-behavior-hardening P01 | 5min | 2 tasks | 3 files |
 | Phase 25-agent-behavior-hardening P02 | 3min | 2 tasks | 6 files |
 | Phase 25-agent-behavior-hardening P03 | 5min | 2 tasks | 14 files |
+| Phase 25-agent-behavior-hardening P05 | 3min | 2 tasks | 4 files |
 | Phase 25-agent-behavior-hardening P06 | 4min | 1 task | 1 file |
 
 ## Accumulated Context
@@ -152,6 +153,10 @@ Key decisions affecting v3.0:
 - [Phase 25-03]: Per-tool actor listing pattern in Attribution sections — every MCP tool listed with explicit actor parameter example, replacing generic "include actor" instruction
 - [Phase 25-03]: Task tool heuristic in audit-log.js — Task tool calls attributed to synapse-orchestrator since only orchestrator spawns Task
 - [Phase 25-03]: has_actor boolean field added to audit log entries — true = explicit actor, false = heuristic/unknown; enables attribution gap visibility
+- [Phase 25-05]: Confidence tiers (HIGH/MEDIUM/LOW) tag every research finding by source reliability — Context7/official docs = HIGH, cross-referenced WebSearch = MEDIUM, single web source = LOW
+- [Phase 25-05]: Research failure is non-blocking — orchestrator proceeds without researcher doc_id if researcher subagent fails; logged as warning, pipeline continues
+- [Phase 25-05]: Context7 and WebSearch/WebFetch tools don't use actor param — only Synapse MCP tools require actor attribution
+- [Phase 25-05]: Task tool added to architect and decomposer frontmatter — required for spawning researcher subagents before non-trivial decisions/decompositions
 - [Phase 25-06]: PR workflow replaces direct merge to main — feature completion creates gh pr create with structured template linking RPEV stage doc, task commits, and decision references
 - [Phase 25-06]: Merge gate is involvement-mode dependent — autopilot/monitors auto-merge (gh pr merge --merge --delete-branch); co-pilot/reviews/drives set pending_approval=true and await user action
 - [Phase 25-06]: Rollback uses git revert not git reset — explicit revert commands for task rollback, feature rollback (pre-merge), and post-merge rollback; NEVER force-push to main

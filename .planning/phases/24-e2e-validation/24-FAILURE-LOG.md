@@ -54,11 +54,12 @@
 | 36 | Refine→Execute | Hardware testing implementation never surfaced as a usability/DX decision — only technical choice (SSH vs deploy) was captured | Refine asked "SSH or deploy to Pi?" (Tier 1 architectural) but never explored the developer experience: how to configure Pi address, what happens when Pi is unreachable, test output format, ease of running `pytest -m hardware` for the first time. Executor implemented DX-affecting details (paramiko fixtures, config structure) without user input. Decisions with both technical and UX facets should surface the UX dimension separately | DEGRADED | OPEN |
 | 37 | All | Audit log agent attribution broken — 91% of entries (430/471) logged as "unknown" | audit-log.js extracts agent from `actor` or `assigned_agent` in tool_input, but the main session and most subagent calls don't populate these fields. Cannot answer "how many tokens did the decomposer use?" from audit data. Makes per-agent cost analysis impossible | DEGRADED | OPEN |
 | 38 | Validate | No session summary or cost report generated after RPEV cycle completes | Audit log contains raw per-call data (471 entries, ~628k tokens) but no automated aggregation. No end-of-session summary file, no $/token cost estimate, no per-agent breakdown. User must parse JSON manually to understand resource consumption. Also: redundant `synapse-audit.js` hook exists alongside the more capable `audit-log.js` | DEGRADED | OPEN |
+| 39 | Install | tree-sitter native module builds with Bun but fails at Bun runtime — MCP server won't start | install.sh generates .mcp.json with `"command": "bun"` but tree-sitter's native bindings are incompatible with Bun's runtime. Server must run under Node.js via `npx tsx`. Hooks (pure JS, no tree-sitter) are fine with bun | BLOCKER | PATCHED |
 
 ## Failure Summary
 
-**Total: 38 issues** (4 BLOCKER, 27 DEGRADED, 7 COSMETIC)
-- BLOCKER: 4 (all PATCHED -- #1, #2, #3, #4, #7 patched across 24-01 and 24-02)
+**Total: 39 issues** (5 BLOCKER, 27 DEGRADED, 7 COSMETIC)
+- BLOCKER: 5 (all PATCHED -- #1, #2, #3, #4, #7, #39 patched across 24-01 and 24-02)
 - DEGRADED: 27 (all OPEN -- documented as known limitations)
 - COSMETIC: 7 (all OPEN -- documented as known limitations)
 
@@ -95,7 +96,13 @@
 - **Verified by:** /synapse:status no longer denied after patch
 - **Commit:** 4f67b63 (applied during 24-01)
 
-### Patch 5: synapse-orchestrator registration (BLOCKER #7)
+### Patch 5: MCP server command bun→npx tsx (BLOCKER #39)
+- **File:** packages/server/install.sh
+- **Change:** Changed .mcp.json generation from `"command": "bun", "args": ["run", ...]` to `"command": "npx", "args": ["tsx", ...]`. tree-sitter native module builds under Bun but fails at Bun runtime; Node.js/tsx works. Added Node.js + npx prerequisite checks. Added Ollama systemd troubleshooting note to install output.
+- **Verified by:** rpi-camera-py re-run confirmed npx tsx starts the MCP server successfully
+- **Commit:** (this commit)
+
+### Patch 6: synapse-orchestrator registration (BLOCKER #7)
 - **File:** packages/framework/config/agents.toml, .synapse/config/agents.toml, packages/framework/config/trust.toml
 - **Change:** Added synapse-orchestrator to agents.toml (tool allowlist) and trust.toml [tier_authority] (tier gate); slash commands pass actor="synapse-orchestrator" which was never registered
 - **Verified by:** store_decision no longer denied for orchestrator
@@ -138,6 +145,7 @@
 | 36 | Hardware testing UX not surfaced as decision | DEGRADED | Deferred -- refinement needs UX dimension capture |
 | 37 | Audit log 91% "unknown" attribution | DEGRADED | Deferred -- needs actor field propagation |
 | 38 | No session summary or cost report | DEGRADED | Deferred -- needs end-of-session aggregation |
+| 39 | tree-sitter incompatible with Bun runtime | BLOCKER | PATCHED -- MCP server uses npx tsx, hooks stay bun |
 
 ## Verification Results
 

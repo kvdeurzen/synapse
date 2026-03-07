@@ -197,7 +197,23 @@ log_header "Checking prerequisites..."
 
 OLLAMA_RUNNING=false
 
-# Check Bun (HARD FAIL)
+# Check Node.js (HARD FAIL — MCP server runs under npx tsx due to tree-sitter native module)
+if ! command -v node &> /dev/null; then
+  log_error "Node.js is not installed or not on PATH."
+  log_error "Install Node.js from: https://nodejs.org or via nvm"
+  exit 1
+fi
+NODE_VERSION=$(node --version 2>/dev/null || echo "unknown")
+log_step "Node.js $NODE_VERSION"
+
+# Check npx (should come with Node.js)
+if ! command -v npx &> /dev/null; then
+  log_error "npx is not available. It should come with Node.js."
+  log_error "Reinstall Node.js or check your PATH."
+  exit 1
+fi
+
+# Check Bun (HARD FAIL — hooks and bun install use Bun)
 if ! command -v bun &> /dev/null; then
   log_error "Bun is not installed or not on PATH."
   log_error "Install Bun from: https://bun.sh"
@@ -529,8 +545,8 @@ fi
 MCP_FILE="$TARGET_DIR/.mcp.json"
 
 SYNAPSE_MCP_JSON='{
-  "command": "bun",
-  "args": ["run", ".claude/server/src/index.ts", "--db", ".synapse/data/synapse.db"],
+  "command": "npx",
+  "args": ["tsx", ".claude/server/src/index.ts", "--db", ".synapse/data/synapse.db"],
   "env": {
     "OLLAMA_URL": "http://localhost:11434",
     "EMBED_MODEL": "nomic-embed-text"
@@ -641,6 +657,15 @@ echo -e "${COLOR_RED}IMPORTANT:${COLOR_RESET} ${COLOR_BOLD}Restart Claude Code b
 echo "      MCP servers are loaded at session start. The Synapse MCP server"
 echo "      defined in .mcp.json will not be available until you start a new session."
 echo "      Exit Claude Code (Ctrl+C or /exit), then reopen it in this directory."
+echo ""
+echo -e "${COLOR_YELLOW}Ollama troubleshooting:${COLOR_RESET}"
+echo "      If /synapse:map reports 'model missing' but ollama is installed, check:"
+echo "      - Is Ollama running? → curl -sf http://localhost:11434/api/tags"
+echo "      - Is the model pulled? → ollama pull nomic-embed-text"
+echo "      - systemd conflict? If Ollama runs as a system service, models pulled by"
+echo "        your user may not be visible. Either: disable the service and run manually"
+echo "        (sudo systemctl disable --now ollama && ollama serve), or pull the model"
+echo "        while the service is running (ollama pull nomic-embed-text)."
 echo ""
 echo -e "${COLOR_BOLD}Next steps:${COLOR_RESET}"
 echo "  1. Exit this Claude Code session"

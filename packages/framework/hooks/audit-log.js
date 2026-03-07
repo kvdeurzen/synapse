@@ -23,10 +23,19 @@ process.stdin.on("end", () => {
     const inputStr = JSON.stringify(toolInput);
     const outputStr = JSON.stringify(data.tool_response || "");
 
+    // Primary: explicit actor field (should cover 80%+ after prompt hardening)
+    // Fallback 1: assigned_agent field
+    // Fallback 2: heuristic from tool name patterns
+    const agent = toolInput.actor
+      || toolInput.assigned_agent
+      || (toolName === "Task" ? "synapse-orchestrator" : null)  // Only orchestrator spawns Task
+      || "unknown";
+
     const logEntry = {
       ts: new Date().toISOString(),
       tool: toolName,
-      agent: toolInput.actor || toolInput.assigned_agent || "unknown",
+      agent: agent,
+      has_actor: !!(toolInput.actor || toolInput.assigned_agent),  // true = explicit, false = heuristic/unknown
       project_id: toolInput.project_id || null,
       input_tokens: tokenEstimate(inputStr),
       output_tokens: tokenEstimate(outputStr),

@@ -292,4 +292,4 @@ Phase 25 depends on Phase 24 (failure log drives scope).
 | 22. Install Script | 2/2 | Complete    | 2026-03-06 | - |
 | 23. Visibility + Notifications | v3.0 | 2/2 | Complete | 2026-03-06 |
 | 24. E2E Validation | v3.0 | 2/2 | Complete | 2026-03-07 |
-| 25. Agent Behavior Hardening | v3.0 | 0/4 | Planned | - |
+| 25. Agent Behavior Hardening | v3.0 | 1/4 | In Progress | - |

@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v3.0
 milestone_name: Working Prototype
 status: in_progress
-stopped_at: "Phase 25 planned (4 plans in 2 waves). Ready to execute."
-last_updated: "2026-03-07T14:00:00Z"
-last_activity: 2026-03-07 — Phase 25 planned (4 plans, 2 waves). Ready to execute.
+stopped_at: "Completed 25-02-PLAN.md (slash command prompt fixes)"
+last_updated: "2026-03-07T07:51:31Z"
+last_activity: 2026-03-07 — Phase 25 Plan 02 complete (slash command fixes).
 progress:
   total_phases: 11
   completed_phases: 10
   total_plans: 26
-  completed_plans: 22
-  percent: 91
+  completed_plans: 23
+  percent: 92
 ---
 
 # Project State
@@ -21,15 +21,15 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-03)
 
 **Core value:** Agents get the right context for any task — from both project decisions and actual code — without wasting tokens on irrelevant content. The orchestrator ensures agents respect established decisions and decompose work to context-window-sized executable units.
-**Current focus:** Phase 25 — Agent Behavior Hardening (planned, ready to execute)
+**Current focus:** Phase 25 — Agent Behavior Hardening (executing, 1/4 plans complete)
 **Previous milestones:** v1.0 Data Layer (shipped 2026-03-01), v2.0 Agentic Framework (shipped 2026-03-02)
 
 ## Current Position
 
-Phase: 25 of 25 (Agent Behavior Hardening) — planned, ready to execute
-Plan: 0 of 4 in current phase
-Status: Phase 25 planned (4 plans in 2 waves). Wave 1: orchestrator hardening + slash commands + hooks (parallel). Wave 2: E2E re-validation.
-Last activity: 2026-03-07 — Phase 25 planned
+Phase: 25 of 25 (Agent Behavior Hardening) — executing
+Plan: 1 of 4 in current phase (25-02 complete)
+Status: Phase 25 executing. Plan 02 (slash commands) done. Wave 1 remaining: 25-01 (orchestrator), 25-03 (hooks). Wave 2: 25-04 (E2E re-validation).
+Last activity: 2026-03-07 — Phase 25 Plan 02 complete (slash command prompt fixes)
 
 Progress: [██████████] 100%
 
@@ -67,6 +67,7 @@ Progress: [██████████] 100%
 | Phase 23-visibility-notifications P01 | 2min | 2 tasks | 2 files |
 | Phase 23-visibility-notifications P02 | 6min | 2 tasks | 3 files |
 | Phase 24-e2e-validation P01 | 3min | 1 task (of 2) | 67 files |
+| Phase 25-agent-behavior-hardening P02 | 3min | 2 tasks | 6 files |
 
 ## Accumulated Context
 
@@ -136,6 +137,11 @@ Key decisions affecting v3.0:
 - [Phase 23-02]: rpev_stage_counts only added to epic entry when at least one child task has a stage doc — avoids empty zero-filled objects
 - [Phase 24-01]: init.md updated to full 16-entry [rpev.involvement] matrix (drives/co-pilot/reviews/monitors/autopilot x 4 levels) — replaces stale 4-key [rpev] section. Both tracked and untracked copies updated
 - [Phase 24-01]: v3.0.0-alpha.1 GitHub prerelease created with 67 committed framework files — tarball includes packages/framework/ (agents, hooks, commands, skills) + packages/server/install.sh
+- [Phase 25-02]: status.md uses per-epic get_task_tree(root_task_id, max_depth: 2) instead of single unfiltered tree — O(epics) small calls vs O(1) huge call; rollup stats on nodes already contain completion data
+- [Phase 25-02]: semantic_search removed from status.md allowed-tools — redundant with query_documents for rpev-stage tags
+- [Phase 25-02]: Code Index Trust Rule in refine.md: get_smart_context code summaries are SUFFICIENT context; do NOT spawn Explore agent when index has data (saves ~58k tokens)
+- [Phase 25-02]: Persist-before-transition in refine.md: store_document called before readiness summary, not after user responds — prevents state loss on session end
+- [Phase 25-02]: init.md commit step is non-fatal — warns user on git failure but does not block initialization
 
 ### Roadmap Evolution
 
@@ -153,6 +159,6 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-03-07T12:00:00Z
-Stopped at: Phase 24 complete. Phase 25 inserted, ready to plan.
-Resume file: .planning/ROADMAP.md (Phase 25 section)
+Last session: 2026-03-07T07:51:31Z
+Stopped at: Completed 25-02-PLAN.md (slash command prompt fixes)
+Resume file: .planning/phases/25-agent-behavior-hardening/25-02-SUMMARY.md

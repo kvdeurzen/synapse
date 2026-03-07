@@ -88,6 +88,15 @@ Requirements for Working Prototype milestone. Each maps to roadmap phases.
 - [x] **VIS-01**: Progress statusline hook shows active epic, wave count, and task completion in Claude Code
 - [x] **VIS-02**: project_overview enhanced to show task tree progress alongside document stats
 
+### Agent Behavior Hardening
+
+- [ ] **ABH-01**: RPEV stages have explicit boundaries — stage documents persisted at each transition, gate checks verify prerequisites before proceeding
+- [ ] **ABH-02**: Orchestrator delegates bookkeeping to subagents — executors mark their own tasks done, validators update their own findings, orchestrator context stays lean
+- [ ] **ABH-03**: Executors create atomic commits per task and orchestrator verifies commits exist before marking tasks done
+- [ ] **ABH-04**: /synapse:status output is consistent across runs and uses filtered queries that scale to 100+ task trees
+- [ ] **ABH-05**: Audit log entries have correct agent attribution (not "unknown") for at least 80% of calls
+- [ ] **ABH-06**: A second E2E run on rpi-camera-py shows measurably fewer issues than the first run (target: 0 BLOCKER, <10 DEGRADED)
+
 ## Future Requirements
 
 Deferred to future release. Tracked but not in current roadmap.
@@ -178,12 +187,18 @@ Which phases cover which requirements. Updated during roadmap creation.
 | E2E-02 | Phase 24 | Complete |
 | E2E-03 | Phase 24 | Complete |
 | E2E-04 | Phase 24 | Complete (PARTIAL — core data accurate, presentation gaps in Phase 25 scope) |
+| ABH-01 | Phase 25-01 | Planned |
+| ABH-02 | Phase 25-01 | Planned |
+| ABH-03 | Phase 25-01 | Planned |
+| ABH-04 | Phase 25-02 | Planned |
+| ABH-05 | Phase 25-03 | Planned |
+| ABH-06 | Phase 25-04 | Planned |
 
 **Coverage:**
-- v3.0 requirements: 51 total (39 original + 8 RPEV + 4 Agent Pool)
-- Mapped to phases: 51
+- v3.0 requirements: 57 total (39 original + 8 RPEV + 4 Agent Pool + 6 Agent Behavior Hardening)
+- Mapped to phases: 57
 - Unmapped: 0
 
 ---
 *Requirements defined: 2026-03-03*
-*Last updated: 2026-03-06 after Phase 21 planning (POOL requirements added)*
+*Last updated: 2026-03-07 after Phase 25 planning (ABH requirements added)*

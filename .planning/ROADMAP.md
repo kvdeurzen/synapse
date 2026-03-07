@@ -218,7 +218,7 @@ Plans:
 ### Phase 25: Agent Behavior Hardening
 **Goal**: The RPEV orchestrator and agent prompts produce a usable, efficient workflow — with explicit stage gates, terse output, self-managing subagents, git discipline, and accurate observability
 **Depends on**: Phase 24 (failure log as input)
-**Requirements**: ABH-01 through ABH-06 (to be defined during planning)
+**Requirements**: ABH-01, ABH-02, ABH-03, ABH-04, ABH-05, ABH-06
 **Success Criteria** (what must be TRUE):
   1. RPEV stages have explicit boundaries — stage documents are persisted at each transition, gate checks verify prerequisites before proceeding
   2. The orchestrator delegates bookkeeping to subagents — executors mark their own tasks done, validators update their own findings, orchestrator context stays lean
@@ -226,7 +226,13 @@ Plans:
   4. /synapse:status output is consistent across runs and uses filtered queries that scale to 100+ task trees
   5. Audit log entries have correct agent attribution (not "unknown") for at least 80% of calls
   6. A second E2E run on rpi-camera-py shows measurably fewer issues than the first run (target: 0 BLOCKER, <10 DEGRADED)
-**Plans**: TBD (to be created by /gsd:plan-phase 25)
+**Plans**: 4 plans
+
+Plans:
+- [ ] 25-01-PLAN.md — Orchestrator + executor + decomposer prompt hardening: stage gates, delegation, git workflow, terse output, research/reviewer steps (ABH-01, ABH-02, ABH-03)
+- [ ] 25-02-PLAN.md — Slash command prompt fixes: status.md filtered queries + template, refine.md code index trust + persist + UX, init.md commit step (ABH-04)
+- [ ] 25-03-PLAN.md — Hook/infrastructure: audit-log.js attribution, synapse-audit.js removal, session-summary.js, 8 agent attribution strengthening (ABH-05)
+- [ ] 25-04-PLAN.md — E2E re-validation on rpi-camera-py: abbreviated run verifying all hardening changes (ABH-06)
 
 **Scope** (from 24-FAILURE-LOG.md DEGRADED issues):
 
@@ -286,4 +292,4 @@ Phase 25 depends on Phase 24 (failure log drives scope).
 | 22. Install Script | 2/2 | Complete    | 2026-03-06 | - |
 | 23. Visibility + Notifications | v3.0 | 2/2 | Complete | 2026-03-06 |
 | 24. E2E Validation | v3.0 | 2/2 | Complete | 2026-03-07 |
-| 25. Agent Behavior Hardening | v3.0 | 0/? | Not Planned | - |
+| 25. Agent Behavior Hardening | v3.0 | 0/4 | Planned | - |

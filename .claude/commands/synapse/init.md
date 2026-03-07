@@ -32,7 +32,7 @@ Set up this project for Synapse: detect the project name, create config files, c
 
    Display the detected `project_id` to the user and allow them to confirm or provide a different name before proceeding. Do NOT proceed until confirmed.
 
-3. **Create config directory:** Use Bash to run `mkdir -p .synapse/config`.
+3. **Create config directory:** Use Bash to run `mkdir -p .synapse/config`. **Wait for this to complete before writing any files.**
 
 4. **Write project.toml:** Use the Write tool to create `.synapse/config/project.toml`:
 
@@ -106,6 +106,8 @@ Set up this project for Synapse: detect the project name, create config files, c
    ```
 
    Use the Write tool to write the final trust.toml to `.synapse/config/trust.toml`.
+
+   **IMPORTANT:** Wait for the Write to complete successfully before proceeding to step 7. The DB registration depends on the config files existing.
 
 7. **Register with Synapse DB:** Call `mcp__synapse__init_project` with:
    - `project_id`: the confirmed project_id

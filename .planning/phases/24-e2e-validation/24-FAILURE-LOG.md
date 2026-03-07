@@ -55,13 +55,14 @@
 | 37 | All | Audit log agent attribution broken — 91% of entries (430/471) logged as "unknown" | audit-log.js extracts agent from `actor` or `assigned_agent` in tool_input, but the main session and most subagent calls don't populate these fields. Cannot answer "how many tokens did the decomposer use?" from audit data. Makes per-agent cost analysis impossible | DEGRADED | OPEN |
 | 38 | Validate | No session summary or cost report generated after RPEV cycle completes | Audit log contains raw per-call data (471 entries, ~628k tokens) but no automated aggregation. No end-of-session summary file, no $/token cost estimate, no per-agent breakdown. User must parse JSON manually to understand resource consumption. Also: redundant `synapse-audit.js` hook exists alongside the more capable `audit-log.js` | DEGRADED | OPEN |
 | 39 | Install | tree-sitter native module builds with Bun but fails at Bun runtime — MCP server won't start | install.sh generates .mcp.json with `"command": "bun"` but tree-sitter's native bindings are incompatible with Bun's runtime. Server must run under Node.js via `npx tsx`. Hooks (pure JS, no tree-sitter) are fine with bun | BLOCKER | PATCHED |
+| 40 | Init | /synapse:init parallelizes Write(trust.toml) with init_project — Write fails because .synapse/config/ not yet created, cascades as "Sibling tool call errored" | init.md steps 3→6→7 are a dependency chain (mkdir → write files → register DB) but LLM parallelizes them. No sequencing instructions in prompt. Init recovers on retry but wastes a turn | DEGRADED | PATCHED |
 
 ## Failure Summary
 
-**Total: 39 issues** (5 BLOCKER, 27 DEGRADED, 7 COSMETIC)
-- BLOCKER: 5 (all PATCHED -- #1, #2, #3, #4, #7, #39 patched across 24-01 and 24-02)
-- DEGRADED: 27 (all OPEN -- documented as known limitations)
-- COSMETIC: 7 (all OPEN -- documented as known limitations)
+**Total: 40 issues** (5 BLOCKER, 28 DEGRADED, 7 COSMETIC)
+- BLOCKER: 5 (all PATCHED)
+- DEGRADED: 28 (27 OPEN, 1 PATCHED -- #40)
+- COSMETIC: 7 (all OPEN)
 
 **Top themes:**
 1. **No RPEV stage discipline** -- stages blend without gates, boundary persists, or verification (#26, #31, #32, #34)

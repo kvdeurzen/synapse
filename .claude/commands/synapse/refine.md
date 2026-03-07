@@ -59,12 +59,20 @@ Run a structured brainstorming session that tracks decisions, surfaces what's mi
    - Present relevant context briefly: "Here's what Synapse knows about this area: [summary of key decisions and documents]"
    - If no existing context: "No prior decisions found for this topic — this is fresh territory."
 
+   **Code Index Trust Rule:** If `get_smart_context` returns code summaries (documents with category "code" or code_chunks data), treat these as SUFFICIENT context for the codebase. Do NOT spawn an Explore agent, do NOT use Read/Glob/Grep to browse source files that the code index already covers. You may read specific files only if:
+   - The user explicitly asks to see a file
+   - A decision requires examining exact implementation details not in the summary
+   - The code index returned no results for a relevant query
+
+   This rule saves significant tokens. The Phase 24 E2E run showed an Explore agent consuming 58k tokens reading files the index had already summarized.
+
 5. **Run brainstorming session:** Act as a collaborative thinking partner, extending the brainstorm skill pattern with RPEV-aware decision tracking. Use Socratic questioning to explore the item:
    - **Clarifying:** "What problem does this solve for users?"
    - **Consequence:** "What happens if we don't address this?"
    - **Alternative surfacing:** "What other approaches have you considered?"
    - **Connection finding:** "How does this relate to [existing decision or epic]?"
    - **Assumption challenging:** "What are we taking for granted here?"
+   - **UX/DX dimension surfacing:** When a decision has both a technical dimension AND a developer/user experience dimension, surface them separately. Example: "SSH vs deploy" is a Tier 1 architectural decision, but "how does the developer configure the Pi address?" and "what happens when the Pi is unreachable?" are Tier 2 UX decisions that must also be captured. If you detect a decision with DX impact, ask: "This also affects developer experience -- should we capture [specific DX aspect] as a separate decision?"
 
    Throughout the conversation, maintain and update three categories:
    - **DECIDED**: Statements the user has explicitly committed to. As each decision is made:
@@ -100,6 +108,8 @@ Run a structured brainstorming session that tracks decisions, surfaces what's mi
    - **Feature level:** Tier 2 decisions captured? Requirements testable?
    - **Work Package level:** Spec unambiguous enough to implement?
 
+   **Persist before transition:** Before presenting the readiness summary or offering to proceed to Plan, call store_document to save the current refinement state (step 8). This ensures that if the user says "wait" or the session ends, the refinement output is already persisted. Do NOT defer persistence until after the user responds.
+
    If not ready: "Before we can move to planning, we still need to resolve: [OPEN items]. Want to explore those now, or park them for next session?"
 
    If ready: Present a readiness summary:
@@ -115,7 +125,7 @@ Run a structured brainstorming session that tracks decisions, surfaces what's mi
 
    Note after the readiness summary: "The involvement mode for the Plan stage at this level determines what happens next. The orchestrator (or startup hook) injects the involvement matrix — the mode for `{level}_plan` controls whether user approval is needed before planning begins."
 
-8. **Persist refinement state:** Call `mcp__synapse__store_document` with:
+8. **Persist refinement state:** This step should already have been called in step 7 (persist before transition). If it was, skip the duplicate call. If the session is ending without reaching step 7, call store_document now as a safety net. Call `mcp__synapse__store_document` with:
    - `project_id`: from session context (injected by synapse-startup hook)
    - `title`: `"Refinement: [Item Title] ([Level])"`
    - `category`: `"plan"`

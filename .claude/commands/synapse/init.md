@@ -141,7 +141,17 @@ Set up this project for Synapse: detect the project name, create config files, c
 
    If any skills are found, list them and offer to add their names to the `skills` array in `project.toml`. Only update `project.toml` if the user agrees.
 
-10. **Summary:** Display a confirmation of everything created or configured:
+10. **Commit scaffolding:** After all files are created and configured, commit the Synapse scaffolding to version control:
+
+    ```bash
+    git add .synapse/ .claude/
+    git commit -m "chore: initialize Synapse project configuration"
+    ```
+
+    If the git add or commit fails (e.g., not a git repo, or user has uncommitted changes that conflict), warn the user but do not treat it as a fatal error:
+    > "Note: Could not auto-commit Synapse scaffolding. You may want to commit .synapse/ and .claude/ manually."
+
+11. **Summary:** Display a confirmation of everything created or configured:
 
     ```
     Synapse initialized for "{{project_name}}" ({{project_id}})

@@ -90,11 +90,11 @@ Requirements for Working Prototype milestone. Each maps to roadmap phases.
 
 ### Agent Behavior Hardening
 
-- [ ] **ABH-01**: RPEV stages have explicit boundaries — stage documents persisted at each transition, gate checks verify prerequisites before proceeding
-- [ ] **ABH-02**: Orchestrator delegates bookkeeping to subagents — executors mark their own tasks done, validators update their own findings, orchestrator context stays lean
-- [ ] **ABH-03**: Executors create atomic commits per task and orchestrator verifies commits exist before marking tasks done
+- [x] **ABH-01**: RPEV stages have explicit boundaries — stage documents persisted at each transition, gate checks verify prerequisites before proceeding
+- [x] **ABH-02**: Orchestrator delegates bookkeeping to subagents — executors mark their own tasks done, validators update their own findings, orchestrator context stays lean
+- [x] **ABH-03**: Executors create atomic commits per task and orchestrator verifies commits exist before marking tasks done
 - [x] **ABH-04**: /synapse:status output is consistent across runs and uses filtered queries that scale to 100+ task trees
-- [ ] **ABH-05**: Audit log entries have correct agent attribution (not "unknown") for at least 80% of calls
+- [x] **ABH-05**: Audit log entries have correct agent attribution (not "unknown") for at least 80% of calls
 - [ ] **ABH-06**: A second E2E run on rpi-camera-py shows measurably fewer issues than the first run (target: 0 BLOCKER, <10 DEGRADED)
 
 ## Future Requirements
@@ -187,9 +187,9 @@ Which phases cover which requirements. Updated during roadmap creation.
 | E2E-02 | Phase 24 | Complete |
 | E2E-03 | Phase 24 | Complete |
 | E2E-04 | Phase 24 | Complete (PARTIAL — core data accurate, presentation gaps in Phase 25 scope) |
-| ABH-01 | Phase 25-01 | Planned |
-| ABH-02 | Phase 25-01 | Planned |
-| ABH-03 | Phase 25-01 | Planned |
+| ABH-01 | Phase 25-01 | Complete |
+| ABH-02 | Phase 25-01 | Complete |
+| ABH-03 | Phase 25-01 | Complete |
 | ABH-04 | Phase 25-02 | Complete |
 | ABH-05 | Phase 25-03 | Planned |
 | ABH-06 | Phase 25-04 | Planned |

@@ -229,9 +229,9 @@ Plans:
 **Plans**: 4 plans
 
 Plans:
-- [ ] 25-01-PLAN.md — Orchestrator + executor + decomposer prompt hardening: stage gates, delegation, git workflow, terse output, research/reviewer steps (ABH-01, ABH-02, ABH-03)
-- [ ] 25-02-PLAN.md — Slash command prompt fixes: status.md filtered queries + template, refine.md code index trust + persist + UX, init.md commit step (ABH-04)
-- [ ] 25-03-PLAN.md — Hook/infrastructure: audit-log.js attribution, synapse-audit.js removal, session-summary.js, 8 agent attribution strengthening (ABH-05)
+- [x] 25-01-PLAN.md — Orchestrator + executor + decomposer prompt hardening: stage gates, delegation, git workflow, terse output, research/reviewer steps (ABH-01, ABH-02, ABH-03)
+- [x] 25-02-PLAN.md — Slash command prompt fixes: status.md filtered queries + template, refine.md code index trust + persist + UX, init.md commit step (ABH-04)
+- [x] 25-03-PLAN.md — Hook/infrastructure: audit-log.js attribution, synapse-audit.js removal, session-summary.js, 8 agent attribution strengthening (ABH-05)
 - [ ] 25-04-PLAN.md — E2E re-validation on rpi-camera-py: abbreviated run verifying all hardening changes (ABH-06)
 
 **Scope** (from 24-FAILURE-LOG.md DEGRADED issues):
@@ -292,4 +292,4 @@ Phase 25 depends on Phase 24 (failure log drives scope).
 | 22. Install Script | 2/2 | Complete    | 2026-03-06 | - |
 | 23. Visibility + Notifications | v3.0 | 2/2 | Complete | 2026-03-06 |
 | 24. E2E Validation | v3.0 | 2/2 | Complete | 2026-03-07 |
-| 25. Agent Behavior Hardening | v3.0 | 1/4 | In Progress | - |
+| 25. Agent Behavior Hardening | v3.0 | 3/4 | In Progress | - |

@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v3.0
 milestone_name: Working Prototype
 status: in_progress
-stopped_at: "Completed 25-02-PLAN.md (slash command prompt fixes)"
-last_updated: "2026-03-07T07:51:31Z"
-last_activity: 2026-03-07 — Phase 25 Plan 02 complete (slash command fixes).
+stopped_at: "Completed 25-01-PLAN.md (orchestrator/executor/decomposer hardening)"
+last_updated: "2026-03-07T07:53:49Z"
+last_activity: 2026-03-07 — Phase 25 Plan 01 complete (agent prompt hardening). Plans 01, 02, 03 done. Wave 2 (25-04 E2E re-validation) remaining.
 progress:
   total_phases: 11
   completed_phases: 10
   total_plans: 26
-  completed_plans: 23
-  percent: 92
+  completed_plans: 25
+  percent: 96
 ---
 
 # Project State
@@ -21,15 +21,15 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-03)
 
 **Core value:** Agents get the right context for any task — from both project decisions and actual code — without wasting tokens on irrelevant content. The orchestrator ensures agents respect established decisions and decompose work to context-window-sized executable units.
-**Current focus:** Phase 25 — Agent Behavior Hardening (executing, 1/4 plans complete)
+**Current focus:** Phase 25 — Agent Behavior Hardening (executing, 3/4 plans complete)
 **Previous milestones:** v1.0 Data Layer (shipped 2026-03-01), v2.0 Agentic Framework (shipped 2026-03-02)
 
 ## Current Position
 
 Phase: 25 of 25 (Agent Behavior Hardening) — executing
-Plan: 1 of 4 in current phase (25-02 complete)
-Status: Phase 25 executing. Plan 02 (slash commands) done. Wave 1 remaining: 25-01 (orchestrator), 25-03 (hooks). Wave 2: 25-04 (E2E re-validation).
-Last activity: 2026-03-07 — Phase 25 Plan 02 complete (slash command prompt fixes)
+Plan: 3 of 4 in current phase (25-01, 25-02, 25-03 complete)
+Status: Phase 25 executing. Plans 01 (orchestrator/executor/decomposer), 02 (slash commands), 03 (hooks/attribution) done. Wave 2 remaining: 25-04 (E2E re-validation).
+Last activity: 2026-03-07 — Phase 25 Plan 01 complete (orchestrator/executor/decomposer hardening)
 
 Progress: [██████████] 100%
 
@@ -67,7 +67,9 @@ Progress: [██████████] 100%
 | Phase 23-visibility-notifications P01 | 2min | 2 tasks | 2 files |
 | Phase 23-visibility-notifications P02 | 6min | 2 tasks | 3 files |
 | Phase 24-e2e-validation P01 | 3min | 1 task (of 2) | 67 files |
+| Phase 25-agent-behavior-hardening P01 | 5min | 2 tasks | 3 files |
 | Phase 25-agent-behavior-hardening P02 | 3min | 2 tasks | 6 files |
+| Phase 25-agent-behavior-hardening P03 | 5min | 2 tasks | 14 files |
 
 ## Accumulated Context
 
@@ -142,6 +144,13 @@ Key decisions affecting v3.0:
 - [Phase 25-02]: Code Index Trust Rule in refine.md: get_smart_context code summaries are SUFFICIENT context; do NOT spawn Explore agent when index has data (saves ~58k tokens)
 - [Phase 25-02]: Persist-before-transition in refine.md: store_document called before readiness summary, not after user responds — prevents state loss on session end
 - [Phase 25-02]: init.md commit step is non-fatal — warns user on git failure but does not block initialization
+- [Phase 25-01]: Stage gate failures are NON-RECOVERABLE — orchestrator halts and reports, no retry or workaround on gate mismatch
+- [Phase 25-01]: Orchestrator NEVER calls update_task on leaf tasks — executors and validators own their own task status updates (delegation rule)
+- [Phase 25-01]: Pool-state document writes changed from "should" to "MUST" with explicit 4-trigger list (assign, clear, recovery, cancel)
+- [Phase 25-01]: Executor frontmatter tools include store_document and link_documents — were already used in Key Tool Sequences but missing from frontmatter (Rule 2 auto-fix)
+- [Phase 25-03]: Per-tool actor listing pattern in Attribution sections — every MCP tool listed with explicit actor parameter example, replacing generic "include actor" instruction
+- [Phase 25-03]: Task tool heuristic in audit-log.js — Task tool calls attributed to synapse-orchestrator since only orchestrator spawns Task
+- [Phase 25-03]: has_actor boolean field added to audit log entries — true = explicit actor, false = heuristic/unknown; enables attribution gap visibility
 
 ### Roadmap Evolution
 
@@ -159,6 +168,6 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-03-07T07:51:31Z
-Stopped at: Completed 25-02-PLAN.md (slash command prompt fixes)
-Resume file: .planning/phases/25-agent-behavior-hardening/25-02-SUMMARY.md
+Last session: 2026-03-07T07:54:11Z
+Stopped at: Completed 25-03-PLAN.md (audit attribution & session summary)
+Resume file: .planning/phases/25-agent-behavior-hardening/25-01-SUMMARY.md

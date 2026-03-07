@@ -205,6 +205,42 @@ For each feature when it becomes active:
 4. Identify execution waves: group independent tasks (no unmet dependencies) into the same wave
 5. Update stage document: `stage: "PLANNING"`, record involvement mode
 
+## Researcher Document Discovery
+
+When the orchestrator spawns a Researcher (step 0 in Epic -> Features and Feature -> Tasks), the researcher stores findings with a predictable doc_id pattern: `researcher-findings-{task_id}`.
+
+### Discovery and Handoff Chain
+
+After a Researcher subagent completes:
+
+1. **Verify the document exists:** `query_documents(project_id: "{project_id}", category: "research", tags: "|{task_id}|", actor: "synapse-orchestrator")`
+2. **Extract the doc_id** from the query result (expected: `researcher-findings-{task_id}`)
+3. **Include in downstream handoffs:** Add the researcher doc_id to the `doc_ids` field in SYNAPSE HANDOFF blocks for:
+   - Decomposer (so decomposition is informed by research)
+   - Architect (so decisions reference research)
+   - Plan Reviewer (so review can verify research was addressed)
+
+**Example handoff chain:**
+
+```
+Orchestrator spawns Researcher for epic "Auth System"
+  → Researcher stores: researcher-findings-01HXYZ (research doc)
+Orchestrator discovers doc_id via query_documents
+Orchestrator spawns Decomposer with handoff:
+  doc_ids: rpev-stage-01HXYZ, researcher-findings-01HXYZ
+  → Decomposer reads research before decomposing
+Orchestrator spawns Plan Reviewer with handoff:
+  doc_ids: rpev-stage-01HXYZ, researcher-findings-01HXYZ, plan-01HXYZ
+  → Plan Reviewer verifies decomposition addresses research findings
+```
+
+### If Researcher Fails
+
+If the Researcher subagent returns an error or doesn't produce a document:
+- Log a warning: "Researcher did not produce findings for task {task_id}"
+- Proceed with decomposition WITHOUT the research doc_id in the handoff
+- Do NOT block the pipeline on a failed research step — it's informational, not gating
+
 ## Wave Execution Protocol
 
 ### Identifying Waves

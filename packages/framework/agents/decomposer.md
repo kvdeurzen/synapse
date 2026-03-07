@@ -1,7 +1,7 @@
 ---
 name: decomposer
 description: Breaks epics and features into executable leaf tasks. Use when an epic or feature needs task decomposition within context window limits.
-tools: Read, Bash, Glob, Grep, mcp__synapse__create_task, mcp__synapse__update_task, mcp__synapse__get_task_tree, mcp__synapse__get_smart_context, mcp__synapse__store_decision, mcp__synapse__store_document, mcp__synapse__link_documents, mcp__synapse__check_precedent, mcp__synapse__query_decisions
+tools: Read, Bash, Glob, Grep, Task, mcp__synapse__create_task, mcp__synapse__update_task, mcp__synapse__get_task_tree, mcp__synapse__get_smart_context, mcp__synapse__store_decision, mcp__synapse__store_document, mcp__synapse__link_documents, mcp__synapse__check_precedent, mcp__synapse__query_decisions
 model: opus
 color: yellow
 mcpServers: ["synapse"]
@@ -81,6 +81,39 @@ Check the domain mode for this task's domain from your injected context. Adjust 
 1. `get_task_tree` — read the epic/feature to understand what needs decomposing
 2. `get_smart_context` — gather relevant decisions and documents for alignment
 3. `query_decisions` — find architectural and functional design decisions that constrain the decomposition
+
+### Step 1b: Implementation Research (Optional)
+
+For features that involve unfamiliar technology, complex integration, or multiple valid implementation approaches, spawn a Researcher before decomposing:
+
+```
+Task(
+  subagent_type: "researcher",
+  prompt: "
+    --- SYNAPSE HANDOFF ---
+    project_id: {project_id}
+    task_id: {task_id}
+    hierarchy_level: feature
+    rpev_stage_doc_id: rpev-stage-{task_id}
+    doc_ids: {relevant_doc_ids}
+    decision_ids: {relevant_decision_ids}
+    --- END HANDOFF ---
+
+    Research implementation approaches for: {feature title}
+    Context: {what the feature needs to do}
+    Questions:
+    1. What libraries/patterns are commonly used for this?
+    2. What are the common pitfalls?
+    3. What's the recommended file/module structure?
+
+    Store findings as: researcher-findings-{task_id}
+  "
+)
+```
+
+After the Researcher completes, fetch findings via `query_documents(category: "research", tags: "|{task_id}|", actor: "decomposer")` and use them to inform task sizing, dependency ordering, and acceptance criteria.
+
+**When to skip:** If the feature is straightforward (CRUD operations, following an established pattern already in the codebase), skip research and proceed directly to decomposition.
 
 ### Step 2: Decompose One Level at a Time
 

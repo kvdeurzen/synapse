@@ -191,7 +191,7 @@ Which phases cover which requirements. Updated during roadmap creation.
 | ABH-02 | Phase 25-01 | Complete |
 | ABH-03 | Phase 25-01 | Complete |
 | ABH-04 | Phase 25-02 | Complete |
-| ABH-05 | Phase 25-03 | Planned |
+| ABH-05 | Phase 25-03 | Complete |
 | ABH-06 | Phase 25-04 | Planned |
 
 **Coverage:**

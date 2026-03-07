@@ -387,6 +387,18 @@ for d in "$SYNAPSE_SOURCE/packages/framework/skills/"/*/; do
 done
 log_step "Skills: $SKILL_COUNT directories"
 
+# Copy scripts (session-summary.js and others)
+if [ -d "$SYNAPSE_SOURCE/packages/framework/scripts" ]; then
+  mkdir -p "$TARGET_DIR/.claude/scripts"
+  SCRIPT_COUNT=0
+  for f in "$SYNAPSE_SOURCE/packages/framework/scripts/"*.js; do
+    [ -f "$f" ] || continue
+    cp "$f" "$TARGET_DIR/.claude/scripts/"
+    SCRIPT_COUNT=$((SCRIPT_COUNT + 1))
+  done
+  log_step "Scripts: $SCRIPT_COUNT files"
+fi
+
 # Copy server (entire packages/server/)
 cp -r "$SYNAPSE_SOURCE/packages/server/." "$TARGET_DIR/.claude/server/"
 log_step "Server: copied to .claude/server/"

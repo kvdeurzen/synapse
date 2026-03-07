@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v3.0
 milestone_name: Working Prototype
 status: in_progress
-stopped_at: "Completed 25-01-PLAN.md (orchestrator/executor/decomposer hardening)"
-last_updated: "2026-03-07T07:53:49Z"
-last_activity: 2026-03-07 — Phase 25 Plan 01 complete (agent prompt hardening). Plans 01, 02, 03 done. Wave 2 (25-04 E2E re-validation) remaining.
+stopped_at: "Phase 25 expanded — plans 25-05 (research-driven decisions) and 25-06 (PR workflow) added"
+last_updated: "2026-03-07T15:30:00Z"
+last_activity: 2026-03-07 — Phase 25 expanded to 6 plans. Plans 01-03 complete. New plans 05-06 added for research capabilities and PR workflow.
 progress:
   total_phases: 11
   completed_phases: 10
-  total_plans: 26
+  total_plans: 28
   completed_plans: 25
-  percent: 96
+  percent: 89
 ---
 
 # Project State
@@ -21,15 +21,15 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-03)
 
 **Core value:** Agents get the right context for any task — from both project decisions and actual code — without wasting tokens on irrelevant content. The orchestrator ensures agents respect established decisions and decompose work to context-window-sized executable units.
-**Current focus:** Phase 25 — Agent Behavior Hardening (executing, 3/4 plans complete)
+**Current focus:** Phase 25 — Agent Behavior Hardening (executing, 3/6 plans complete)
 **Previous milestones:** v1.0 Data Layer (shipped 2026-03-01), v2.0 Agentic Framework (shipped 2026-03-02)
 
 ## Current Position
 
 Phase: 25 of 25 (Agent Behavior Hardening) — executing
-Plan: 3 of 4 in current phase (25-01, 25-02, 25-03 complete)
-Status: Phase 25 executing. Plans 01 (orchestrator/executor/decomposer), 02 (slash commands), 03 (hooks/attribution) done. Wave 2 remaining: 25-04 (E2E re-validation).
-Last activity: 2026-03-07 — Phase 25 Plan 01 complete (orchestrator/executor/decomposer hardening)
+Plan: 3 of 6 in current phase (25-01, 25-02, 25-03 complete)
+Status: Phase 25 expanded to 6 plans. Wave 1: 01-03 done, 05-06 ready. Wave 2: 04 (E2E re-validation, blocked on all Wave 1). New scope: research-driven decisions (ABH-07), PR workflow (ABH-08).
+Last activity: 2026-03-07 — Phase 25 expanded with plans 05 (research capabilities) and 06 (PR workflow)
 
 Progress: [██████████] 100%
 

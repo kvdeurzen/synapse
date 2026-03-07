@@ -96,6 +96,8 @@ Requirements for Working Prototype milestone. Each maps to roadmap phases.
 - [x] **ABH-04**: /synapse:status output is consistent across runs and uses filtered queries that scale to 100+ task trees
 - [x] **ABH-05**: Audit log entries have correct agent attribution (not "unknown") for at least 80% of calls
 - [ ] **ABH-06**: A second E2E run on rpi-camera-py shows measurably fewer issues than the first run (target: 0 BLOCKER, <10 DEGRADED)
+- [ ] **ABH-07**: Researcher uses WebSearch/WebFetch/Context7 for external research with confidence tiers; Architect and Decomposer spawn researchers before decisions/decomposition; orchestrator chains researcher doc_ids to downstream agents
+- [ ] **ABH-08**: Feature completion creates PRs via `gh pr create` with RPEV context; merge gate respects involvement mode; rollback protocol has explicit git commands
 
 ## Future Requirements
 
@@ -193,10 +195,12 @@ Which phases cover which requirements. Updated during roadmap creation.
 | ABH-04 | Phase 25-02 | Complete |
 | ABH-05 | Phase 25-03 | Complete |
 | ABH-06 | Phase 25-04 | Planned |
+| ABH-07 | Phase 25-05 | Planned |
+| ABH-08 | Phase 25-06 | Planned |
 
 **Coverage:**
-- v3.0 requirements: 57 total (39 original + 8 RPEV + 4 Agent Pool + 6 Agent Behavior Hardening)
-- Mapped to phases: 57
+- v3.0 requirements: 59 total (39 original + 8 RPEV + 4 Agent Pool + 8 Agent Behavior Hardening)
+- Mapped to phases: 59
 - Unmapped: 0
 
 ---

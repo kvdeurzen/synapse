@@ -104,6 +104,13 @@ None - no external service configuration required. Changes are to agent prompt t
 - Orchestrator now has a complete PR-based merge workflow. Feature branches are created, integration-checked, and surfaced as PRs with full RPEV context. Merge gate respects the involvement matrix. Rollback has explicit git commands.
 - Phase 24 plan 04 (E2E re-validation) is the remaining work to verify the hardened orchestrator works end-to-end.
 
+## Self-Check: PASSED
+
+- synapse-orchestrator.md: FOUND at packages/framework/agents/synapse-orchestrator.md
+- 25-06-SUMMARY.md: FOUND at .planning/phases/25-agent-behavior-hardening/25-06-SUMMARY.md
+- Task 1 commit c79e2f9: FOUND in git log
+- Final metadata commit 6d7383d: FOUND in git log
+
 ---
 *Phase: 25-agent-behavior-hardening*
 *Completed: 2026-03-07*

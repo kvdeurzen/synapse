@@ -3,13 +3,13 @@ gsd_state_version: 1.0
 milestone: v3.0
 milestone_name: Working Prototype
 status: in_progress
-stopped_at: "Phase 24 complete (SC1-SC4 verified). Phase 25: Agent Behavior Hardening inserted, not yet planned."
-last_updated: "2026-03-07T12:00:00Z"
-last_activity: 2026-03-07 — Phase 24 complete (SC1-SC4 verified, 40 failures documented). Phase 25 inserted for agent behavior hardening.
+stopped_at: "Phase 25 planned (4 plans in 2 waves). Ready to execute."
+last_updated: "2026-03-07T14:00:00Z"
+last_activity: 2026-03-07 — Phase 25 planned (4 plans, 2 waves). Ready to execute.
 progress:
   total_phases: 11
   completed_phases: 10
-  total_plans: 22
+  total_plans: 26
   completed_plans: 22
   percent: 91
 ---
@@ -21,15 +21,15 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-03)
 
 **Core value:** Agents get the right context for any task — from both project decisions and actual code — without wasting tokens on irrelevant content. The orchestrator ensures agents respect established decisions and decompose work to context-window-sized executable units.
-**Current focus:** Phase 25 — Agent Behavior Hardening (not yet planned)
+**Current focus:** Phase 25 — Agent Behavior Hardening (planned, ready to execute)
 **Previous milestones:** v1.0 Data Layer (shipped 2026-03-01), v2.0 Agentic Framework (shipped 2026-03-02)
 
 ## Current Position
 
-Phase: 25 of 25 (Agent Behavior Hardening) — not yet planned
-Plan: 0 of ? in current phase
-Status: Phase 24 E2E complete (SC1-SC4 verified). Phase 25 inserted to fix 28 DEGRADED issues before v3.0.
-Last activity: 2026-03-07 — Phase 24 complete, Phase 25 inserted
+Phase: 25 of 25 (Agent Behavior Hardening) — planned, ready to execute
+Plan: 0 of 4 in current phase
+Status: Phase 25 planned (4 plans in 2 waves). Wave 1: orchestrator hardening + slash commands + hooks (parallel). Wave 2: E2E re-validation.
+Last activity: 2026-03-07 — Phase 25 planned
 
 Progress: [██████████] 100%
 

@@ -150,11 +150,11 @@
 
 ## Verification Results
 
-*Filled in during Plan 24-02 after patches applied.*
+*Completed 2026-03-07 based on Plan 24-01 full RPEV run + Plan 24-02 abbreviated re-run.*
 
 | Success Criterion | Result | Evidence |
 |-------------------|--------|----------|
-| SC1: Full RPEV cycle completes on rpi-camera-py | PENDING | — |
-| SC2: .synapse-audit.log contains required tool entries | PENDING | — |
-| SC3: Failure log documents issues with root causes | PENDING | — |
-| SC4: /synapse:status matches get_task_tree state | PENDING | — |
+| SC1: Full RPEV cycle completes on rpi-camera-py | **PASS** | Full Refine→Plan→Execute→Validate cycle ran. 1 epic, 2 features, 11 WPs + 2 validators + epic integration = 15/15 tasks marked done. Orchestrator reported "Epic Complete: Codebase Refactoring — All 15 tasks done, all validations passed." (terminal log lines 793-826). Note: task tree integrity not verified (#28, #29) |
+| SC2: .synapse-audit.log contains required tool entries | **PASS** | Original run: 471 entries, ~628k tokens. Terminal log analysis confirmed init_project, store_document, create_task, update_task, get_task_tree, get_smart_context all present. Abbreviated re-run: 15 entries, init_project confirmed. Note: 91% entries had agent="unknown" (#37) |
+| SC3: Failure log documents issues with root causes | **PASS** | 40 issues documented (5 BLOCKER all PATCHED, 28 DEGRADED, 7 COSMETIC). Every entry has root cause and severity. 6 patches applied and documented. Known limitations table covers all non-blocking issues |
+| SC4: /synapse:status matches get_task_tree state | **PARTIAL** | During the run, /synapse:status (terminal log lines 634-687) showed correct epic name, feature names, and task completion counts matching the task tree. However: (a) "Agent Pool not yet active" while agents were running (#13), (b) blocked counts may be stale (#35), (c) layout inconsistent between invocations (#5). Core data was accurate; presentation had gaps |

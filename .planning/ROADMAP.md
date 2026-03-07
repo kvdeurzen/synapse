@@ -4,7 +4,7 @@
 
 - ✅ **v1.0 Data Layer** - Phases 1-9 (shipped 2026-03-01)
 - ✅ **v2.0 Agentic Framework** - Phases 10-14 (shipped 2026-03-02)
-- 🚧 **v3.0 Working Prototype** - Phases 15-24 (in progress)
+- 🚧 **v3.0 Working Prototype** - Phases 15-25 (in progress)
 
 ## Phases
 
@@ -52,7 +52,8 @@ See [v2.0 Archive](milestones/v2.0-ROADMAP.md) for full details.
 - [x] **Phase 21: Agent Pool** - configurable slots, auto-assignment, work queue, agent-based focus (completed 2026-03-06)
 - [x] **Phase 22: Install Script** - one-command install.sh with prerequisite checks, file wiring, and Ollama smoke test (completed 2026-03-06)
 - [x] **Phase 23: Visibility + Notifications** - statusline hook, blocked counter, project_overview progress, configurable notifications (completed 2026-03-06)
-- [ ] **Phase 24: E2E Validation** - full RPEV cycle on a real task, hook verification, failure log, status verification
+- [x] **Phase 24: E2E Validation** - full RPEV cycle on a real task, hook verification, failure log, status verification (completed 2026-03-07)
+- [ ] **Phase 25: Agent Behavior Hardening** - fix DEGRADED issues from E2E run: orchestrator prompt discipline, RPEV stage gates, git workflow, token efficiency, audit attribution (INSERTED)
 
 ## Phase Details
 
@@ -214,11 +215,49 @@ Plans:
 - [ ] 24-01-PLAN.md — Alpha release (commit framework files, tag v3.0.0-alpha.1, gh release) + pre-run fix (init.md trust schema) + install on rpi-camera-py + run RPEV cycle (E2E-01, E2E-02, E2E-03)
 - [ ] 24-02-PLAN.md — Patch BLOCKER failures + tag v3.0.0-alpha.2 + abbreviated re-run verification + SC1-SC4 checklist (E2E-03, E2E-04)
 
+### Phase 25: Agent Behavior Hardening
+**Goal**: The RPEV orchestrator and agent prompts produce a usable, efficient workflow — with explicit stage gates, terse output, self-managing subagents, git discipline, and accurate observability
+**Depends on**: Phase 24 (failure log as input)
+**Requirements**: ABH-01 through ABH-06 (to be defined during planning)
+**Success Criteria** (what must be TRUE):
+  1. RPEV stages have explicit boundaries — stage documents are persisted at each transition, gate checks verify prerequisites before proceeding
+  2. The orchestrator delegates bookkeeping to subagents — executors mark their own tasks done, validators update their own findings, orchestrator context stays lean
+  3. Executors create atomic commits per task and the orchestrator verifies commits exist before marking tasks done
+  4. /synapse:status output is consistent across runs and uses filtered queries that scale to 100+ task trees
+  5. Audit log entries have correct agent attribution (not "unknown") for at least 80% of calls
+  6. A second E2E run on rpi-camera-py shows measurably fewer issues than the first run (target: 0 BLOCKER, <10 DEGRADED)
+**Plans**: TBD (to be created by /gsd:plan-phase 25)
+
+**Scope** (from 24-FAILURE-LOG.md DEGRADED issues):
+
+Group A — Orchestrator prompt hardening (#10, #11, #12, #13, #15, #16, #19, #21, #23, #28, #29, #30, #31, #32, #34, #35):
+- RPEV stage boundary discipline (gate checks, stage documents, /clear between stages)
+- Terse output budget (progress template, no pipeline narration)
+- Delegate bookkeeping to subagents (executor self-update, validator findings-as-document)
+- Git workflow (feature branches, atomic commits per task)
+- Task tree integrity (verify children before marking parent done, update is_blocked)
+- Re-index after execution, store plan document, spawn researcher + plan_reviewer
+
+Group B — Slash command prompt fixes (#5, #6, #17, #26, #33, #36):
+- status.md structured output template + filtered queries
+- refine.md trust code index, persist at boundary, surface UX decisions
+- init.md commit scaffolding step
+
+Group C — Hook/infrastructure fixes (#37, #38):
+- audit-log.js agent attribution fix
+- Session summary generation (end-of-cycle aggregation)
+
+Deferred to v3.1 (#9, #18, #27):
+- /synapse:status during execution (architectural — needs side-channel)
+- Decomposer task granularity (needs deeper decomposer rework)
+- Parallel store_decision cascade (Claude Code platform limitation)
+
 ## Progress
 
 **Execution Order:**
-15 → 16 → 17 → 18 → 19 → 20 → 21 → 22 → 23 → 24
+15 → 16 → 17 → 18 → 19 → 20 → 21 → 22 → 23 → 24 → 25
 Parallelizable: Phase 17 (Tech Debt) and Phase 20 (Skills) can proceed in parallel with 18-19. Phase 20 depends only on Phase 15.
+Phase 25 depends on Phase 24 (failure log drives scope).
 
 | Phase | Milestone | Plans Complete | Status | Completed |
 |-------|-----------|----------------|--------|-----------|
@@ -246,4 +285,5 @@ Parallelizable: Phase 17 (Tech Debt) and Phase 20 (Skills) can proceed in parall
 | 21. Agent Pool | 2/2 | Complete    | 2026-03-06 | - |
 | 22. Install Script | 2/2 | Complete    | 2026-03-06 | - |
 | 23. Visibility + Notifications | v3.0 | 2/2 | Complete | 2026-03-06 |
-| 24. E2E Validation | v3.0 | 0/2 | In Progress (24-01 at checkpoint) | - |
+| 24. E2E Validation | v3.0 | 2/2 | Complete | 2026-03-07 |
+| 25. Agent Behavior Hardening | v3.0 | 0/? | Not Planned | - |

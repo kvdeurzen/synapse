@@ -78,10 +78,10 @@ Requirements for Working Prototype milestone. Each maps to roadmap phases.
 
 ### E2E Validation
 
-- [ ] **E2E-01**: Full RPEV cycle runs on a real task (refine → plan → execute → validate)
-- [ ] **E2E-02**: Hooks verified firing via audit log presence after tool calls
-- [ ] **E2E-03**: Failure log documented with root causes and patches for top-3 issues
-- [ ] **E2E-04**: `/synapse:status` output matches task tree state at completion
+- [x] **E2E-01**: Full RPEV cycle runs on a real task (refine → plan → execute → validate)
+- [x] **E2E-02**: Hooks verified firing via audit log presence after tool calls
+- [x] **E2E-03**: Failure log documented with root causes and patches for top-3 issues
+- [x] **E2E-04**: `/synapse:status` output matches task tree state at completion (PARTIAL — core data accurate, presentation gaps documented)
 
 ### Visibility
 
@@ -174,10 +174,10 @@ Which phases cover which requirements. Updated during roadmap creation.
 | INST-04 | Phase 22 | Complete |
 | VIS-01 | Phase 23-01 | Complete |
 | VIS-02 | Phase 23-02 | Complete |
-| E2E-01 | Phase 24 | Pending |
-| E2E-02 | Phase 24 | Pending |
-| E2E-03 | Phase 24 | Pending |
-| E2E-04 | Phase 24 | Pending |
+| E2E-01 | Phase 24 | Complete |
+| E2E-02 | Phase 24 | Complete |
+| E2E-03 | Phase 24 | Complete |
+| E2E-04 | Phase 24 | Complete (PARTIAL — core data accurate, presentation gaps in Phase 25 scope) |
 
 **Coverage:**
 - v3.0 requirements: 51 total (39 original + 8 RPEV + 4 Agent Pool)

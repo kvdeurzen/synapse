@@ -82,9 +82,23 @@ Check the domain mode for this task's domain from your injected context. Adjust 
 2. `get_smart_context` — gather relevant decisions and documents for alignment
 3. `query_decisions` — find architectural and functional design decisions that constrain the decomposition
 
-### Step 1b: Implementation Research (Optional)
+### Step 1b: Implementation Research
 
-For features that involve unfamiliar technology, complex integration, or multiple valid implementation approaches, spawn a Researcher before decomposing:
+After understanding scope in Step 1, identify whether research would inform the decomposition. The Decomposer owns research spawning — this is a standard step, not an orchestrator responsibility.
+
+**When to research (default):**
+- Unfamiliar technology or libraries the codebase hasn't used before
+- Multiple valid implementation approaches where the choice affects task structure
+- Complex integrations with external services or systems
+- External dependencies that need evaluation (version compatibility, API surface)
+- The epic/feature acceptance criteria leave open architectural questions
+
+**When to skip (exception):**
+- Straightforward CRUD following established codebase patterns
+- The architect already provided research findings in the handoff doc_ids — check for `researcher-findings-*` documents in the handoff before spawning a duplicate researcher
+- Pure refactoring where the target pattern is already decided
+
+**Spawning the Researcher:**
 
 ```
 Task(
@@ -93,14 +107,14 @@ Task(
     --- SYNAPSE HANDOFF ---
     project_id: {project_id}
     task_id: {task_id}
-    hierarchy_level: feature
+    hierarchy_level: {epic|feature}
     rpev_stage_doc_id: rpev-stage-{task_id}
     doc_ids: {relevant_doc_ids}
     decision_ids: {relevant_decision_ids}
     --- END HANDOFF ---
 
-    Research implementation approaches for: {feature title}
-    Context: {what the feature needs to do}
+    Research implementation approaches for: {epic/feature title}
+    Context: {what needs to be built and why}
     Questions:
     1. What libraries/patterns are commonly used for this?
     2. What are the common pitfalls?
@@ -111,9 +125,12 @@ Task(
 )
 ```
 
-After the Researcher completes, fetch findings via `query_documents(category: "research", tags: "|{task_id}|", actor: "decomposer")` and use them to inform task sizing, dependency ordering, and acceptance criteria.
+After the Researcher completes, fetch findings via `query_documents(category: "research", tags: "|{task_id}|", actor: "decomposer")` and use them to inform:
+- Task sizing (are there hidden complexities that require finer splits?)
+- Dependency ordering (does the research suggest a particular build order?)
+- Acceptance criteria (what specific patterns/libraries should tasks use?)
 
-**When to skip:** If the feature is straightforward (CRUD operations, following an established pattern already in the codebase), skip research and proceed directly to decomposition.
+**If the Researcher fails:** Log a warning in the plan document's Research References section and proceed with decomposition using available information. Research is informational, not gating.
 
 ### Step 2: Decompose One Level at a Time
 
@@ -157,7 +174,7 @@ decision_ids: [{relevant_decision_ids from query_decisions}]
 ```
 
 **What to include:**
-- `document_ids`: IDs of documents directly relevant to this task (architecture patterns, research findings, RPEV stage docs). Include the parent feature's rpev-stage doc_id if it exists.
+- `document_ids`: IDs of documents directly relevant to this task (architecture patterns, research findings, RPEV stage docs). Include the parent feature's rpev-stage doc_id if it exists. Include researcher doc_ids from Step 1b if research was performed.
 - `decision_ids`: IDs of decisions that constrain this task's implementation (architectural choices, design patterns).
 
 **Rules:**
@@ -178,7 +195,7 @@ store_document(
   category: "plan",
   status: "active",
   tags: "|plan|decomposition|{level}|",
-  content: "## Decomposition Rationale\n{why features were split this way}\n\n## Execution Order\n{wave assignments and dependency reasoning}\n\n## Effort Estimates\n{per-task rough size}\n\n## Key Risks\n{what might go wrong}",
+  content: "## Decomposition Rationale\n{why features were split this way}\n\n## Research References\n{researcher doc_ids produced during Step 1b, or 'No research performed — [reason per Step 1b skip criteria]'}\n\n## Execution Order\n{wave assignments and dependency reasoning}\n\n## Effort Estimates\n{per-task rough size}\n\n## Key Risks\n{what might go wrong}",
   actor: "decomposer"
 )
 link_documents(
@@ -223,12 +240,19 @@ Domain mode: Check your injected context for Domain Autonomy Modes. Adjust your 
 
 ## Examples
 
-### Example: Decomposing an Authentication Epic
+### Example: Decomposing an Authentication Epic (with research)
 
 Epic: "Authentication System" (depth 0, from Architect)
 
+**Step 1b — Research:** Unfamiliar territory (JWT implementation, token rotation strategies). Spawned researcher to investigate JWT signing libraries, refresh token rotation patterns, and token revocation approaches. Researcher stored findings as `researcher-findings-01HXYZ`.
+
+**Research informed the decomposition:**
+- Findings recommended `jose` library over `jsonwebtoken` for RS256 support → referenced in Feature 1 leaf task acceptance criteria
+- Findings identified token rotation as a separate concern from generation → split into distinct feature
+- Findings flagged Redis as common choice for revocation blacklists → informed Feature 4 task structure
+
 **Features (depth 1):**
-1. "JWT Token Generation" — create and sign access/refresh tokens
+1. "JWT Token Generation" — create and sign access/refresh tokens (using jose per research)
 2. "Token Validation Middleware" — verify tokens on protected routes
 3. "Token Refresh Flow" — exchange refresh tokens for new access tokens
 4. "Token Revocation" — blacklist tokens on logout/compromise
@@ -236,15 +260,19 @@ Epic: "Authentication System" (depth 0, from Architect)
 **Dependencies:** Feature 2 depends on Feature 1 (needs token format). Feature 3 depends on Features 1 and 2. Feature 4 depends on Feature 1.
 
 **Leaf tasks for Feature 1 (depth 3):**
-- Task: "Implement JWT signing utility" — signing module source + test file (2 files)
+- Task: "Implement JWT signing utility" — signing module source + test file (2 files). Acceptance criteria references `researcher-findings-01HXYZ` for jose library usage.
 - Task: "Create token payload schema" — payload types module + schema validation module (2 files)
 - Task: "Implement refresh token generation with rotation" — refresh module source + test file (2 files)
 
 Each task touches 2 files — well within the 2-5 file guideline.
 
-### Example: Splitting an Oversized Task
+**Plan document `## Research References`:** `researcher-findings-01HXYZ`
+
+### Example: Splitting an Oversized Task (research skipped)
 
 Initial task: "Implement the entire dashboard page" — touches 12+ files (layouts, widgets, API calls, tests).
+
+**Step 1b — Research skipped:** Following established dashboard pattern already in codebase (see `src/pages/admin-dashboard/`). No unfamiliar technology or open architectural questions.
 
 Split into:
 1. "Dashboard layout shell" — 3 files (layout component, styles, route registration)
@@ -253,6 +281,8 @@ Split into:
 4. "Dashboard integration test" — 2 files (test, test fixtures)
 
 Dependencies: Tasks 2 and 3 depend on Task 1. Task 4 depends on Tasks 2 and 3.
+
+**Plan document `## Research References`:** No research performed — following established dashboard pattern in codebase per Step 1b skip criteria.
 
 ## Mandatory Validation Tasks
 

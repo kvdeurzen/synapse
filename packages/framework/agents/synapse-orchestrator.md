@@ -173,73 +173,67 @@ See `@packages/framework/workflows/pev-workflow.md` for the authoritative RPEV w
 
 ### Epic -> Features
 
-0. Spawn Researcher subagent via Task tool to gather domain knowledge relevant to the epic. Pass SYNAPSE HANDOFF with project_id and task_id. The researcher stores findings as documents -- these doc_ids feed into the Decomposer's handoff.
-1. Spawn Decomposer subagent via Task tool to decompose the epic into feature-level tasks (depth=1)
-   - Pass via SYNAPSE HANDOFF block: project_id, task_id, hierarchy_level=epic, rpev_stage_doc_id, doc_ids (include researcher doc_ids), decision_ids from CONTEXT_REFS
-2. Spawn Plan Reviewer subagent to verify the Decomposer's feature list
+0. Spawn Decomposer subagent via Task tool to decompose the epic into feature-level tasks (depth=1)
+   - Pass via SYNAPSE HANDOFF block: project_id, task_id, hierarchy_level=epic, rpev_stage_doc_id, doc_ids, decision_ids from CONTEXT_REFS
+   - The Decomposer owns research spawning — it will spawn Researchers as needed during decomposition (see decomposer.md Step 1b)
+1. Spawn Plan Reviewer subagent to verify the Decomposer's feature list
    - Plan Reviewer checks: completeness (all acceptance criteria covered), testability, no circular dependencies
-2b. Spawn Plan Reviewer subagent to verify the Decomposer's feature list against stored decisions (from query_decisions). Plan Reviewer checks: completeness, testability, no circular deps, AND consistency with all DECIDED items from Refine.
-3. If Plan Reviewer rejects the decomposition:
+1b. Spawn Plan Reviewer subagent to verify the Decomposer's feature list against stored decisions (from query_decisions). Plan Reviewer checks: completeness, testability, no circular deps, AND consistency with all DECIDED items from Refine.
+2. If Plan Reviewer rejects the decomposition:
    - Spawn Decomposer again with the reviewer's feedback in context (max 3 cycles total)
    - Each respawn must address ALL reviewer concerns — not just acknowledge them
-4. If rejected after 3 cycles: escalate to user with both decomposer's plan and reviewer's objections
-5. Resolve involvement mode for `{level}_plan`:
+3. If rejected after 3 cycles: escalate to user with both decomposer's plan and reviewer's objections
+4. Resolve involvement mode for `{level}_plan`:
    - `drives` or `co-pilot`: Store feature list as proposal document, set stage doc `pending_approval: true` with `proposal_doc_id`, wait for user approval
    - `reviews`: Proceed with decomposition, store as proposal, set `pending_approval: true` for post-execution review
    - `autopilot` or `monitors`: Proceed without user involvement
-6. Update stage document: `stage: "PLANNING"`, record involvement mode
+5. Update stage document: `stage: "PLANNING"`, record involvement mode
 
 ### Feature -> Tasks (JIT Decomposition)
 
 Decompose features into tasks ONLY when that feature is the next to execute — not upfront. Earlier features' outputs inform later decomposition.
 
 For each feature when it becomes active:
-0. Spawn Researcher subagent via Task tool to gather domain knowledge relevant to the feature. Pass SYNAPSE HANDOFF with project_id and task_id. The researcher stores findings as documents -- these doc_ids feed into the Decomposer's handoff.
-1. Spawn Decomposer subagent to decompose feature into component/task items (depth=2/3)
-   - Pass via SYNAPSE HANDOFF block: project_id, task_id, hierarchy_level=feature, rpev_stage_doc_id, doc_ids (include researcher doc_ids), decision_ids from CONTEXT_REFS
-2. Spawn Plan Reviewer to verify task decomposition (max 3 review cycles)
-3. Resolve involvement mode for `{level}_plan`:
+0. Spawn Decomposer subagent to decompose feature into component/task items (depth=2/3)
+   - Pass via SYNAPSE HANDOFF block: project_id, task_id, hierarchy_level=feature, rpev_stage_doc_id, doc_ids, decision_ids from CONTEXT_REFS
+   - The Decomposer owns research spawning — it will spawn Researchers as needed during decomposition (see decomposer.md Step 1b)
+1. Spawn Plan Reviewer to verify task decomposition (max 3 review cycles)
+2. Resolve involvement mode for `{level}_plan`:
    - `drives` or `co-pilot`: Present task list to user before executing
    - `reviews`: Execute decomposition, then present for review
    - `autopilot` or `monitors`: Proceed without user involvement
-4. Identify execution waves: group independent tasks (no unmet dependencies) into the same wave
-5. Update stage document: `stage: "PLANNING"`, record involvement mode
+3. Identify execution waves: group independent tasks (no unmet dependencies) into the same wave
+4. Update stage document: `stage: "PLANNING"`, record involvement mode
 
-## Researcher Document Discovery
+## Research Document Discovery
 
-When the orchestrator spawns a Researcher (step 0 in Epic -> Features and Feature -> Tasks), the researcher stores findings with a predictable doc_id pattern: `researcher-findings-{task_id}`.
+The Decomposer now owns research spawning (Step 1b of its protocol). After the Decomposer completes, the orchestrator discovers what research was done by reading the plan document.
 
-### Discovery and Handoff Chain
+### Discovery Chain
 
-After a Researcher subagent completes:
-
-1. **Verify the document exists:** `query_documents(project_id: "{project_id}", category: "research", tags: "|{task_id}|", actor: "synapse-orchestrator")`
-2. **Extract the doc_id** from the query result (expected: `researcher-findings-{task_id}`)
-3. **Include in downstream handoffs:** Add the researcher doc_id to the `doc_ids` field in SYNAPSE HANDOFF blocks for:
-   - Decomposer (so decomposition is informed by research)
-   - Architect (so decisions reference research)
-   - Plan Reviewer (so review can verify research was addressed)
+1. **Read the plan document:** After the Decomposer completes, query `plan-{task_id}` via `query_documents(project_id: "{project_id}", category: "plan", tags: "|plan|decomposition|", actor: "synapse-orchestrator")`
+2. **Extract research_doc_ids:** The plan document's `## Research References` section lists any researcher doc_ids produced during decomposition
+3. **Thread into Plan Reviewer handoff:** Include the research_doc_ids in the Plan Reviewer's SYNAPSE HANDOFF `doc_ids` field so the reviewer can verify research was addressed
 
 **Example handoff chain:**
 
 ```
-Orchestrator spawns Researcher for epic "Auth System"
-  → Researcher stores: researcher-findings-01HXYZ (research doc)
-Orchestrator discovers doc_id via query_documents
-Orchestrator spawns Decomposer with handoff:
-  doc_ids: rpev-stage-01HXYZ, researcher-findings-01HXYZ
-  → Decomposer reads research before decomposing
+Orchestrator spawns Decomposer for epic "Auth System"
+  → Decomposer spawns Researcher internally (Step 1b)
+  → Researcher stores: researcher-findings-01HXYZ
+  → Decomposer stores plan: plan-01HXYZ (includes ## Research References)
+Orchestrator reads plan-01HXYZ, extracts research_doc_ids
 Orchestrator spawns Plan Reviewer with handoff:
-  doc_ids: rpev-stage-01HXYZ, researcher-findings-01HXYZ, plan-01HXYZ
+  doc_ids: rpev-stage-01HXYZ, plan-01HXYZ, researcher-findings-01HXYZ
   → Plan Reviewer verifies decomposition addresses research findings
 ```
 
-### If Researcher Fails
+### If No Research Was Produced
 
-If the Researcher subagent returns an error or doesn't produce a document:
-- Log a warning: "Researcher did not produce findings for task {task_id}"
-- Proceed with decomposition WITHOUT the research doc_id in the handoff
-- Do NOT block the pipeline on a failed research step — it's informational, not gating
+If the Decomposer's plan document has no `## Research References` section or the section is empty:
+- The Decomposer determined research was unnecessary (see decomposer.md Step 1b skip criteria)
+- Proceed normally — do NOT block the pipeline or re-spawn a researcher
+- Omit research doc_ids from the Plan Reviewer handoff
 
 ## Wave Execution Protocol
 

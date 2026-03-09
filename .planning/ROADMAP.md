@@ -53,7 +53,8 @@ See [v2.0 Archive](milestones/v2.0-ROADMAP.md) for full details.
 - [x] **Phase 22: Install Script** - one-command install.sh with prerequisite checks, file wiring, and Ollama smoke test (completed 2026-03-06)
 - [x] **Phase 23: Visibility + Notifications** - statusline hook, blocked counter, project_overview progress, configurable notifications (completed 2026-03-06)
 - [x] **Phase 24: E2E Validation** - full RPEV cycle on a real task, hook verification, failure log, status verification (completed 2026-03-07)
-- [ ] **Phase 25: Agent Behavior Hardening** - fix DEGRADED issues from E2E run: orchestrator prompt discipline, RPEV stage gates, git workflow, token efficiency, audit attribution (INSERTED)
+- [~] **Phase 25: Agent Behavior Hardening** - fix DEGRADED issues from E2E run: orchestrator prompt discipline, RPEV stage gates, git workflow, token efficiency, audit attribution (INSERTED) — 5/6 plans complete, E2E re-validation (25-04) deferred to usage
+- [ ] **Phase 26: Usage Findings** - address issues discovered during real usage on rpi-camera-py before declaring v3.0 release
 
 ## Phase Details
 
@@ -260,12 +261,26 @@ Deferred to v3.1 (#9, #18, #27):
 - Decomposer task granularity (needs deeper decomposer rework)
 - Parallel store_decision cascade (Claude Code platform limitation)
 
+### Phase 26: Usage Findings
+**Goal**: Address issues discovered during real usage of Synapse on rpi-camera-py — the final polish pass before declaring v3.0 release-ready
+**Depends on**: Phase 25, real usage session(s)
+**Requirements**: TBD (populated as findings accumulate)
+**Success Criteria** (what must be TRUE):
+  1. All BLOCKER-severity findings from usage are resolved
+  2. Install script reliably deploys the latest framework to a clean project
+  3. The RPEV cycle can run end-to-end without manual workarounds
+**Plans**: TBD (created as findings are collected)
+
+Plans:
+- *(plans will be added as usage findings are reported)*
+
 ## Progress
 
 **Execution Order:**
-15 → 16 → 17 → 18 → 19 → 20 → 21 → 22 → 23 → 24 → 25
+15 → 16 → 17 → 18 → 19 → 20 → 21 → 22 → 23 → 24 → 25 → 26
 Parallelizable: Phase 17 (Tech Debt) and Phase 20 (Skills) can proceed in parallel with 18-19. Phase 20 depends only on Phase 15.
 Phase 25 depends on Phase 24 (failure log drives scope).
+Phase 26 depends on Phase 25 + real usage findings (plans created as issues arise).
 
 | Phase | Milestone | Plans Complete | Status | Completed |
 |-------|-----------|----------------|--------|-----------|
@@ -294,4 +309,5 @@ Phase 25 depends on Phase 24 (failure log drives scope).
 | 22. Install Script | 2/2 | Complete    | 2026-03-06 | - |
 | 23. Visibility + Notifications | v3.0 | 2/2 | Complete | 2026-03-06 |
 | 24. E2E Validation | v3.0 | 2/2 | Complete | 2026-03-07 |
-| 25. Agent Behavior Hardening | v3.0 | 5/6 | In Progress | - |
+| 25. Agent Behavior Hardening | v3.0 | 5/6 | Complete (25-04 deferred) | 2026-03-09 |
+| 26. Usage Findings | v3.0 | 0/0 | Pending | - |

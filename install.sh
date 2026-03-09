@@ -122,7 +122,7 @@ Options:
 Examples:
   bash install.sh                           # Local install, latest version
   bash install.sh --global                  # Global install to ~/.synapse/
-  bash install.sh --version v3.0            # Install specific version
+  bash install.sh --version v3.0.0-alpha.6   # Install specific version
   bash install.sh --smoke-test              # Test already-installed Synapse
   curl -fsSL https://raw.githubusercontent.com/kvdeurzen/synapse/main/install.sh | bash
 EOF
@@ -257,11 +257,16 @@ else
   # Determine the version to download
   if [ "$VERSION" = "latest" ]; then
     log_info "Fetching latest release tag from GitHub..."
+    # Try stable release first, then fall back to most recent tag (includes pre-releases)
     LATEST_TAG=$(curl -sf "https://api.github.com/repos/kvdeurzen/synapse/releases/latest" \
       2>/dev/null | grep '"tag_name"' | head -1 | sed 's/.*"tag_name": *"\([^"]*\)".*/\1/' || echo "")
     if [ -z "$LATEST_TAG" ]; then
-      log_warn "Could not fetch latest tag; falling back to v3.0"
-      LATEST_TAG="v3.0"
+      LATEST_TAG=$(curl -sf "https://api.github.com/repos/kvdeurzen/synapse/tags?per_page=1" \
+        2>/dev/null | grep '"name"' | head -1 | sed 's/.*"name": *"\([^"]*\)".*/\1/' || echo "")
+    fi
+    if [ -z "$LATEST_TAG" ]; then
+      log_error "Could not determine latest version from GitHub. Specify one with --version TAG"
+      exit 1
     fi
     VERSION="$LATEST_TAG"
   fi

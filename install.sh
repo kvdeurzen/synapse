@@ -406,12 +406,27 @@ else
 
   # Install server dependencies (native tree-sitter binaries require bun install)
   log_info "Installing server dependencies (native binaries)..."
-  if (cd "$TARGET_DIR/.claude/server" && bun install --production 2>&1 | tail -5); then
+  if (cd "$TARGET_DIR/.claude/server" && CXXFLAGS="-std=c++20" bun install --production 2>&1); then
     log_step "Server dependencies installed"
   else
     log_warn "Server dependency install had errors (tree-sitter native build may have failed)."
     log_warn "The server will still work — code indexing (/synapse:map) may be unavailable."
     log_step "Server dependencies installed (with warnings)"
+  fi
+
+  # Verify tree-sitter native module loads under Node (the actual MCP server runtime)
+  if ! node -e "require('tree-sitter')" 2>/dev/null; then
+    log_warn "tree-sitter native module failed to load under Node."
+    log_info "Attempting rebuild with C++20 support..."
+    if (cd "$TARGET_DIR/.claude/server/node_modules/tree-sitter" && \
+        CXXFLAGS="-std=c++20" npx node-gyp rebuild 2>&1 | tail -3); then
+      log_step "tree-sitter rebuilt successfully"
+    else
+      log_warn "tree-sitter rebuild failed. Code indexing (/synapse:map) will not work."
+      log_info "Fix: cd .claude/server && CXXFLAGS='-std=c++20' bun install"
+    fi
+  else
+    log_step "tree-sitter native module verified under Node"
   fi
 fi
 

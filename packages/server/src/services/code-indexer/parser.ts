@@ -1,11 +1,50 @@
+import { createRequire } from "node:module";
 import { extname } from "node:path";
-import Parser from "tree-sitter";
-import PythonLang from "tree-sitter-python";
-import RustLang from "tree-sitter-rust";
-import TypeScriptLang from "tree-sitter-typescript";
+import type Parser from "tree-sitter";
+import { TreeSitterUnavailableError } from "../../errors.js";
 
 // Re-export SUPPORTED_EXTENSIONS from scanner for convenience
 export { SUPPORTED_EXTENSIONS } from "./scanner.js";
+
+// Re-export so consumers can catch it without importing errors.ts directly
+export { TreeSitterUnavailableError } from "../../errors.js";
+
+// ---------------------------------------------------------------------------
+// Lazy-loaded tree-sitter modules (defense-in-depth: server starts even if
+// tree-sitter native module failed to build)
+// ---------------------------------------------------------------------------
+
+const _require = createRequire(import.meta.url);
+
+// biome-ignore lint: dynamic require returns untyped modules
+let _TreeSitter: any = null;
+// biome-ignore lint: dynamic require returns untyped modules
+let _PythonLang: any = null;
+// biome-ignore lint: dynamic require returns untyped modules
+let _RustLang: any = null;
+// biome-ignore lint: dynamic require returns untyped modules
+let _TypeScriptLang: any = null;
+let _loadAttempted = false;
+let _loadError: unknown = null;
+
+function loadTreeSitter(): void {
+  if (_TreeSitter) return;
+  if (_loadAttempted) throw new TreeSitterUnavailableError(_loadError);
+  _loadAttempted = true;
+  try {
+    _TreeSitter = _require("tree-sitter");
+    _PythonLang = _require("tree-sitter-python");
+    _RustLang = _require("tree-sitter-rust");
+    _TypeScriptLang = _require("tree-sitter-typescript");
+  } catch (err) {
+    _loadError = err;
+    _TreeSitter = null;
+    _PythonLang = null;
+    _RustLang = null;
+    _TypeScriptLang = null;
+    throw new TreeSitterUnavailableError(err);
+  }
+}
 
 // Grammar packages expose `language: unknown` in their type definitions,
 // which is incompatible with tree-sitter's `language: Language` recursive type.
@@ -26,34 +65,38 @@ let _rsParser: Parser | null = null;
 
 function getTsParser(): Parser {
   if (!_tsParser) {
-    _tsParser = new Parser();
-    _tsParser.setLanguage(asLang(TypeScriptLang.typescript));
+    loadTreeSitter();
+    _tsParser = new _TreeSitter();
+    _tsParser!.setLanguage(asLang(_TypeScriptLang.typescript));
   }
-  return _tsParser;
+  return _tsParser!;
 }
 
 function getTsxParser(): Parser {
   if (!_tsxParser) {
-    _tsxParser = new Parser();
-    _tsxParser.setLanguage(asLang(TypeScriptLang.tsx));
+    loadTreeSitter();
+    _tsxParser = new _TreeSitter();
+    _tsxParser!.setLanguage(asLang(_TypeScriptLang.tsx));
   }
-  return _tsxParser;
+  return _tsxParser!;
 }
 
 function getPyParser(): Parser {
   if (!_pyParser) {
-    _pyParser = new Parser();
-    _pyParser.setLanguage(asLang(PythonLang));
+    loadTreeSitter();
+    _pyParser = new _TreeSitter();
+    _pyParser!.setLanguage(asLang(_PythonLang));
   }
-  return _pyParser;
+  return _pyParser!;
 }
 
 function getRsParser(): Parser {
   if (!_rsParser) {
-    _rsParser = new Parser();
-    _rsParser.setLanguage(asLang(RustLang));
+    loadTreeSitter();
+    _rsParser = new _TreeSitter();
+    _rsParser!.setLanguage(asLang(_RustLang));
   }
-  return _rsParser;
+  return _rsParser!;
 }
 
 // ---------------------------------------------------------------------------
@@ -69,6 +112,8 @@ function getRsParser(): Parser {
  *   .py  → Python parser
  *   .rs  → Rust parser
  *   other → throws Error
+ *
+ * @throws {TreeSitterUnavailableError} if tree-sitter native module is not installed
  */
 export function getParserForFile(filePath: string): Parser {
   const ext = extname(filePath).toLowerCase();
@@ -94,6 +139,7 @@ export function getParserForFile(filePath: string): Parser {
  * @param source   - Source code string to parse
  * @returns The parsed tree
  * @throws if the parser fails to produce a tree or the extension is unsupported
+ * @throws {TreeSitterUnavailableError} if tree-sitter native module is not installed
  */
 export function parseSource(filePath: string, source: string): Parser.Tree {
   const parser = getParserForFile(filePath);

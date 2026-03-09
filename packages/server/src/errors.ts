@@ -36,3 +36,15 @@ export class EmbedDimensionError extends OllamaError {
     this.name = "EmbedDimensionError";
   }
 }
+
+// tree-sitter native module errors
+export class TreeSitterUnavailableError extends Error {
+  constructor(cause?: unknown) {
+    super(
+      "tree-sitter native module is not available. Code indexing is disabled.\n" +
+        "Fix: cd .claude/server && CXXFLAGS='-std=c++20' bun install",
+    );
+    this.name = "TreeSitterUnavailableError";
+    if (cause) this.cause = cause;
+  }
+}

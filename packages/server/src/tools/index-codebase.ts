@@ -11,7 +11,7 @@ import {
   RelationshipRowSchema,
 } from "../db/schema.js";
 import { escapeSQL } from "../db/sql-helpers.js";
-import { OllamaUnreachableError } from "../errors.js";
+import { OllamaUnreachableError, TreeSitterUnavailableError } from "../errors.js";
 import { createToolLogger, logger } from "../logger.js";
 import { logActivity } from "../services/activity-log.js";
 import { extractSymbols } from "../services/code-indexer/extractor.js";
@@ -272,6 +272,10 @@ export async function indexCodebase(
       });
       allEdges.push(...fileEdges);
     } catch (err) {
+      // tree-sitter unavailable: abort immediately — all files will fail
+      if (err instanceof TreeSitterUnavailableError) {
+        throw err;
+      }
       // Syntax errors: partial index + warning
       logger.warn({ file: file.relativePath, error: String(err) }, "Error indexing file");
       errors.push(`${file.relativePath}: ${String(err)}`);

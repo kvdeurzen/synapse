@@ -5,7 +5,8 @@
   "private": true,
   "scripts": {
     "test": "bun test",
-    "lint": "bunx biome check src/ test/ hooks/"
+    "lint": "bunx biome check src/ test/ hooks/",
+    "build:agents": "bun scripts/compose-agents.ts"
   },
   "peerDependencies": {
     "zod": "^4.0.0",

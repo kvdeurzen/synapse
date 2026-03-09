@@ -50,7 +50,7 @@ const trustConfig = loadTrustConfig(TRUST_TOML);
 
 // List agent markdown files (excluding synapse-orchestrator)
 const agentMdFiles = readdirSync(AGENTS_DIR)
-  .filter((f) => f.endsWith(".md") && f !== "synapse-orchestrator.md")
+  .filter((f) => f.endsWith(".md") && f !== "synapse-orchestrator.md" && !f.startsWith("_"))
   .map((f) => f.replace(".md", ""));
 
 // Agent names from agents.toml

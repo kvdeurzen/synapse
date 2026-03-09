@@ -328,14 +328,17 @@ mkdir -p \
   "$TARGET_DIR/.claude/server" \
   "$TARGET_DIR/.synapse/config"
 
-# Copy framework agents (11 .md files)
+# Compose and copy framework agents (resolves {{include:}} markers)
+AGENT_BUILD_DIR=$(mktemp -d)
+bun "$SYNAPSE_SOURCE/packages/framework/scripts/compose-agents.ts" "$AGENT_BUILD_DIR"
 AGENT_COUNT=0
-for f in "$SYNAPSE_SOURCE/packages/framework/agents/"*.md; do
+for f in "$AGENT_BUILD_DIR/"*.md; do
   [ -f "$f" ] || continue
   cp "$f" "$TARGET_DIR/.claude/agents/"
   AGENT_COUNT=$((AGENT_COUNT + 1))
 done
-log_step "Agents: $AGENT_COUNT files"
+rm -rf "$AGENT_BUILD_DIR"
+log_step "Agents: $AGENT_COUNT files (composed)"
 
 # Copy hook JS files (not lib/)
 HOOK_COUNT=0

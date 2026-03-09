@@ -60,51 +60,11 @@ Check the domain mode for this task's domain from your injected context. Adjust 
 
 After understanding scope in Step 1, identify whether research would inform the decomposition. The Decomposer owns research spawning — this is a standard step, not an orchestrator responsibility.
 
-**When to research (default):**
-- Unfamiliar technology or libraries the codebase hasn't used before
-- Multiple valid implementation approaches where the choice affects task structure
-- Complex integrations with external services or systems
-- External dependencies that need evaluation (version compatibility, API surface)
-- The epic/feature acceptance criteria leave open architectural questions
+Follow `@packages/framework/workflows/research-decision-flow.md` for the full research spawning protocol (when to spawn, researcher handoff template, findings integration).
 
-**When to skip (exception):**
-- Straightforward CRUD following established codebase patterns
-- The architect already provided research findings in the handoff doc_ids — check for `researcher-findings-*` documents in the handoff before spawning a duplicate researcher
-- Pure refactoring where the target pattern is already decided
+**Decomposer-specific integration:** Use research findings to inform task sizing, dependency ordering, and acceptance criteria (see "Agent-Specific Integration: Decomposer" in the workflow doc).
 
-**Spawning the Researcher:**
-
-```
-Task(
-  subagent_type: "researcher",
-  prompt: "
-    --- SYNAPSE HANDOFF ---
-    project_id: {project_id}
-    task_id: {task_id}
-    hierarchy_level: {epic|feature}
-    rpev_stage_doc_id: rpev-stage-{task_id}
-    doc_ids: {relevant_doc_ids}
-    decision_ids: {relevant_decision_ids}
-    --- END HANDOFF ---
-
-    Research implementation approaches for: {epic/feature title}
-    Context: {what needs to be built and why}
-    Questions:
-    1. What libraries/patterns are commonly used for this?
-    2. What are the common pitfalls?
-    3. What's the recommended file/module structure?
-
-    Store findings as: researcher-findings-{task_id}
-  "
-)
-```
-
-After the Researcher completes, fetch findings via `query_documents(category: "research", tags: "|{task_id}|", actor: "decomposer")` and use them to inform:
-- Task sizing (are there hidden complexities that require finer splits?)
-- Dependency ordering (does the research suggest a particular build order?)
-- Acceptance criteria (what specific patterns/libraries should tasks use?)
-
-**If the Researcher fails:** Log a warning in the plan document's Research References section and proceed with decomposition using available information. Research is informational, not gating.
+**If the Researcher fails:** Log a warning in the plan document's Research References section and proceed with available information. Research is informational, not gating.
 
 ### Step 2: Decompose One Level at a Time
 

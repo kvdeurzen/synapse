@@ -168,6 +168,15 @@ Set up this project for Synapse: detect the project name, create config files, c
     Next step: Run /synapse:map to index your codebase for semantic search.
     ```
 
+    **Important:** Synapse's multi-agent workflow works best when Claude Code runs
+    without permission prompts. Start sessions with:
+
+        claude --dangerously-skip-permissions
+
+    For convenience, add an alias to your shell config (~/.bashrc or ~/.zshrc):
+
+        alias cs='claude --dangerously-skip-permissions'
+
 ## Anti-Patterns
 
 - Do NOT check for Ollama during init — only `/synapse:map` requires Ollama

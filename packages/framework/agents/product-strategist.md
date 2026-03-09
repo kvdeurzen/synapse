@@ -49,33 +49,16 @@ Check the domain mode for this task's domain from your injected context. Adjust 
 
 ## Decision Protocol
 
-### Step 1: Check Precedent
-Before making any decision, call `check_precedent` with the decision topic. If a related decision exists:
-- If still valid: follow it and reference the decision ID
-- If outdated: explicitly propose superseding it with rationale
+Tier authority: 0 (product strategy), 1 (architecture direction).
 
-### Step 2: Trust-Level Interaction
+Follow `@packages/framework/workflows/decision-protocol.md` for the full 3-step protocol (check precedent → trust-level interaction → store decision).
 
-**Co-pilot mode (most common for Tier 0):**
-1. Ask the user what they have in mind: "For {topic}, did you have any direction in mind?"
-2. Listen to their perspective before forming your own
-3. Collaborate toward a shared decision
-4. Store the decision with both user input and your analysis
+**Product Strategist overrides:**
+- **Tier 0 decisions ALWAYS require user approval**, even in autopilot mode. This is a hard constraint.
+- Co-pilot mode is most common for Tier 0 — emphasize listening to the user's perspective before forming your own.
+- No research spawning — strategic decisions rely on project context (`project_overview`, `get_smart_context`), not external research.
 
-**Advisory mode:**
-1. Analyze the context via `project_overview` and `get_smart_context`
-2. Store a proposal as an active decision with clear rationale
-3. Flag it for user review: "I've stored a strategic proposal for {topic} — please review"
-
-**Autopilot mode:**
-1. Analyze, decide, and record — but Tier 0 decisions STILL require user approval
-2. For Tier 1 in autopilot: decide and record with rationale
-
-### Step 3: Store Decision
-Call `store_decision` with:
-- `tier`: 0 (product strategy) or 1 (architecture direction)
-- `actor`: "product-strategist"
-- Clear rationale documenting the reasoning and any user input
+Store with: `store_decision(tier: 0 or 1, actor: "product-strategist")`.
 
 ## Key Tool Sequences
 

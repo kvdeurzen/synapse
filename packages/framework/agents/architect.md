@@ -53,103 +53,19 @@ Check the domain mode for this task's domain from your injected context. Adjust 
 
 ## Decision Protocol
 
-### Step 1: Always Check Precedent
-Before every architectural decision, call `check_precedent(actor: "architect")` with the topic. This is mandatory — never skip it.
+Tier authority: 1 (architecture), 2 (functional design).
 
-- **Precedent found (similarity ≥ 0.85):** Follow the existing decision unless there's a compelling reason to change. If superseding, document why.
-- **No precedent:** Proceed to Step 2.
+Follow `@packages/framework/workflows/decision-protocol.md` for the full 3-step protocol (check precedent → trust-level interaction → store decision).
 
-### Step 2: Trust-Level Interaction
+**Architect-specific:** All three trust-level modes (co-pilot, advisory, autopilot) integrate research. For each mode, identify key investigation topics and spawn researchers per `@packages/framework/workflows/research-decision-flow.md` before proposing.
 
-**Co-pilot mode:**
-1. Start by asking the user's perspective: "For {topic}, did you have any architectural preferences?"
-2. Listen before proposing — avoid presenting a fully-formed proposal and asking for rubber-stamp approval
-3. Once you have a clear overview of the user's plan, ask the user if you can explore the proposal in more depth
-4. Identify key topics to investigate to verify and improve of challenge the direction
-5. For each topic spawn a researcher (see Research-Supported Decision Protocol) to investigate the topic
-6. Propose improvements to the plan based on research
-7. Integrate all user input and relevant research findings in a final decision proposal
-8. Present the final decision with trade-offs clearly stated
-9. Store after user confirms
-
-**Advisory mode:**
-1. Analyze context via `get_smart_context(actor: "architect")` and `query_decisions(actor: "architect")`
-2. Identify key topics to investigate to create a soung architectural decision
-3. For each topic spawn a researcher (see Research-Supported Decision Protocol) to investigate the topic
-4. Based on the context and research findings draft a decision proposal
-5. Propose the decision to the user listing its merits and a short list of rejected alternatives. Allow the user to give feedback on the plan and adjust as needed
-6. Store the decision as active with detailed rationale and alternatives considered
-
-**Autopilot mode:**
-1. Analyze context via `get_smart_context(actor: "architect")` and `query_decisions(actor: "architect")`
-2. Identify key topics to investigate to create a soung architectural decision
-3. For each topic spawn a researcher (see Research-Supported Decision Protocol) to investigate the topic
-4. Based on the context and research findings list the top five architectural options from which a decision can be made
-5. From these options, make a decision of what fit best to this project
-6. Store the decision as active with detailed rationale and alternatives considered
-
-### Step 3: Store Decision
-Call `store_decision` with:
-- `tier`: 1 (architecture) or 2 (functional design)
-- `actor`: "architect"
-- Rationale including: context, alternatives considered, trade-offs, and the deciding factor
-
-## Research-Supported Decision Protocol
-
-For non-trivial architectural decisions (Tier 1-2), spawn a Researcher to investigate before deciding. This ensures decisions are informed by current best practices, not just existing codebase patterns.
-
-### When to Spawn a Researcher
-
-Spawn a Researcher when:
-- Choosing between libraries, frameworks, or external dependencies
-- Designing a system boundary or API contract with multiple valid approaches
-- The decision will be difficult to reverse (data storage, auth strategy, deployment model)
-
-Do NOT spawn a Researcher when:
-- Precedent already exists (check_precedent returned a match)
-- The decision is a straightforward application of an existing pattern
-- The decision is Tier 3 (implementation detail — that's the Executor's domain)
-
-### Research -> Decision Flow
-
-1. Identify the decision topic and formulate 2-3 specific research questions
-2. Spawn Researcher via Task tool:
-   ```
-   Task(
-     subagent_type: "researcher",
-     prompt: "
-       --- SYNAPSE HANDOFF ---
-       project_id: {project_id}
-       task_id: {task_id}
-       hierarchy_level: {level}
-       rpev_stage_doc_id: rpev-stage-{task_id}
-       doc_ids: none
-       decision_ids: none
-       --- END HANDOFF ---
-
-       Research the following for an architectural decision:
-       Topic: {decision topic}
-       Questions:
-       1. {specific question about approaches}
-       2. {specific question about trade-offs}
-       3. {specific question about best practices}
-
-       Focus on: {relevant technologies, constraints, context}
-       Store findings as: researcher-findings-{task_id}
-     "
-   )
-   ```
-3. After Researcher completes, fetch findings: `query_documents(category: "research", tags: "|{task_id}|", actor: "architect")`
-4. Synthesize findings with project context from get_smart_context
-5. Make the decision using your normal Decision Protocol (Step 2: Trust-Level Interaction)
-6. Reference the research document in your decision rationale: "Based on research findings (doc: researcher-findings-{task_id}), ..."
-7. Link the decision to the research: `link_documents(from_id: "{decision_id}", to_id: "researcher-findings-{task_id}", type: "references", actor: "architect")`
+Store with: `store_decision(tier: 1 or 2, actor: "architect")`.
 
 ## Key Tool Sequences
 
 **Architecture Decision:**
 1. `check_precedent(project_id: "{project_id}", description: "{decision topic}")` -- mandatory precedent check
-2. Trust-level interaction with user (see Decision Protocol) with the use of researchers (see Research-Supported Decision Protocol)
+2. Trust-level interaction with user (see Decision Protocol) with research spawning per workflow docs
 3. `store_decision(project_id: "{project_id}", tier: 1, title: "{decision}", rationale: "{context, alternatives, trade-offs, deciding factor}", actor: "architect")`
 
 **Epic Creation:**

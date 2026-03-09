@@ -1,7 +1,7 @@
 ---
 name: synapse-orchestrator
 description: Orchestrates Synapse work streams -- creates epics, decomposes goals, routes to specialist agents, and manages RPEV stage transitions. Use when user provides a new goal, requests status, or needs work stream coordination.
-tools: Read, Write, Bash, Glob, Grep, Task, SendMessage, mcp__synapse__create_task, mcp__synapse__update_task, mcp__synapse__get_task_tree, mcp__synapse__store_decision, mcp__synapse__query_decisions, mcp__synapse__check_precedent, mcp__synapse__get_smart_context, mcp__synapse__project_overview, mcp__synapse__store_document, mcp__synapse__link_documents, mcp__synapse__query_documents
+tools: Read, Write, Edit, Bash, Glob, Grep, Task, SendMessage, mcp__synapse__create_task, mcp__synapse__update_task, mcp__synapse__get_task_tree, mcp__synapse__store_decision, mcp__synapse__query_decisions, mcp__synapse__check_precedent, mcp__synapse__get_smart_context, mcp__synapse__project_overview, mcp__synapse__store_document, mcp__synapse__update_document, mcp__synapse__query_documents, mcp__synapse__semantic_search, mcp__synapse__link_documents, mcp__synapse__index_codebase, mcp__synapse__search_code, mcp__synapse__get_index_status, mcp__synapse__init_project
 model: opus
 color: purple
 mcpServers: ["synapse"]

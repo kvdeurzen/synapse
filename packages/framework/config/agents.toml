@@ -59,6 +59,8 @@ allowed_tools = [
   "Bash",
   "Glob",
   "Grep",
+  "WebSearch",
+  "WebFetch",
   "mcp__synapse__store_document",
   "mcp__synapse__update_document",
   "mcp__synapse__link_documents",
@@ -67,6 +69,8 @@ allowed_tools = [
   "mcp__synapse__search_code",
   "mcp__synapse__get_smart_context",
   "mcp__synapse__check_precedent",
+  "mcp__context7__resolve-library-id",
+  "mcp__context7__query-docs",
 ]
 
 [agents.architect]
@@ -78,6 +82,7 @@ allowed_tools = [
   "Bash",
   "Glob",
   "Grep",
+  "Task",
   "mcp__synapse__store_decision",
   "mcp__synapse__query_decisions",
   "mcp__synapse__check_precedent",
@@ -97,11 +102,14 @@ allowed_tools = [
   "Bash",
   "Glob",
   "Grep",
+  "Task",
   "mcp__synapse__create_task",
   "mcp__synapse__update_task",
   "mcp__synapse__get_task_tree",
   "mcp__synapse__get_smart_context",
   "mcp__synapse__store_decision",
+  "mcp__synapse__store_document",
+  "mcp__synapse__link_documents",
   "mcp__synapse__check_precedent",
   "mcp__synapse__query_decisions",
 ]

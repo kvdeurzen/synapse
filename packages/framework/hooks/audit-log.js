@@ -43,9 +43,14 @@ process.stdin.on("end", () => {
     };
 
     const projectTomlPath = resolveConfig("project.toml");
-    const projectRoot = projectTomlPath
-      ? path.dirname(path.dirname(path.dirname(projectTomlPath))) // .synapse/config/project.toml -> project root
-      : process.env.CLAUDE_PROJECT_DIR || process.cwd(); // fallback for pre-init state
+    let projectRoot;
+    if (projectTomlPath && path.basename(path.dirname(path.dirname(projectTomlPath))) === ".synapse") {
+      // Standard path: .synapse/config/project.toml -> go up 3 levels to project root
+      projectRoot = path.dirname(path.dirname(path.dirname(projectTomlPath)));
+    } else {
+      // Monorepo fallback or no project.toml -- use cwd as audit log location
+      projectRoot = process.env.CLAUDE_PROJECT_DIR || process.cwd();
+    }
     const logPath = path.join(projectRoot, ".synapse-audit.log");
     fs.appendFileSync(logPath, `${JSON.stringify(logEntry)}\n`);
     process.exit(0);

@@ -38,16 +38,15 @@ describe("tier-gate.js (PreToolUse enforcement hook)", () => {
     expect(out.hookSpecificOutput.permissionDecisionReason).toContain("DENIED");
   });
 
-  // Unknown actor (no actor field) should be denied — fail-closed
-  test("denies unknown actor (no actor field) storing any decision", () => {
+  // No actor = main session — allowed for non-tier-0 decisions (silent pass-through)
+  test("allows main session (no actor) for non-tier-0 decisions", () => {
     const result = runHook(TIER_GATE_HOOK, {
       tool_name: "mcp__synapse__store_decision",
       tool_input: { tier: 2, subject: "Test", choice: "A", rationale: "B" },
     });
 
     expect(result.status).toBe(0);
-    const out = parsedOutput(result.stdout);
-    expect(out.hookSpecificOutput.permissionDecision).toBe("deny");
+    expect(result.stdout.trim()).toBe("");
   });
 
   // executor is allowed tiers: [3] — tier 3 should be allowed
@@ -208,16 +207,15 @@ describe("tool-allowlist.js (PreToolUse enforcement hook)", () => {
     expect(out.hookSpecificOutput.permissionDecision).toBe("deny");
   });
 
-  // No actor field — unknown agent — should be denied
-  test("denies when no actor field provided for Synapse tool", () => {
+  // No actor = main session — always allowed for Synapse tools
+  test("allows main session (no actor) for Synapse tools", () => {
     const result = runHook(TOOL_ALLOWLIST_HOOK, {
       tool_name: "mcp__synapse__get_task_tree",
       tool_input: {},
     });
 
     expect(result.status).toBe(0);
-    const out = parsedOutput(result.stdout);
-    expect(out.hookSpecificOutput.permissionDecision).toBe("deny");
+    expect(result.stdout.trim()).toBe("");
   });
 
   // Fail-closed: malformed JSON

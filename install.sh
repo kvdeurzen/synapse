@@ -197,7 +197,23 @@ log_header "Checking prerequisites..."
 
 OLLAMA_RUNNING=false
 
-# Check Bun (HARD FAIL)
+# Check Node.js (HARD FAIL — MCP server runs under npx tsx due to tree-sitter native module)
+if ! command -v node &> /dev/null; then
+  log_error "Node.js is not installed or not on PATH."
+  log_error "Install Node.js from: https://nodejs.org or via nvm"
+  exit 1
+fi
+NODE_VERSION=$(node --version 2>/dev/null || echo "unknown")
+log_step "Node.js $NODE_VERSION"
+
+# Check npx (should come with Node.js)
+if ! command -v npx &> /dev/null; then
+  log_error "npx is not available. It should come with Node.js."
+  log_error "Reinstall Node.js or check your PATH."
+  exit 1
+fi
+
+# Check Bun (HARD FAIL — hooks and bun install use Bun)
 if ! command -v bun &> /dev/null; then
   log_error "Bun is not installed or not on PATH."
   log_error "Install Bun from: https://bun.sh"
@@ -543,8 +559,8 @@ fi
 MCP_FILE="$TARGET_DIR/.mcp.json"
 
 SYNAPSE_MCP_JSON='{
-  "command": "bun",
-  "args": ["run", ".claude/server/src/index.ts", "--db", ".synapse/data/synapse.db"],
+  "command": "npx",
+  "args": ["tsx", ".claude/server/src/index.ts", "--db", ".synapse/data/synapse.db"],
   "env": {
     "OLLAMA_URL": "http://localhost:11434",
     "EMBED_MODEL": "nomic-embed-text"

@@ -246,7 +246,7 @@ SYNAPSE_SOURCE=""
 
 # Development mode: if run from the synapse repo itself, use local files
 # Check both TARGET_DIR (running from repo root) and the script's directory (running via ../install.sh)
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]:-$0}")" && pwd)"
 if [ -f "$TARGET_DIR/packages/server/src/index.ts" ]; then
   log_info "Running from Synapse repo — using local files (development mode)"
   SYNAPSE_SOURCE="$TARGET_DIR"
@@ -390,8 +390,13 @@ else
 
   # Install server dependencies (native tree-sitter binaries require bun install)
   log_info "Installing server dependencies (native binaries)..."
-  (cd "$TARGET_DIR/.claude/server" && bun install --production 2>&1 | tail -3)
-  log_step "Server dependencies installed"
+  if (cd "$TARGET_DIR/.claude/server" && bun install --production 2>&1 | tail -5); then
+    log_step "Server dependencies installed"
+  else
+    log_warn "Server dependency install had errors (tree-sitter native build may have failed)."
+    log_warn "The server will still work — code indexing (/synapse:map) may be unavailable."
+    log_step "Server dependencies installed (with warnings)"
+  fi
 fi
 
 # Copy config templates (only if not already present — preserve user customizations)

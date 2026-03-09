@@ -1,16 +1,42 @@
 import { extname } from "node:path";
-import Parser from "tree-sitter";
-import PythonLang from "tree-sitter-python";
-import RustLang from "tree-sitter-rust";
-import TypeScriptLang from "tree-sitter-typescript";
+
+// tree-sitter is an optional dependency (native compilation may fail on some platforms).
+// Lazy-load to allow the server to start even when tree-sitter is unavailable.
+let Parser: typeof import("tree-sitter").default | null = null;
+let TypeScriptLang: typeof import("tree-sitter-typescript") | null = null;
+let PythonLang: any = null;
+let RustLang: any = null;
+
+try {
+  Parser = (await import("tree-sitter")).default;
+  TypeScriptLang = await import("tree-sitter-typescript");
+  PythonLang = (await import("tree-sitter-python")).default;
+  RustLang = (await import("tree-sitter-rust")).default;
+} catch {
+  // tree-sitter not available — code indexing will be disabled
+}
 
 // Re-export SUPPORTED_EXTENSIONS from scanner for convenience
 export { SUPPORTED_EXTENSIONS } from "./scanner.js";
 
+/** Returns true if tree-sitter is available for code parsing. */
+export function isTreeSitterAvailable(): boolean {
+  return Parser !== null;
+}
+
+function ensureTreeSitter(): asserts Parser is NonNullable<typeof Parser> {
+  if (!Parser) {
+    throw new Error(
+      "tree-sitter is not installed. Code indexing requires tree-sitter native binaries. " +
+      "Run: cd .claude/server && bun install"
+    );
+  }
+}
+
 // Grammar packages expose `language: unknown` in their type definitions,
 // which is incompatible with tree-sitter's `language: Language` recursive type.
 // Cast via `unknown` to bridge the type mismatch — runtime behavior is correct.
-type AnyLanguage = Parser.Language;
+type AnyLanguage = any;
 function asLang(lang: unknown): AnyLanguage {
   return lang as AnyLanguage;
 }
@@ -19,38 +45,42 @@ function asLang(lang: unknown): AnyLanguage {
 // Module-level lazy parser cache (one parser per language variant)
 // ---------------------------------------------------------------------------
 
-let _tsParser: Parser | null = null;
-let _tsxParser: Parser | null = null;
-let _pyParser: Parser | null = null;
-let _rsParser: Parser | null = null;
+let _tsParser: any = null;
+let _tsxParser: any = null;
+let _pyParser: any = null;
+let _rsParser: any = null;
 
-function getTsParser(): Parser {
+function getTsParser(): any {
+  ensureTreeSitter();
   if (!_tsParser) {
-    _tsParser = new Parser();
-    _tsParser.setLanguage(asLang(TypeScriptLang.typescript));
+    _tsParser = new Parser!();
+    _tsParser.setLanguage(asLang(TypeScriptLang!.typescript));
   }
   return _tsParser;
 }
 
-function getTsxParser(): Parser {
+function getTsxParser(): any {
+  ensureTreeSitter();
   if (!_tsxParser) {
-    _tsxParser = new Parser();
-    _tsxParser.setLanguage(asLang(TypeScriptLang.tsx));
+    _tsxParser = new Parser!();
+    _tsxParser.setLanguage(asLang(TypeScriptLang!.tsx));
   }
   return _tsxParser;
 }
 
-function getPyParser(): Parser {
+function getPyParser(): any {
+  ensureTreeSitter();
   if (!_pyParser) {
-    _pyParser = new Parser();
+    _pyParser = new Parser!();
     _pyParser.setLanguage(asLang(PythonLang));
   }
   return _pyParser;
 }
 
-function getRsParser(): Parser {
+function getRsParser(): any {
+  ensureTreeSitter();
   if (!_rsParser) {
-    _rsParser = new Parser();
+    _rsParser = new Parser!();
     _rsParser.setLanguage(asLang(RustLang));
   }
   return _rsParser;
@@ -70,7 +100,7 @@ function getRsParser(): Parser {
  *   .rs  → Rust parser
  *   other → throws Error
  */
-export function getParserForFile(filePath: string): Parser {
+export function getParserForFile(filePath: string): any {
   const ext = extname(filePath).toLowerCase();
 
   switch (ext) {
@@ -95,7 +125,7 @@ export function getParserForFile(filePath: string): Parser {
  * @returns The parsed tree
  * @throws if the parser fails to produce a tree or the extension is unsupported
  */
-export function parseSource(filePath: string, source: string): Parser.Tree {
+export function parseSource(filePath: string, source: string): any {
   const parser = getParserForFile(filePath);
   const tree = parser.parse(source);
   if (!tree) {

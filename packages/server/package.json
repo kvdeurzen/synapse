@@ -22,10 +22,12 @@
     "ignore": "^7.0.5",
     "lru-cache": "^11.2.6",
     "pino": "latest",
+    "ulidx": "^2.4.1"
+  },
+  "optionalDependencies": {
     "tree-sitter": "^0.25.0",
     "tree-sitter-python": "^0.25.0",
     "tree-sitter-rust": "^0.24.0",
-    "tree-sitter-typescript": "^0.23.2",
-    "ulidx": "^2.4.1"
+    "tree-sitter-typescript": "^0.23.2"
   }
 }

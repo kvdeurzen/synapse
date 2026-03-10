@@ -1,7 +1,7 @@
 # Research-Supported Decision Flow
 
 Authoritative workflow for spawning Researchers to inform decisions and decomposition.
-Referenced by: architect, decomposer.
+Referenced by: architect, planner, task-designer.
 
 ## When to Spawn a Researcher
 
@@ -59,10 +59,16 @@ Referenced by: architect, decomposer.
 ### Architect
 After Step 4, proceed with Decision Protocol Step 2 (Trust-Level Interaction) using findings to inform the proposal.
 
-### Decomposer
+### Planner
 After Step 4, use findings to inform:
 - Task sizing (hidden complexities that require finer splits)
 - Dependency ordering (research-suggested build order)
 - Acceptance criteria (specific patterns/libraries tasks should use)
+
+### Task Designer
+After Step 4, use findings to inform task specification details:
+- Implementation approach and patterns to follow
+- Test expectations and acceptance criteria specifics
+- Tool and library choices that affect task scope
 
 **If the Researcher fails:** Log a warning in the plan document's Research References section and proceed with available information. Research is informational, not gating.

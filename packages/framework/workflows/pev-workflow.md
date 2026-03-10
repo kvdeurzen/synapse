@@ -91,7 +91,7 @@ The involvement matrix (injected into session context by the startup hook) contr
 
 - **`drives`**: The user initiates this stage — the orchestrator does not proceed. Set `pending_approval: true` in the stage document with `notes: "waiting-for-user"`. Surface in `/synapse:status`. Do not proceed until user explicitly signals readiness.
 
-- **`co-pilot`**: Execute the stage work (e.g., run Decomposer for a plan stage), store the output as a proposal document, set `pending_approval: true` with `proposal_doc_id` pointing to the proposal. Wait for user approval via `/synapse:focus`. Plan Reviewer runs before user sees the proposal — only quality-checked proposals are presented.
+- **`co-pilot`**: Execute the stage work (e.g., run Planner for a plan stage), store the output as a proposal document, set `pending_approval: true` with `proposal_doc_id` pointing to the proposal. Wait for user approval via `/synapse:focus`. Plan Auditor runs before user sees the proposal — only quality-checked proposals are presented.
 
 - **`reviews`**: Execute the stage work, store output as a proposal document, set `pending_approval: true` with `proposal_doc_id`. User reviews after completion (agent does the work, then pauses for review). Differs from co-pilot: work is done first, then reviewed.
 
@@ -141,13 +141,13 @@ On session start, check for stage documents in PLANNING state via `query_documen
 
 ### Step 2a: Epic -> Features
 
-1. Spawn Decomposer subagent via Task tool to decompose epic into features (depth=1 tasks)
+1. Spawn Planner subagent via Task tool to decompose epic into features (depth=1 tasks)
    - Pass: `project_id`, `task_id`, `rpev_stage_doc_id: "rpev-stage-[task_id]"`, relevant decisions from `check_precedent`
-2. Decomposer creates feature tasks with descriptions, acceptance criteria, and mandatory validation tasks:
+2. Planner creates feature tasks with descriptions, acceptance criteria, and mandatory validation tasks:
    - Each feature gets an "integration test" child task
    - The epic gets an "epic integration" task
-3. Spawn Plan Reviewer subagent to verify feature decomposition
-   - Max 3 review cycles (Decomposer <-> Plan Reviewer loop)
+3. Spawn Plan Auditor subagent to verify feature decomposition
+   - Max 3 review cycles (Planner <-> Plan Auditor loop)
    - If plan rejected after 3 cycles: escalate to user
 4. Resolve involvement mode for `{level}_plan`:
    - `drives` or `co-pilot`: Present feature list for user approval before proceeding
@@ -161,14 +161,14 @@ Features are decomposed into tasks (depth=2/3) only when the feature is next to 
 
 For each feature when it becomes active:
 
-1. Spawn Decomposer subagent to decompose feature into component/task-level items
+1. Spawn Planner subagent to decompose feature into component/task-level items
    - Pass: `project_id`, `task_id`, `rpev_stage_doc_id`, relevant decisions
-2. Decomposer creates leaf tasks with:
+2. Planner creates leaf tasks with:
    - Description and acceptance criteria
    - Unit test expectations
    - Dependencies on other tasks within the feature
    - `context_refs`: decision_ids and document_ids relevant to each leaf task
-3. Spawn Plan Reviewer to verify task decomposition (max 3 review cycles)
+3. Spawn Plan Auditor to verify task decomposition (max 3 review cycles)
 4. Resolve involvement mode for `{level}_plan`:
    - `drives` or `co-pilot`: Present task list to user
    - `reviews`: Execute decomposition, then present
@@ -311,6 +311,6 @@ For each active stage document:
 
 - Subagents spawned via Task tool CANNOT spawn other subagents — orchestrator manages all spawning
 - Fresh executor per retry (not resumed original) — pass debugger's document in context for continuity
-- Decomposer and Plan Reviewer are separate agents (Decomposer cannot review its own work)
+- Planner and Plan Auditor are separate agents (Planner cannot review its own work)
 - All subagents receive `project_id`, `task_id`, and `rpev_stage_doc_id` in every Task call handoff
 - All Task tool calls are mediated by the Pool Manager -- the orchestrator never issues Task calls directly outside the pool dispatch loop

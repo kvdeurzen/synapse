@@ -64,7 +64,7 @@ On update: framework files (agents, hooks, commands, skills) are overwritten wit
 
 ```
 .claude/
-  agents/             # 11 agent definitions
+  agents/             # 14 agent definitions + shared protocol
   hooks/              # 7 hook scripts + lib/
   commands/synapse/   # 5 slash commands
   skills/             # 18 skill definitions
@@ -266,19 +266,29 @@ product_strategy = "advisory"
 
 ### agents.toml
 
-Agent role configuration. Assigns skills to each of the 11 agents and sets their allowed tools and model tier.
+Agent role configuration. Assigns skills to each of the 14 agents and sets their allowed tools and model tier.
 
-The 11 agents and their roles:
-- **product-strategist** — Top-level vision and strategy (Tier 0, Opus)
-- **architect** — System design and architectural decisions (Tier 1, Opus)
-- **decomposer** — Breaks work into the task hierarchy (Tier 2, Opus)
-- **plan-reviewer** — Reviews plans before execution (Opus)
-- **executor** — Implements work packages (Sonnet)
-- **validator** — Validates completed work against criteria (Sonnet)
-- **integration-checker** — Checks cross-feature integration (Sonnet)
-- **researcher** — Gathers context and documentation (Sonnet)
-- **debugger** — Diagnoses failures and retries (Sonnet)
-- **codebase-analyst** — Indexes and searches the codebase (Sonnet)
+The 14 agents and their roles:
+
+**Pipeline agents (spawned by orchestrator):**
+- **product-researcher** — Gathers product context and synthesizes requirements during refinement (Opus)
+- **architect** — Designs system architecture and drafts Tier 1-2 decisions (Opus)
+- **architecture-auditor** — Reviews and activates architectural decision drafts; sole gatekeeper for Tier 1-2 decisions (Opus)
+- **planner** — Decomposes epics and features into the task hierarchy (Opus)
+- **plan-auditor** — Reviews decomposition plans before execution; activates Tier 2 planning decisions (Opus)
+- **task-designer** — Designs detailed task specifications with acceptance criteria and test expectations (Opus)
+- **task-auditor** — Reviews task specs for completeness and executability (Sonnet)
+- **executor** — Implements work packages in isolated git worktrees (Sonnet)
+- **validator** — Validates completed work against acceptance criteria (Sonnet)
+- **integration-checker** — Checks cross-feature integration after wave completion (Sonnet)
+
+**Support agents:**
+- **researcher** — Gathers external context, documentation, and library research (Sonnet)
+- **debugger** — Diagnoses failures and produces diagnostic reports for retries (Sonnet)
+- **codebase-analyst** — Indexes and searches the codebase for context (Sonnet)
+
+**Orchestration:**
+- **synapse-orchestrator** — Dispatches pipeline agents, manages the pool, escalates failures (Opus)
 
 Role skills are assigned per agent:
 

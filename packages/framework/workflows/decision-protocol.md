@@ -1,7 +1,7 @@
 # Decision Protocol
 
 Authoritative decision-making workflow for all decision-capable agents.
-Referenced by: architect, product-strategist.
+Referenced by: architect, planner, task-designer (doer agents that draft decisions).
 
 ## Step 1: Always Check Precedent
 

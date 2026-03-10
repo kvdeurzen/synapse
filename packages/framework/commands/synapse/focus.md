@@ -113,7 +113,7 @@ Navigate to a specific item in the project hierarchy and present its full contex
       ## Proposal: [Item Title]
 
       **Stage:** [current stage] | **Level:** [level] | **Involvement mode:** [mode]
-      **Quality check:** [If Plan Reviewer ran: "Passed" or note]
+      **Quality check:** [If Plan Auditor ran: "Passed" or note]
 
       ### Summary
       [2-3 sentence summary extracted from the proposal document]
@@ -134,7 +134,7 @@ Navigate to a specific item in the project hierarchy and present its full contex
       - Confirm: "Approved. The orchestrator will proceed with [next stage]."
 
    d. **If user chooses Reject:**
-      - Ask for specific feedback: "What should be changed? Your guidance will be passed to the [Decomposer/Planner] for revision."
+      - Ask for specific feedback: "What should be changed? Your guidance will be passed to the [Planner] for revision."
       - Update stage document: set `notes` to rejection feedback, keep `pending_approval: true`
       - The orchestrator will detect this on next session start and re-run the specialist agent with feedback (max 3 review cycles per WFLOW-06)
 

@@ -79,11 +79,11 @@ describe("tier-gate.js (PreToolUse enforcement hook)", () => {
   });
 
   // Tier 0 is always "ask" regardless of actor
-  test('returns "ask" for any tier 0 decision (product-strategist)', () => {
+  test('returns "ask" for any tier 0 decision (architect)', () => {
     const result = runHook(TIER_GATE_HOOK, {
       tool_name: "mcp__synapse__store_decision",
       tool_input: {
-        actor: "product-strategist",
+        actor: "architect",
         tier: 0,
         subject: "Strategy",
         choice: "A",

@@ -294,14 +294,16 @@ architecture = "co-pilot"
 decomposition = "strategic"
 
 [tier_authority]
-product-strategist = [0, 1]
+product-researcher = []
+architect = [1, 2]
 executor = [3]
 validator = []
 `,
     );
 
     const config = loadTrustConfig(configPath);
-    expect(config.tier_authority["product-strategist"]).toEqual([0, 1]);
+    expect(config.tier_authority["product-researcher"]).toEqual([]);
+    expect(config.tier_authority.architect).toEqual([1, 2]);
     expect(config.tier_authority.executor).toEqual([3]);
     expect(config.tier_authority.validator).toEqual([]);
   });

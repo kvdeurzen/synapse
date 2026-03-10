@@ -309,19 +309,45 @@ project_id: {project_id from session context}
 task_id: {task.id}
 hierarchy_level: {epic|feature|component|task}
 rpev_stage_doc_id: rpev-stage-{task_id}
-doc_ids: {comma-separated from CONTEXT_REFS block, or "none"}
-decision_ids: {comma-separated from CONTEXT_REFS block, or "none"}
+doc_ids: {comma-separated doc_ids from task's context_doc_ids field, or "none"}
+decision_ids: {comma-separated IDs from task's context_decision_ids field, or "none"}
 --- END HANDOFF ---
 ```
 
 **Building the handoff:**
 1. Read the task via `get_task_tree(project_id, task_id)`
-2. Parse the `---CONTEXT_REFS---` block from the task description
-3. Determine `hierarchy_level` from task depth: depth 0 = epic, depth 1 = feature, depth 2 = component, depth 3 = task
-4. Include the handoff block at the TOP of the Task tool prompt, before any other instructions
+2. Read `context_doc_ids` field from task (JSON array string) — parse to get doc_ids for handoff
+3. Read `context_decision_ids` field from task (JSON array string) — parse to get decision_ids for handoff
+4. Determine `hierarchy_level` from task depth: depth 0 = epic, depth 1 = feature, depth 2 = component, depth 3 = task
+5. If `spec` field is null when dispatching executor: HALT and report "Task Designer did not write spec for task {task_id}"
+6. Include the handoff block at the TOP of the Task tool prompt, before any other instructions
 
 **Subagent instructions to include in every Task prompt:**
-"Parse the --- SYNAPSE HANDOFF --- block first. Use project_id for all MCP calls. Fetch task spec via get_task_tree(task_id). Fetch context via get_smart_context(doc_ids). Begin work only after loading context."
+"Parse the --- SYNAPSE HANDOFF --- block first. Use project_id for all MCP calls. Fetch task spec via get_task_tree(task_id). Fetch context via get_smart_context(doc_ids from context_doc_ids field). Begin work only after loading context."
+
+**Reading completed task outputs:**
+- Read `output_doc_ids` from completed executor tasks to pass to validators
+- Read `spec` field to confirm task designer has populated it before dispatching executor
+
+## Upstream Context Routing
+
+When dispatching an agent, set `context_doc_ids` and `context_decision_ids` on the task (via `update_task`) using upstream outputs:
+
+| Agent Being Dispatched | context_doc_ids Source | context_decision_ids Source |
+|------------------------|----------------------|---------------------------|
+| Architecture Auditor | architect's doc_ids from completion report | -- |
+| Planner | architecture doc_id | activated decision_ids from Architecture Auditor |
+| Plan Auditor | plan doc_id + research doc_ids from Planner | -- |
+| Task Designer | plan doc_id | activated decision_ids |
+| Task Auditor | -- (reads spec field directly) | -- |
+| Executor | task's context_doc_ids (set by Planner/Task Designer) | task's context_decision_ids |
+| Validator | executor's output_doc_ids from task field | -- |
+| Integration Checker | children tasks' output_doc_ids | -- |
+| Debugger | validator-findings or integration-findings doc_id | -- |
+
+**Protocol:** After an agent completes, read its completion report for produced doc_ids. Before dispatching the next agent, call `update_task` to set `context_doc_ids` (JSON array string) on the target task.
+
+**Do NOT modify context fields already set by Planner/Task Designer.** Only add orchestrator-routed upstream doc_ids to tasks that don't already have them populated.
 
 ## Checkpoint Format
 

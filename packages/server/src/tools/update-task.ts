@@ -53,6 +53,26 @@ const UpdateTaskInputSchema = z.object({
     .describe("Human-readable reason for block (nullable to clear)"),
   tags: z.string().optional().describe("Pipe-separated tags, e.g. '|auth|backend|'"),
   phase: z.string().optional().nullable().describe("Project phase (nullable to clear)"),
+  context_doc_ids: z
+    .string()
+    .optional()
+    .nullable()
+    .describe("JSON array string of context document IDs (nullable to clear)"),
+  context_decision_ids: z
+    .string()
+    .optional()
+    .nullable()
+    .describe("JSON array string of context decision IDs (nullable to clear)"),
+  spec: z
+    .string()
+    .optional()
+    .nullable()
+    .describe("Detailed task specification for the assigned agent (nullable to clear)"),
+  output_doc_ids: z
+    .string()
+    .optional()
+    .nullable()
+    .describe("JSON array string of output document IDs produced by this task (nullable to clear)"),
   dependencies: z
     .array(z.string())
     .optional()
@@ -251,6 +271,22 @@ export async function updateTask(
     updateValues.phase = validated.phase;
     changedFields.push("phase");
   }
+  if (validated.context_doc_ids !== undefined) {
+    updateValues.context_doc_ids = validated.context_doc_ids;
+    changedFields.push("context_doc_ids");
+  }
+  if (validated.context_decision_ids !== undefined) {
+    updateValues.context_decision_ids = validated.context_decision_ids;
+    changedFields.push("context_decision_ids");
+  }
+  if (validated.spec !== undefined) {
+    updateValues.spec = validated.spec;
+    changedFields.push("spec");
+  }
+  if (validated.output_doc_ids !== undefined) {
+    updateValues.output_doc_ids = validated.output_doc_ids;
+    changedFields.push("output_doc_ids");
+  }
 
   // ── e. Handle dependency replacement ──────────────────────────────────────
   if (validated.dependencies !== undefined) {
@@ -442,6 +478,34 @@ export function registerUpdateTaskTool(server: McpServer, config: SynapseConfig)
         block_reason: z.string().optional().nullable().describe("Reason for block (null to clear)"),
         tags: z.string().optional().describe("Pipe-separated tags, e.g. '|auth|backend|'"),
         phase: z.string().optional().nullable().describe("Project phase (null to clear)"),
+        context_doc_ids: z
+          .string()
+          .optional()
+          .nullable()
+          .describe(
+            "JSON array string of context document IDs (e.g. '[\"doc-001\"]') (null to clear)",
+          ),
+        context_decision_ids: z
+          .string()
+          .optional()
+          .nullable()
+          .describe(
+            "JSON array string of context decision IDs (e.g. '[\"dec-001\"]') (null to clear)",
+          ),
+        spec: z
+          .string()
+          .optional()
+          .nullable()
+          .describe(
+            "Detailed task specification for the assigned agent (plain text or markdown) (null to clear)",
+          ),
+        output_doc_ids: z
+          .string()
+          .optional()
+          .nullable()
+          .describe(
+            "JSON array string of output document IDs produced by this task (e.g. '[\"doc-out-001\"]') (null to clear)",
+          ),
         dependencies: z
           .array(z.string())
           .optional()

@@ -250,10 +250,11 @@ export const DecisionRowSchema = z.object({
 });
 
 /**
- * Tasks table — 19 fields (Phase 11).
+ * Tasks table — 23 fields (Phase 26.2).
  * Stores the recursive task hierarchy with 4 depth levels (0=Epic, 1=Feature, 2=Component, 3=Task).
  * Bool fields for is_blocked and is_cancelled (auto-computed from dependencies).
  * vector is nullable — fail-fast enforcement is at the create_task level.
+ * 4 new handoff fields (Phase 26.2): context_doc_ids, context_decision_ids, spec, output_doc_ids.
  */
 export const TASKS_SCHEMA = new Schema([
   new Field("task_id", new Utf8(), false),
@@ -272,6 +273,10 @@ export const TASKS_SCHEMA = new Schema([
   new Field("estimated_effort", new Utf8(), true),
   new Field("tags", new Utf8(), false),
   new Field("phase", new Utf8(), true),
+  new Field("context_doc_ids", new Utf8(), true),
+  new Field("context_decision_ids", new Utf8(), true),
+  new Field("spec", new Utf8(), true),
+  new Field("output_doc_ids", new Utf8(), true),
   new Field("created_at", new Utf8(), false),
   new Field("updated_at", new Utf8(), false),
   new Field("vector", new FixedSizeList(768, new Field("item", new Float32(), true)), true),
@@ -294,6 +299,10 @@ export const TaskRowSchema = z.object({
   estimated_effort: z.string().nullable(),
   tags: z.string(),
   phase: z.string().nullable(),
+  context_doc_ids: z.string().nullable(),
+  context_decision_ids: z.string().nullable(),
+  spec: z.string().nullable(),
+  output_doc_ids: z.string().nullable(),
   created_at: z.string(),
   updated_at: z.string(),
   vector: z.array(z.number()).length(768).nullable(),

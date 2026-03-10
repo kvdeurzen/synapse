@@ -74,6 +74,10 @@ export interface TaskTreeNode {
   estimated_effort: string | null;
   tags: string;
   phase: string | null;
+  context_doc_ids: string | null;
+  context_decision_ids: string | null;
+  spec: string | null;
+  output_doc_ids: string | null;
   parent_id: string | null;
   dependency_ids: string[];
   created_at: string;
@@ -362,6 +366,10 @@ export async function getTaskTree(
       estimated_effort: row.estimated_effort as string | null,
       tags: row.tags as string,
       phase: row.phase as string | null,
+      context_doc_ids: row.context_doc_ids as string | null,
+      context_decision_ids: row.context_decision_ids as string | null,
+      spec: row.spec as string | null,
+      output_doc_ids: row.output_doc_ids as string | null,
       parent_id: row.parent_id as string | null,
       dependency_ids: depMap.get(taskId) ?? [],
       created_at: row.created_at as string,

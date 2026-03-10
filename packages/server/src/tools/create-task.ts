@@ -46,6 +46,15 @@ const CreateTaskInputSchema = z.object({
   estimated_effort: z.string().optional().describe("Estimated effort string, e.g. '2h', '3d'"),
   tags: z.string().optional().default("").describe("Pipe-separated tags, e.g. '|auth|backend|'"),
   phase: z.string().optional().describe("Project phase this task belongs to"),
+  context_doc_ids: z
+    .string()
+    .optional()
+    .describe("JSON array string of document IDs providing context for this task"),
+  context_decision_ids: z
+    .string()
+    .optional()
+    .describe("JSON array string of decision IDs relevant to this task"),
+  spec: z.string().optional().describe("Detailed task specification for the assigned agent"),
 });
 
 type CreateTaskArgs = z.infer<typeof CreateTaskInputSchema>;
@@ -288,6 +297,10 @@ export async function createTask(
         estimated_effort: validated.estimated_effort ?? null,
         tags: validated.tags ?? "",
         phase: validated.phase ?? null,
+        context_doc_ids: validated.context_doc_ids ?? null,
+        context_decision_ids: validated.context_decision_ids ?? null,
+        spec: validated.spec ?? null,
+        output_doc_ids: null,
         created_at: now,
         updated_at: now,
         vector: vector.length === 768 ? vector : null,
@@ -406,6 +419,22 @@ export function registerCreateTaskTool(server: McpServer, config: SynapseConfig)
         estimated_effort: z.string().optional().describe("Estimated effort, e.g. '2h', '3d', '1w'"),
         tags: z.string().optional().describe("Pipe-separated tags, e.g. '|auth|backend|'"),
         phase: z.string().optional().describe("Project phase this task belongs to"),
+        context_doc_ids: z
+          .string()
+          .optional()
+          .describe(
+            "JSON array string of document IDs providing context for this task (e.g. '[\"doc-001\",\"doc-002\"]')",
+          ),
+        context_decision_ids: z
+          .string()
+          .optional()
+          .describe(
+            "JSON array string of decision IDs relevant to this task (e.g. '[\"dec-001\"]')",
+          ),
+        spec: z
+          .string()
+          .optional()
+          .describe("Detailed task specification for the assigned agent (plain text or markdown)"),
       }),
     },
     async (args) => {

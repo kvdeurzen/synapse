@@ -68,27 +68,35 @@ export const DEPTH_NAMES: Record<number, string> = {
 /**
  * Valid agent role values — specialized agents that can be assigned to tasks.
  *
- * executor           — implements assigned tasks
- * validator          — reviews and validates completed work
- * architect          — designs system structure and interfaces
- * decomposer         — breaks down epics/features into smaller tasks
- * plan_reviewer      — evaluates and critiques plans
- * integration_checker — verifies component integration points
- * debugger           — diagnoses and resolves failures
- * codebase_analyst   — analyzes existing code for context
- * product_strategist — defines product direction and priorities
- * researcher         — investigates unknowns and gathers information
+ * executor              — implements assigned tasks
+ * validator             — reviews and validates completed work
+ * architect             — designs system structure and interfaces
+ * architecture_auditor  — activates Tier 1-2 decision drafts; blocks deficient proposals
+ * planner               — breaks down architecture into epics/features/components
+ * plan_auditor          — reviews and approves plans before execution
+ * task_designer         — synthesizes detailed task specs from component plans
+ * task_auditor          — reviews task specs before wave execution
+ * integration_checker   — verifies component integration points
+ * debugger              — diagnoses and resolves failures
+ * codebase_analyst      — analyzes existing code for context
+ * product_researcher    — gathers and synthesizes product context for gateway
+ * researcher            — investigates unknowns and gathers domain information
+ * synapse_orchestrator  — dispatches and coordinates the agent pipeline
  */
 export const VALID_AGENT_ROLES = [
   "executor",
   "validator",
   "architect",
-  "decomposer",
-  "plan_reviewer",
+  "architecture_auditor",
+  "planner",
+  "plan_auditor",
+  "task_designer",
+  "task_auditor",
   "integration_checker",
   "debugger",
   "codebase_analyst",
-  "product_strategist",
+  "product_researcher",
   "researcher",
+  "synapse_orchestrator",
 ] as const;
 export type ValidAgentRole = (typeof VALID_AGENT_ROLES)[number];

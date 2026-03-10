@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v3.0
 milestone_name: Working Prototype
 status: Phase 25 closed (5/6 plans; 25-04 E2E re-validation deferred). Phase 26 created for real usage findings.
-stopped_at: Completed 26.1-01-PLAN.md (gateway protocol + decision draft flow)
-last_updated: "2026-03-10T10:57:26.589Z"
+stopped_at: Completed 26.1-02-PLAN.md — orchestrator rewrite as pure dispatcher
+last_updated: "2026-03-10T11:00:38.733Z"
 last_activity: 2026-03-09 — Phase 25 execution complete. Phase 26 created.
 progress:
   total_phases: 13
   completed_phases: 9
   total_plans: 35
-  completed_plans: 29
+  completed_plans: 30
   percent: 96
 ---
 
@@ -73,6 +73,7 @@ Progress: [█████████░] 96%
 | Phase 25-agent-behavior-hardening P05 | 3min | 2 tasks | 4 files |
 | Phase 25-agent-behavior-hardening P06 | 4min | 1 task | 1 file |
 | Phase 26.1-further-improvements-agentic-framework P01 | 2 | 2 tasks | 3 files |
+| Phase 26.1-further-improvements-agentic-framework P02 | 4min | 1 tasks | 3 files |
 
 ## Accumulated Context
 
@@ -164,6 +165,9 @@ Key decisions affecting v3.0:
 - [Phase 26.1-01]: Gateway owns all user communication: subagents NEVER interact with user directly; gateway spawns only Product Researcher (refinement) and Orchestrator (dispatch) directly
 - [Phase 26.1-01]: Decision draft uses document-based workaround: store_decision has no draft status (only active/superseded/revoked), doers store decision_draft category documents, reviewers activate via store_decision
 - [Phase 26.1-01]: Tier 3 executor exception retained: executors store execution-level decisions directly as active; validators check post-hoc
+- [Phase 26.1-02]: Orchestrator tier_authority set to [] in trust.toml — pure dispatcher with no decision authority; enforced by anti-drift tests
+- [Phase 26.1-02]: Failure Reporting replaces Failure Escalation in orchestrator: set pending_approval=true, emit report to gateway; gateway decides retry/debug/escalate
+- [Phase 26.1-02]: Progressive Decomposition pipeline expanded to Architect->Architecture Auditor->Planner->Plan Auditor->Task Designer->Task Auditor before wave execution
 
 ### Roadmap Evolution
 
@@ -182,6 +186,6 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-03-10T10:57:26.578Z
-Stopped at: Completed 26.1-01-PLAN.md (gateway protocol + decision draft flow)
+Last session: 2026-03-10T11:00:38.729Z
+Stopped at: Completed 26.1-02-PLAN.md — orchestrator rewrite as pure dispatcher
 Resume file: None

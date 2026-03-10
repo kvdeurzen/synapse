@@ -354,4 +354,4 @@ Phase 26.2 depends on Phase 26.1 (tightens handoff contracts on the new agent ro
 | 25. Agent Behavior Hardening | v3.0 | 5/6 | Complete (25-04 deferred) | 2026-03-09 |
 | 26. Usage Findings | v3.0 | 0/0 | Pending | - |
 | 26.1. Further Improvements | 5/5 | Complete    | 2026-03-10 | - |
-| 26.2. Agent Handoff Tightening | 1/4 | In Progress|  | - |
+| 26.2. Agent Handoff Tightening | 2/4 | In Progress|  | - |

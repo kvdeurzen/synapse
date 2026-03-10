@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v3.0
 milestone_name: Working Prototype
 status: Phase 25 closed (5/6 plans; 25-04 E2E re-validation deferred). Phase 26 created for real usage findings.
-stopped_at: Completed 26.2-02-PLAN.md
-last_updated: "2026-03-10T14:24:58.611Z"
+stopped_at: Completed 26.2-01-PLAN.md
+last_updated: "2026-03-10T14:29:06.863Z"
 last_activity: 2026-03-09 — Phase 25 execution complete. Phase 26 created.
 progress:
   total_phases: 14
   completed_phases: 10
   total_plans: 39
-  completed_plans: 34
+  completed_plans: 35
   percent: 96
 ---
 
@@ -78,6 +78,7 @@ Progress: [█████████░] 96%
 | Phase 26.1 P04 | 8min | 2 tasks | 4 files |
 | Phase 26.1-further-improvements-agentic-framework P05 | 8min | 3 tasks | 12 files |
 | Phase 26.2-agent-handoff-tightening P02 | 179 | 2 tasks | 2 files |
+| Phase 26.2-agent-handoff-tightening P01 | 5min | 1 tasks | 9 files |
 
 ## Accumulated Context
 
@@ -181,6 +182,9 @@ Key decisions affecting v3.0:
 - [Phase 26.2]: Structured fields (context_doc_ids, context_decision_ids) replace CONTEXT_REFS text-block parsing in orchestrator handoff building
 - [Phase 26.2]: Provides vocabulary is a fixed 11-slug set -- agents must not invent new slugs
 - [Phase 26.2]: Routing table does not modify context fields already set by Planner/Task Designer -- orchestrator only adds when fields are unpopulated
+- [Phase 26.2-01]: output_doc_ids excluded from create_task input — agents produce output documents after task completion, never during creation
+- [Phase 26.2-01]: Handoff fields (context_doc_ids, context_decision_ids, spec, output_doc_ids) do NOT trigger re-embedding — structural routing data, not semantic content
+- [Phase 26.2-01]: VALID_AGENT_ROLES expanded from 10 to 14 roles: adds architecture_auditor, planner, plan_auditor, task_designer, task_auditor, product_researcher, synapse_orchestrator; removes decomposer, plan_reviewer, product_strategist
 
 ### Roadmap Evolution
 
@@ -200,6 +204,6 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-03-10T14:24:58.607Z
-Stopped at: Completed 26.2-02-PLAN.md
+Last session: 2026-03-10T14:29:06.857Z
+Stopped at: Completed 26.2-01-PLAN.md
 Resume file: None

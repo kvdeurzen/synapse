@@ -55,7 +55,7 @@ See [v2.0 Archive](milestones/v2.0-ROADMAP.md) for full details.
 - [x] **Phase 24: E2E Validation** - full RPEV cycle on a real task, hook verification, failure log, status verification (completed 2026-03-07)
 - [~] **Phase 25: Agent Behavior Hardening** - fix DEGRADED issues from E2E run: orchestrator prompt discipline, RPEV stage gates, git workflow, token efficiency, audit attribution (INSERTED) — 5/6 plans complete, E2E re-validation (25-04) deferred to usage
 - [ ] **Phase 26: Usage Findings** - address issues discovered during real usage on rpi-camera-py before declaring v3.0 release
-- [ ] **Phase 26.1: Further Improvements Agentic Framework** - further improvements to the agentic framework (INSERTED)
+- [ ] **Phase 26.1: Further Improvements Agentic Framework** - gateway architecture, doer+reviewer pipeline, orchestrator scope reduction, decision draft flow (INSERTED)
 
 ## Phase Details
 
@@ -181,7 +181,7 @@ Plans:
   1. Running `bash install.sh` on a clean machine checks for Bun version, Ollama running, and nomic-embed-text model — missing prerequisites produce an actionable error message, not a cryptic failure
   2. After `install.sh` completes, `.claude/agents/`, `.claude/hooks/`, `.claude/commands/synapse/`, `.mcp.json`, and `.claude/settings.json` all exist with correct content and `$CLAUDE_PROJECT_DIR`-prefixed hook paths
   3. `install.sh` runs a smoke test (`init_project` → `store_document` → `semantic_search`) before printing success — the user only sees "Done" if Synapse is actually operational
-  4. A usage manual exists documenting the complete user journey, all commands, and configuration options
+  4. A usage manual exists documenting the complete user journey, commands reference, and configuration
 **Plans**: 2 plans
 
 Plans:
@@ -275,13 +275,34 @@ Deferred to v3.1 (#9, #18, #27):
 Plans:
 - *(plans will be added as usage findings are reported)*
 
+### Phase 26.1: Further Improvements Agentic Framework
+**Goal**: Establish clear role separation with a gateway-led user interaction model, doer+reviewer pairs at every pipeline stage, and a draft->review->activate decision flow — making the RPEV pipeline more structured and the orchestrator stateless/restartable
+**Depends on**: Phase 25
+**Requirements**: FI-01, FI-02, FI-03, FI-04, FI-05, FI-06
+**Success Criteria** (what must be TRUE):
+  1. CLAUDE.md contains a Synapse Gateway Protocol section that establishes the main session as the sole user interaction point
+  2. The orchestrator is a pure dispatcher (~300 lines, down from ~700) — no decision-making, no user interaction, no failure handling
+  3. Every pipeline stage has a doer+reviewer pair: Product Researcher (gateway), Architect+Architecture Auditor, Planner+Plan Auditor, Task Designer+Task Auditor, Executor+Validator
+  4. Decisions follow draft->review->activate flow using document-based drafts (store_decision only supports active/superseded/revoked)
+  5. agents.toml registers all 14 agents with correct tool allowlists; trust.toml tier_authority reflects new authority model
+  6. Old agent files deleted (product-strategist, decomposer, plan-reviewer) and all references updated
+**Plans**: 5 plans
+
+Plans:
+- [ ] 26.1-01-PLAN.md — CLAUDE.md gateway protocol + decision draft workflow + _synapse-protocol.md update (FI-01, FI-04)
+- [ ] 26.1-02-PLAN.md — Orchestrator scope reduction to pure dispatcher (FI-02)
+- [ ] 26.1-03-PLAN.md — Stage 1-2 agents: product-researcher, architect narrowing, architecture-auditor (FI-03, FI-04)
+- [ ] 26.1-04-PLAN.md — Stage 3-4 agents: planner, plan-auditor, task-designer, task-auditor (FI-03, FI-04)
+- [ ] 26.1-05-PLAN.md — Config updates (agents.toml, trust.toml) + old file deletion + reference updates (FI-05, FI-06)
+
 ## Progress
 
 **Execution Order:**
-15 → 16 → 17 → 18 → 19 → 20 → 21 → 22 → 23 → 24 → 25 → 26
+15 → 16 → 17 → 18 → 19 → 20 → 21 → 22 → 23 → 24 → 25 → 26 → 26.1
 Parallelizable: Phase 17 (Tech Debt) and Phase 20 (Skills) can proceed in parallel with 18-19. Phase 20 depends only on Phase 15.
 Phase 25 depends on Phase 24 (failure log drives scope).
 Phase 26 depends on Phase 25 + real usage findings (plans created as issues arise).
+Phase 26.1 depends on Phase 25 (restructures agent prompts and pipeline).
 
 | Phase | Milestone | Plans Complete | Status | Completed |
 |-------|-----------|----------------|--------|-----------|
@@ -312,3 +333,4 @@ Phase 26 depends on Phase 25 + real usage findings (plans created as issues aris
 | 24. E2E Validation | v3.0 | 2/2 | Complete | 2026-03-07 |
 | 25. Agent Behavior Hardening | v3.0 | 5/6 | Complete (25-04 deferred) | 2026-03-09 |
 | 26. Usage Findings | v3.0 | 0/0 | Pending | - |
+| 26.1. Further Improvements | v3.0 | 0/5 | Planned | - |

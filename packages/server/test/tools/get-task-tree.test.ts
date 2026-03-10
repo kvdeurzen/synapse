@@ -477,7 +477,29 @@ describe("getTaskTree", () => {
     expect(result.truncated).toBe(false);
   });
 
-  // ── 13. Vector not included in output ────────────────────────────────────
+  // ── 13. Handoff fields in tree nodes ─────────────────────────────────────
+
+  test("tree node includes context_doc_ids, context_decision_ids, spec, output_doc_ids fields", async () => {
+    const result = await getTaskTree(tmpDir, "test-proj", {
+      project_id: "test-proj",
+      root_task_id: epicE1,
+    });
+
+    const rootNode = result.tree;
+    // All 4 handoff fields should be present (null by default)
+    expect("context_doc_ids" in rootNode).toBe(true);
+    expect("context_decision_ids" in rootNode).toBe(true);
+    expect("spec" in rootNode).toBe(true);
+    expect("output_doc_ids" in rootNode).toBe(true);
+
+    // Values should be null (not set on create)
+    expect(rootNode.context_doc_ids).toBeNull();
+    expect(rootNode.context_decision_ids).toBeNull();
+    expect(rootNode.spec).toBeNull();
+    expect(rootNode.output_doc_ids).toBeNull();
+  });
+
+  // ── 14. Vector not included in output ────────────────────────────────────
 
   test("does not include vector field in tree nodes", async () => {
     const result = await getTaskTree(tmpDir, "test-proj", {

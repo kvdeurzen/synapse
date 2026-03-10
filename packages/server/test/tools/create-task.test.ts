@@ -324,7 +324,7 @@ describe("createTask", () => {
   // ── 3. Database persistence ───────────────────────────────────────────────
 
   describe("database persistence", () => {
-    test("stores task with all 19 fields in the tasks table", async () => {
+    test("stores task with all 23 fields in the tasks table", async () => {
       await initProject(tmpDir, "test-proj");
 
       const result = await createTask(
@@ -549,7 +549,161 @@ describe("createTask", () => {
     });
   });
 
-  // ── 7. Validation errors ───────────────────────────────────────────────────
+  // ── 7. Handoff fields (context_doc_ids, spec, output_doc_ids) ─────────────
+
+  describe("handoff fields", () => {
+    test("creates task with context_doc_ids JSON string, stored correctly", async () => {
+      await initProject(tmpDir, "test-proj");
+
+      const contextDocIds = JSON.stringify(["doc-001", "doc-002"]);
+      const result = await createTask(
+        tmpDir,
+        "test-proj",
+        {
+          project_id: "test-proj",
+          title: "Task with context",
+          description: "Has context doc ids",
+          depth: 0,
+          context_doc_ids: contextDocIds,
+        },
+        config,
+      );
+
+      const db = await lancedb.connect(tmpDir);
+      const table = await db.openTable("tasks");
+      const rows = await table.query().toArray();
+      const row = rows.find((r) => r.task_id === result.task_id);
+
+      expect(row).toBeDefined();
+      expect(row?.context_doc_ids).toBe(contextDocIds);
+    });
+
+    test("context_doc_ids defaults to null when omitted", async () => {
+      await initProject(tmpDir, "test-proj");
+
+      const result = await createTask(
+        tmpDir,
+        "test-proj",
+        {
+          project_id: "test-proj",
+          title: "Task without context",
+          description: "",
+          depth: 0,
+        },
+        config,
+      );
+
+      const db = await lancedb.connect(tmpDir);
+      const table = await db.openTable("tasks");
+      const rows = await table.query().toArray();
+      const row = rows.find((r) => r.task_id === result.task_id);
+
+      expect(row).toBeDefined();
+      expect(row?.context_doc_ids).toBeNull();
+    });
+
+    test("creates task with spec string, stored correctly", async () => {
+      await initProject(tmpDir, "test-proj");
+
+      const spec = "Implement the token signing endpoint using RS256 algorithm.";
+      const result = await createTask(
+        tmpDir,
+        "test-proj",
+        {
+          project_id: "test-proj",
+          title: "Task with spec",
+          description: "",
+          depth: 0,
+          spec,
+        },
+        config,
+      );
+
+      const db = await lancedb.connect(tmpDir);
+      const table = await db.openTable("tasks");
+      const rows = await table.query().toArray();
+      const row = rows.find((r) => r.task_id === result.task_id);
+
+      expect(row).toBeDefined();
+      expect(row?.spec).toBe(spec);
+    });
+
+    test("spec defaults to null when omitted", async () => {
+      await initProject(tmpDir, "test-proj");
+
+      const result = await createTask(
+        tmpDir,
+        "test-proj",
+        {
+          project_id: "test-proj",
+          title: "Task without spec",
+          description: "",
+          depth: 0,
+        },
+        config,
+      );
+
+      const db = await lancedb.connect(tmpDir);
+      const table = await db.openTable("tasks");
+      const rows = await table.query().toArray();
+      const row = rows.find((r) => r.task_id === result.task_id);
+
+      expect(row).toBeDefined();
+      expect(row?.spec).toBeNull();
+    });
+
+    test("output_doc_ids is always null on create (not settable)", async () => {
+      await initProject(tmpDir, "test-proj");
+
+      const result = await createTask(
+        tmpDir,
+        "test-proj",
+        {
+          project_id: "test-proj",
+          title: "Task checking output_doc_ids",
+          description: "",
+          depth: 0,
+        },
+        config,
+      );
+
+      const db = await lancedb.connect(tmpDir);
+      const table = await db.openTable("tasks");
+      const rows = await table.query().toArray();
+      const row = rows.find((r) => r.task_id === result.task_id);
+
+      expect(row).toBeDefined();
+      expect(row?.output_doc_ids).toBeNull();
+    });
+
+    test("new agent role 'architecture_auditor' is accepted for assigned_agent", async () => {
+      await initProject(tmpDir, "test-proj");
+
+      const result = await createTask(
+        tmpDir,
+        "test-proj",
+        {
+          project_id: "test-proj",
+          title: "Task for architecture_auditor",
+          description: "",
+          depth: 0,
+          // biome-ignore lint/suspicious/noExplicitAny: testing new role
+          assigned_agent: "architecture_auditor" as any,
+        },
+        config,
+      );
+
+      const db = await lancedb.connect(tmpDir);
+      const table = await db.openTable("tasks");
+      const rows = await table.query().toArray();
+      const row = rows.find((r) => r.task_id === result.task_id);
+
+      expect(row).toBeDefined();
+      expect(row?.assigned_agent).toBe("architecture_auditor");
+    });
+  });
+
+  // ── 8. Validation errors ───────────────────────────────────────────────────
 
   describe("validation errors", () => {
     test("rejects invalid depth value (5)", async () => {

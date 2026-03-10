@@ -587,7 +587,120 @@ describe("updateTask", () => {
     ).rejects.toThrow("INVALID_TRANSITION");
   });
 
-  // ── 13. updated_at changes on every update ────────────────────────────────
+  // ── 13. Handoff fields update ─────────────────────────────────────────────
+
+  test("updates spec field, stores correctly and appears in changed_fields", async () => {
+    const task = await createTask(
+      tmpDir,
+      "test-proj",
+      {
+        project_id: "test-proj",
+        title: "Task",
+        description: "",
+        depth: 0,
+      },
+      config,
+    );
+
+    _setFetchImpl(() => {
+      throw new Error("embed should NOT be called for spec update");
+    });
+
+    const spec = "Implement the authentication module with OAuth2 support.";
+    const result = await updateTask(
+      tmpDir,
+      "test-proj",
+      {
+        project_id: "test-proj",
+        task_id: task.task_id,
+        spec,
+      },
+      config,
+    );
+
+    expect(result.changed_fields).toContain("spec");
+
+    const db = await lancedb.connect(tmpDir);
+    const table = await db.openTable("tasks");
+    const rows = await table.query().where(`task_id = '${task.task_id}'`).toArray();
+    expect(rows[0]?.spec).toBe(spec);
+  });
+
+  test("updates output_doc_ids field, stores correctly", async () => {
+    const task = await createTask(
+      tmpDir,
+      "test-proj",
+      {
+        project_id: "test-proj",
+        title: "Task",
+        description: "",
+        depth: 0,
+      },
+      config,
+    );
+
+    _setFetchImpl(() => {
+      throw new Error("embed should NOT be called for output_doc_ids update");
+    });
+
+    const outputDocIds = JSON.stringify(["doc-output-001", "doc-output-002"]);
+    const result = await updateTask(
+      tmpDir,
+      "test-proj",
+      {
+        project_id: "test-proj",
+        task_id: task.task_id,
+        output_doc_ids: outputDocIds,
+      },
+      config,
+    );
+
+    expect(result.changed_fields).toContain("output_doc_ids");
+
+    const db = await lancedb.connect(tmpDir);
+    const table = await db.openTable("tasks");
+    const rows = await table.query().where(`task_id = '${task.task_id}'`).toArray();
+    expect(rows[0]?.output_doc_ids).toBe(outputDocIds);
+  });
+
+  test("updates context_doc_ids field, stores correctly", async () => {
+    const task = await createTask(
+      tmpDir,
+      "test-proj",
+      {
+        project_id: "test-proj",
+        title: "Task",
+        description: "",
+        depth: 0,
+      },
+      config,
+    );
+
+    _setFetchImpl(() => {
+      throw new Error("embed should NOT be called for context_doc_ids update");
+    });
+
+    const contextDocIds = JSON.stringify(["ctx-doc-001"]);
+    const result = await updateTask(
+      tmpDir,
+      "test-proj",
+      {
+        project_id: "test-proj",
+        task_id: task.task_id,
+        context_doc_ids: contextDocIds,
+      },
+      config,
+    );
+
+    expect(result.changed_fields).toContain("context_doc_ids");
+
+    const db = await lancedb.connect(tmpDir);
+    const table = await db.openTable("tasks");
+    const rows = await table.query().where(`task_id = '${task.task_id}'`).toArray();
+    expect(rows[0]?.context_doc_ids).toBe(contextDocIds);
+  });
+
+  // ── 14. updated_at changes on every update ────────────────────────────────
 
   test("sets updated_at on every update", async () => {
     const task = await createTask(

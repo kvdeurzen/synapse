@@ -445,8 +445,8 @@ describe("TABLE_NAMES and TABLE_SCHEMAS registry", () => {
 // ────────────────────────────────────────────────────────────────────────────
 
 describe("TASKS_SCHEMA Arrow schema", () => {
-  test("tasks schema has 19 fields", () => {
-    expect(TASKS_SCHEMA.fields.length).toBe(19);
+  test("tasks schema has 23 fields", () => {
+    expect(TASKS_SCHEMA.fields.length).toBe(23);
   });
 
   test("task_id is non-null in tasks schema", () => {
@@ -487,6 +487,30 @@ describe("TASKS_SCHEMA Arrow schema", () => {
     expect(field).toBeDefined();
     expect(field?.nullable).toBe(false);
   });
+
+  test("context_doc_ids is nullable Utf8 in tasks schema", () => {
+    const field = TASKS_SCHEMA.fields.find((f) => f.name === "context_doc_ids");
+    expect(field).toBeDefined();
+    expect(field?.nullable).toBe(true);
+  });
+
+  test("context_decision_ids is nullable Utf8 in tasks schema", () => {
+    const field = TASKS_SCHEMA.fields.find((f) => f.name === "context_decision_ids");
+    expect(field).toBeDefined();
+    expect(field?.nullable).toBe(true);
+  });
+
+  test("spec is nullable Utf8 in tasks schema", () => {
+    const field = TASKS_SCHEMA.fields.find((f) => f.name === "spec");
+    expect(field).toBeDefined();
+    expect(field?.nullable).toBe(true);
+  });
+
+  test("output_doc_ids is nullable Utf8 in tasks schema", () => {
+    const field = TASKS_SCHEMA.fields.find((f) => f.name === "output_doc_ids");
+    expect(field).toBeDefined();
+    expect(field?.nullable).toBe(true);
+  });
 });
 
 describe("Zod TaskRowSchema validation", () => {
@@ -508,6 +532,10 @@ describe("Zod TaskRowSchema validation", () => {
     estimated_effort: null,
     tags: "",
     phase: null,
+    context_doc_ids: null,
+    context_decision_ids: null,
+    spec: null,
+    output_doc_ids: null,
     created_at: nowIso2,
     updated_at: nowIso2,
     vector: null,

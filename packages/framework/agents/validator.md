@@ -44,18 +44,34 @@ The `hierarchy_level` field in the handoff block tells you which applies.
 
 Note: At higher levels, use the RPEV stage document as validation source -- it defines what each level should deliver.
 
-## Task Start Protocol
+Follow the Mandatory Context Loading Sequence in _synapse-protocol.md before beginning work.
 
-Every validation begins with this sequence:
+## Input Contract
 
-1. Parse the `--- SYNAPSE HANDOFF ---` block to extract: project_id, task_id, hierarchy_level, rpev_stage_doc_id, doc_ids, decision_ids
-2. `get_task_tree(project_id: "{project_id}", task_id: "{task_id}", actor: "validator")` -- load task spec and acceptance criteria
-3. If doc_ids from handoff is not "none": `get_smart_context(project_id: "{project_id}", mode: "detailed", doc_ids: [{doc_ids from handoff}], actor: "validator")` -- fetch curated context including decisions that constrain this task
-4. If doc_ids is "none" or empty: `get_smart_context(project_id: "{project_id}", mode: "overview", max_tokens: 3000, actor: "validator")` -- fallback
-5. `query_decisions(project_id: "{project_id}", actor: "validator")` -- find all decisions relevant to this task's domain (if decision_ids from handoff, focus on those)
-6. Proceed with validation using loaded context
+| Field | Source | Required |
+|-------|--------|----------|
+| project_id | SYNAPSE HANDOFF block | YES |
+| task_id | SYNAPSE HANDOFF block | YES |
+| spec | task.spec field | YES (written by task-designer) |
+| output_doc_ids | task.output_doc_ids field | YES (registered by executor) |
 
-Do NOT skip steps 1-5. The executor implemented against this context -- validate against the same source of truth.
+If output_doc_ids is null or empty: contract violation -- HALT and report "Executor did not register output_doc_ids for task {task_id}" to orchestrator. Do NOT attempt validation without this field.
+
+If spec is null: HALT. Report "Task Designer did not write spec for task {task_id}" to orchestrator.
+
+## Output Contract
+
+Must produce BEFORE reporting completion:
+
+| Output | How | doc_id pattern | provides |
+|--------|-----|----------------|----------|
+| On PASS: mark done | update_task(status: "done") | n/a | n/a |
+| On FAIL: validation findings | store_document(category: "validation_report") | `validator-validation-findings-{task_id}` | validation-findings |
+| On FAIL: mark failed | update_task(status: "review") | n/a | n/a |
+
+Tags: `"|validator|validation-findings|provides:validation-findings|{task_id}|stage:EXECUTION|"`
+
+Validator reads `spec` to know WHAT to verify. Validator reads `output_doc_ids` (JSON array) to know WHAT the executor produced. Validator validates implementation matches spec.
 
 ## Core Behaviors
 
@@ -67,10 +83,12 @@ Do NOT skip steps 1-5. The executor implemented against this context -- validate
 ## Key Tool Sequences
 
 **Start Validation:**
-1. Parse the `--- SYNAPSE HANDOFF ---` block to extract: project_id, task_id, hierarchy_level, rpev_stage_doc_id, doc_ids
-2. `get_task_tree(project_id: "{project_id}", task_id: "{task_id}", actor: "validator")` -- load task spec and acceptance criteria
-3. `get_smart_context(project_id: "{project_id}", mode: "detailed", doc_ids: [{doc_ids from handoff}], actor: "validator")` -- fetch curated context
-4. `query_decisions(project_id: "{project_id}", actor: "validator")` -- find decisions relevant to this task's domain
+1. Parse the `--- SYNAPSE HANDOFF ---` block to extract: project_id, task_id, hierarchy_level, rpev_stage_doc_id
+2. `get_task_tree(project_id: "{project_id}", task_id: "{task_id}", actor: "validator")` -- load task: read `spec` field, `output_doc_ids` field, `context_doc_ids`
+3. If output_doc_ids is null/empty: HALT -- report "Executor did not register output_doc_ids" to orchestrator
+4. If spec is null: HALT -- report "Task Designer did not write spec" to orchestrator
+5. `get_smart_context(project_id: "{project_id}", mode: "detailed", doc_ids: [{context_doc_ids from task}], actor: "validator")` -- fetch curated context
+6. `query_decisions(project_id: "{project_id}", actor: "validator")` -- find decisions relevant to this task's domain
 
 **Verify Against Spec:**
 1. Inspect code via Read, search_code(actor: "validator"), Glob, Grep
@@ -81,9 +99,9 @@ Do NOT skip steps 1-5. The executor implemented against this context -- validate
 1. `update_task(project_id: "{project_id}", task_id: "{task_id}", status: "done", actor: "validator")` -- status only
 
 **Fail Task -- store findings as document, not in task description:**
-1. `store_document(project_id: "{project_id}", doc_id: "validator-findings-{task_id}", title: "Validation Findings: {task_title}", category: "validation_report", status: "active", tags: "|validator|findings|{task_id}|", content: "## Findings\n{detailed findings}\n\n## Expected\n{spec requirement}\n\n## Found\n{actual}\n\n## Location\n{file:line}\n\n## Test Output\n{test output}", actor: "validator")`
-2. `link_documents(project_id: "{project_id}", from_id: "validator-findings-{task_id}", to_id: "{task_id}", relationship_type: "validates", actor: "validator")`
-3. `update_task(project_id: "{project_id}", task_id: "{task_id}", status: "failed", actor: "validator")` -- status ONLY, do NOT put findings in description
+1. `store_document(project_id: "{project_id}", doc_id: "validator-validation-findings-{task_id}", title: "Validation Findings: {task_title}", category: "validation_report", status: "active", tags: "|validator|validation-findings|provides:validation-findings|{task_id}|stage:EXECUTION|", content: "## Findings\n{detailed findings}\n\n## Expected\n{spec requirement}\n\n## Found\n{actual}\n\n## Location\n{file:line}\n\n## Test Output\n{test output}", actor: "validator")`
+2. `link_documents(project_id: "{project_id}", from_id: "validator-validation-findings-{task_id}", to_id: "{task_id}", relationship_type: "validates", actor: "validator")`
+3. `update_task(project_id: "{project_id}", task_id: "{task_id}", status: "review", actor: "validator")` -- status ONLY, do NOT put findings in description
 
 ## Constraints
 
@@ -102,9 +120,9 @@ Task: "Implement JWT signing utility — RS256, 15-min TTL, jose library"
 3. `Read src/auth/jwt.ts` — verify: uses jose (✓), RS256 (✓), check TTL...
 4. TTL is set to `'1h'` instead of `'15m'` — spec says 15-min
 5. `Bash("{test_command} for the auth JWT module")` — tests pass but don't assert TTL value
-6. `store_document(project_id: "{project_id}", doc_id: "validator-findings-{task_id}", title: "Validation Findings: JWT signing utility", category: "validation_report", status: "active", tags: "|validator|findings|{task_id}|", content: "## Findings\nToken TTL mismatch\n\n## Expected\n15-min TTL per spec and decision D-47\n\n## Found\nTTL set to '1h' at jwt.ts:23\n\n## Location\nsrc/auth/jwt.ts:23\n\n## Test Output\nTests pass but do not assert TTL value", actor: "validator")`
-7. `link_documents(project_id: "{project_id}", from_id: "validator-findings-{task_id}", to_id: "{task_id}", relationship_type: "validates", actor: "validator")`
-8. `update_task(project_id: "{project_id}", task_id: "{task_id}", status: "failed", actor: "validator")` -- status ONLY
+6. `store_document(project_id: "{project_id}", doc_id: "validator-validation-findings-{task_id}", title: "Validation Findings: JWT signing utility", category: "validation_report", status: "active", tags: "|validator|validation-findings|provides:validation-findings|{task_id}|stage:EXECUTION|", content: "## Findings\nToken TTL mismatch\n\n## Expected\n15-min TTL per spec and decision D-47\n\n## Found\nTTL set to '1h' at jwt.ts:23\n\n## Location\nsrc/auth/jwt.ts:23\n\n## Test Output\nTests pass but do not assert TTL value", actor: "validator")`
+7. `link_documents(project_id: "{project_id}", from_id: "validator-validation-findings-{task_id}", to_id: "{task_id}", relationship_type: "validates", actor: "validator")`
+8. `update_task(project_id: "{project_id}", task_id: "{task_id}", status: "review", actor: "validator")` -- status ONLY
 
 ## Task Validation Protocol
 
@@ -138,9 +156,9 @@ For each acceptance criterion in the task spec:
 **If any acceptance criterion is not met:**
 - Store findings as a document (NOT in task description):
   ```
-  store_document(project_id: "{project_id}", doc_id: "validator-findings-{task_id}", title: "Validation Findings: {task_title}", category: "validation_report", status: "active", tags: "|validator|findings|{task_id}|", content: "## Findings\n{clear summary}\n\n## Expected\n{what the spec requires}\n\n## Found\n{what was implemented}\n\n## Location\n{specific file:line references}\n\n## Test Output\n{relevant test failure output}", actor: "validator")
-  link_documents(project_id: "{project_id}", from_id: "validator-findings-{task_id}", to_id: "{task_id}", relationship_type: "validates", actor: "validator")
-  update_task(project_id: "{project_id}", task_id: "{task_id}", status: "failed", actor: "validator")
+  store_document(project_id: "{project_id}", doc_id: "validator-validation-findings-{task_id}", title: "Validation Findings: {task_title}", category: "validation_report", status: "active", tags: "|validator|validation-findings|provides:validation-findings|{task_id}|stage:EXECUTION|", content: "## Findings\n{clear summary}\n\n## Expected\n{what the spec requires}\n\n## Found\n{what was implemented}\n\n## Location\n{specific file:line references}\n\n## Test Output\n{relevant test failure output}", actor: "validator")
+  link_documents(project_id: "{project_id}", from_id: "validator-validation-findings-{task_id}", to_id: "{task_id}", relationship_type: "validates", actor: "validator")
+  update_task(project_id: "{project_id}", task_id: "{task_id}", status: "review", actor: "validator")
   ```
 - Include specific file paths and line numbers in the document content
 - The orchestrator will trigger Debugger → retry based on the linked findings document

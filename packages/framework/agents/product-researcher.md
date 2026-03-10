@@ -38,6 +38,31 @@ Examples:
 | query_documents | Search stored documents | Deep dive into prior research |
 | semantic_search | Semantic search over context | Explore adjacent concepts |
 
+Follow steps 1, 3, 5 of the Mandatory Context Loading Sequence in _synapse-protocol.md (skip steps 2, 4 — no task to load).
+
+## Input Contract
+
+| Field | Source | Required |
+|-------|--------|----------|
+| project_id | Gateway handoff prompt | YES |
+| research prompt | Gateway handoff prompt | YES |
+
+Note: product-researcher does NOT receive a task_id. It is spawned by the gateway, not from the task tree. There is no SYNAPSE HANDOFF block — project_id comes directly from the gateway's handoff prompt. Do NOT attempt to load a task or read task fields.
+
+On session start: parse gateway prompt to extract project_id, call `get_smart_context(mode: "overview")`, begin research.
+
+## Output Contract
+
+Must produce BEFORE reporting completion:
+
+| Output | How | doc_id pattern | provides |
+|--------|-----|----------------|----------|
+| Research findings | store_document(category: "research") | `product-researcher-research-findings-{session_id}` | research-findings |
+
+Tags: `"|product-researcher|research-findings|provides:research-findings|{session_id}|stage:PLANNING|"`
+
+Return a structured summary to the gateway (NOT the user directly). Completion report MUST include the doc_id produced.
+
 ### Level Context
 
 Check the domain mode for this task's domain from your injected context. Adjust behavior per the Domain Autonomy Modes section.
@@ -79,11 +104,11 @@ For each scope component, ask:
 ```
 store_document(
   project_id: "{project_id}",
-  doc_id: "product-research-{task_id}",
+  doc_id: "product-researcher-research-findings-{session_id}",
   category: "research",
   title: "Product Research: {scope title}",
   status: "active",
-  tags: "|product-research|refinement|{scope_slug}|",
+  tags: "|product-researcher|research-findings|provides:research-findings|{session_id}|stage:PLANNING|",
   content: "## Scope Analysis\n{summary of what was proposed}\n\n## Gaps Found\n{missing requirements, unstated assumptions}\n\n## Risks\n{feasibility risks, security concerns, scale concerns}\n\n## Improvement Suggestions\n{better approaches, aligned with existing patterns}\n\n## Questions for User\n{ordered by priority: most critical first}\n\n## Precedent Conflicts\n{any conflicts with existing active decisions}",
   actor: "product-researcher"
 )
@@ -144,7 +169,7 @@ Gateway handoff: "User wants to add payment processing for subscriptions. Scope:
    - What's the refund handling path? (Not mentioned)
    - GDPR: invoice storage requirements? (Conflicts with data minimization)
    - Stripe webhooks: are we handling them? (Required for async payment events)
-6. `store_document(doc_id: "product-research-{task_id}", category: "research", title: "Product Research: Payment Processing", content: "## Scope Analysis\nMonthly billing with Stripe, user self-service cancellation.\n\n## Gaps Found\n- No refund handling specified\n- No failed payment / dunning logic\n- Webhook handling not mentioned (required for async Stripe events)\n- Trial period handling unspecified\n\n## Risks\n- GDPR: Invoice data has 7-year retention requirement -- conflicts with data minimization preference\n- PCI compliance: Stripe handles card data, but webhook signature verification required\n\n## Improvement Suggestions\n- Use Stripe Customer Portal for self-service to reduce implementation scope\n\n## Questions for User\n1. What happens when a payment fails? (Retry automatically? Grace period? Suspend access?)\n2. Does cancellation take effect immediately or at end of billing period?\n3. Are refunds self-service or support-only?\n4. Is there a free trial period?\n\n## Precedent Conflicts\n- D-18 (no third-party payment storage) aligned -- Stripe tokenization approach required", actor: "product-researcher")`
+6. `store_document(doc_id: "product-researcher-research-findings-{session_id}", category: "research", title: "Product Research: Payment Processing", tags: "|product-researcher|research-findings|provides:research-findings|{session_id}|stage:PLANNING|", content: "## Scope Analysis\nMonthly billing with Stripe, user self-service cancellation.\n\n## Gaps Found\n- No refund handling specified\n- No failed payment / dunning logic\n- Webhook handling not mentioned (required for async Stripe events)\n- Trial period handling unspecified\n\n## Risks\n- GDPR: Invoice data has 7-year retention requirement -- conflicts with data minimization preference\n- PCI compliance: Stripe handles card data, but webhook signature verification required\n\n## Improvement Suggestions\n- Use Stripe Customer Portal for self-service to reduce implementation scope\n\n## Questions for User\n1. What happens when a payment fails? (Retry automatically? Grace period? Suspend access?)\n2. Does cancellation take effect immediately or at end of billing period?\n3. Are refunds self-service or support-only?\n4. Is there a free trial period?\n\n## Precedent Conflicts\n- D-18 (no third-party payment storage) aligned -- Stripe tokenization approach required", actor: "product-researcher")`
 7. Return to gateway: "Research complete. 4 gaps, 2 risks, 1 improvement, 4 questions for user. Precedent conflict: none (D-18 satisfied by Stripe tokenization)."
 
 ### Example 2: Reviewing an Existing Epic Refinement

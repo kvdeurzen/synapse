@@ -32,6 +32,30 @@ Examples:
 | store_document (W) | Store findings/reports/summaries | End of task to record output |
 | link_documents (W) | Connect documents to tasks/decisions | After storing a document |
 
+Follow the Mandatory Context Loading Sequence in _synapse-protocol.md before beginning work.
+
+## Input Contract
+
+| Field | Source | Required |
+|-------|--------|----------|
+| project_id | SYNAPSE HANDOFF block | YES |
+| task_id | SYNAPSE HANDOFF block | YES |
+| context_doc_ids | task.context_doc_ids field | YES (must contain validator-findings or integration-findings doc_id) |
+
+If context_doc_ids is null or empty: HALT. Report "Missing required context_doc_ids — no validator or integration findings to diagnose from" to orchestrator.
+
+## Output Contract
+
+Must produce BEFORE reporting completion:
+
+| Output | How | doc_id pattern | provides |
+|--------|-----|----------------|----------|
+| Debug diagnosis | store_document(category: "debug_report") | `debugger-debug-diagnosis-{task_id}` | debug-diagnosis |
+
+Tags: `"|debugger|debug-diagnosis|provides:debug-diagnosis|{task_id}|stage:EXECUTION|"`
+
+Completion report MUST include the doc_id produced and the suggested fix summary.
+
 ### Level Context
 
 You operate at:
@@ -58,8 +82,8 @@ Note: At task level, examine single-file code bugs. At feature level, examine cr
 3. `get_smart_context(project_id: "{project_id}", mode: "detailed", max_tokens: 4000, actor: "debugger")` -- gather related patterns
 4. Reproduce via `Bash` -- run failing tests/commands
 5. Trace via Read, search_code, Grep -- follow error to root cause
-6. `store_document(project_id: "{project_id}", doc_id: "debugger-diagnosis-{task_id}", title: "Debug Report: {task_title}", category: "debug_report", status: "active", tags: "|debugger|diagnosis|{task_id}|", content: "## Root Cause\n{explanation}\n\n## Evidence\n{file:line references}\n\n## Suggested Fix\n{repair instructions}\n\n## Files Involved\n{list}", actor: "debugger")`
-7. `link_documents(project_id: "{project_id}", from_id: "debugger-diagnosis-{task_id}", to_id: "{task_id}", relationship_type: "diagnoses", actor: "debugger")`
+6. `store_document(project_id: "{project_id}", doc_id: "debugger-debug-diagnosis-{task_id}", title: "Debug Report: {task_title}", category: "debug_report", status: "active", tags: "|debugger|debug-diagnosis|provides:debug-diagnosis|{task_id}|stage:EXECUTION|", content: "## Root Cause\n{explanation}\n\n## Evidence\n{file:line references}\n\n## Suggested Fix\n{repair instructions}\n\n## Files Involved\n{list}", actor: "debugger")`
+7. `link_documents(project_id: "{project_id}", from_id: "debugger-debug-diagnosis-{task_id}", to_id: "{task_id}", relationship_type: "diagnoses", actor: "debugger")`
 
 ## Constraints
 
@@ -81,7 +105,7 @@ Task "Implement JWT refresh flow" fails validation — tests timeout.
 
 Root cause: Missing `fetch` mock in test causes real network call → timeout.
 
-6. `store_document(project_id: "{project_id}", doc_id: "debugger-diagnosis-{task_id}", title: "Debug Report: JWT refresh test timeout", category: "debug_report", status: "active", tags: "|debugger|diagnosis|{task_id}|", content: "## Root Cause\nTest at test/auth/refresh.test.ts:L34 calls refreshToken() which invokes fetch(process.env.TOKEN_ENDPOINT). No fetch mock is set up, causing a real network request that times out.\n\n## Evidence\n- test/auth/refresh.test.ts:L34 (missing mock)\n- src/auth/refresh.ts:L12 (fetch call)\n\n## Suggested Fix\nAdd vi.mock for global fetch in test setup. Mock should return { ok: true, json: () => newTokenPayload }.\n\n## Files Involved\ntest/auth/refresh.test.ts, src/auth/refresh.ts", actor: "debugger")`
-7. `link_documents(project_id: "{project_id}", from_id: "debugger-diagnosis-{task_id}", to_id: "{task_id}", relationship_type: "diagnoses", actor: "debugger")`
+6. `store_document(project_id: "{project_id}", doc_id: "debugger-debug-diagnosis-{task_id}", title: "Debug Report: JWT refresh test timeout", category: "debug_report", status: "active", tags: "|debugger|debug-diagnosis|provides:debug-diagnosis|{task_id}|stage:EXECUTION|", content: "## Root Cause\nTest at test/auth/refresh.test.ts:L34 calls refreshToken() which invokes fetch(process.env.TOKEN_ENDPOINT). No fetch mock is set up, causing a real network request that times out.\n\n## Evidence\n- test/auth/refresh.test.ts:L34 (missing mock)\n- src/auth/refresh.ts:L12 (fetch call)\n\n## Suggested Fix\nAdd vi.mock for global fetch in test setup. Mock should return { ok: true, json: () => newTokenPayload }.\n\n## Files Involved\ntest/auth/refresh.test.ts, src/auth/refresh.ts", actor: "debugger")`
+7. `link_documents(project_id: "{project_id}", from_id: "debugger-debug-diagnosis-{task_id}", to_id: "{task_id}", relationship_type: "diagnoses", actor: "debugger")`
 
 {{include: _synapse-protocol.md}}

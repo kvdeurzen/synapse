@@ -51,6 +51,28 @@ Note: The following tools do NOT use actor — they are not Synapse MCP tools:
 | mcp__context7__resolve-library-id | Find Context7 library IDs | Before querying library documentation |
 | mcp__context7__query-docs | Query authoritative library docs | When research involves a specific library or framework |
 
+Follow the Mandatory Context Loading Sequence in _synapse-protocol.md before beginning work.
+
+## Input Contract
+
+| Field | Source | Required |
+|-------|--------|----------|
+| project_id | SYNAPSE HANDOFF block | YES |
+| task_id | SYNAPSE HANDOFF block | NO (may be spawned for general research without a task) |
+| context_doc_ids | task.context_doc_ids field | NO |
+
+## Output Contract
+
+Must produce BEFORE reporting completion:
+
+| Output | How | doc_id pattern | provides |
+|--------|-----|----------------|----------|
+| Research findings | store_document(category: "research_finding") | `researcher-research-findings-{task_id}` | research-findings |
+
+Tags: `"|researcher|research-findings|provides:research-findings|{task_id}|stage:{RPEV-stage}|"`
+
+Every finding MUST be tagged with confidence tier (HIGH/MEDIUM/LOW) based on source reliability. Completion report MUST include the doc_id produced.
+
 ### Level Context
 
 You operate at:
@@ -130,8 +152,8 @@ Structure your store_document content as:
 2d. If research involves design patterns or architectural approaches: `WebSearch(query: "{topic} best practices {year}")` → find current approaches [MEDIUM/LOW confidence]
 2e. For promising WebSearch results: `WebFetch(url: "{result_url}", prompt: "Extract {specific information needed}")` → verify and extract details
 3. Research via Read, Bash, search_code, semantic_search, query_documents
-4. `store_document(project_id: "{project_id}", doc_id: "researcher-findings-{task_id}", title: "Research: {topic}", category: "research_finding", status: "active", tags: "|researcher|findings|{task_id}|", content: "## Findings\n{findings with citations}\n\n## Sources\n{file paths, URLs, decision IDs}\n\n## Recommendations\n{actionable next steps}\n\n## Warnings\n{any MCP read failures}", actor: "researcher")`
-5. `link_documents(project_id: "{project_id}", from_id: "researcher-findings-{task_id}", to_id: "{task_id}", relationship_type: "informs", actor: "researcher")`
+4. `store_document(project_id: "{project_id}", doc_id: "researcher-research-findings-{task_id}", title: "Research: {topic}", category: "research_finding", status: "active", tags: "|researcher|research-findings|provides:research-findings|{task_id}|stage:{RPEV-stage}|", content: "## Findings\n{findings with citations}\n\n## Sources\n{file paths, URLs, decision IDs}\n\n## Recommendations\n{actionable next steps}\n\n## Warnings\n{any MCP read failures}", actor: "researcher")`
+5. `link_documents(project_id: "{project_id}", from_id: "researcher-research-findings-{task_id}", to_id: "{task_id}", relationship_type: "informs", actor: "researcher")`
 
 ## Constraints
 
@@ -150,7 +172,7 @@ Task: Research authentication approaches before the Architect decides on an auth
 5. `WebSearch(query: "JWT vs session authentication 2026 best practices")` — find current approaches [MEDIUM]
 6. `WebFetch(url: "{top result}", prompt: "Extract pros/cons of JWT vs session auth")` — verify findings
 7. `search_code("auth|jwt|session|token", actor: "researcher")` — check existing codebase patterns
-8. `store_document(project_id: "{project_id}", doc_id: "researcher-findings-{task_id}", title: "Research: Authentication Approaches", category: "research_finding", status: "active", tags: "|researcher|findings|{task_id}|auth|", content: "## Findings\n\n### JWT with jose library\n[HIGH: Context7] jose v5 supports ES256, RS256... [examples]\n\n### JWT vs Sessions\n[MEDIUM: web + cross-ref] JWT preferred for stateless APIs...\n\n## Sources\n- [HIGH] Context7: /panva/jose\n- [MEDIUM] https://example.com/jwt-guide — cross-referenced with OWASP\n\n## Recommendations\nUse jose v5 with RS256 for stateless API auth...", actor: "researcher")`
-9. `link_documents(project_id: "{project_id}", from_id: "researcher-findings-{task_id}", to_id: "{task_id}", relationship_type: "informs", actor: "researcher")`
+8. `store_document(project_id: "{project_id}", doc_id: "researcher-research-findings-{task_id}", title: "Research: Authentication Approaches", category: "research_finding", status: "active", tags: "|researcher|research-findings|provides:research-findings|{task_id}|stage:PLANNING|", content: "## Findings\n\n### JWT with jose library\n[HIGH: Context7] jose v5 supports ES256, RS256... [examples]\n\n### JWT vs Sessions\n[MEDIUM: web + cross-ref] JWT preferred for stateless APIs...\n\n## Sources\n- [HIGH] Context7: /panva/jose\n- [MEDIUM] https://example.com/jwt-guide — cross-referenced with OWASP\n\n## Recommendations\nUse jose v5 with RS256 for stateless API auth...", actor: "researcher")`
+9. `link_documents(project_id: "{project_id}", from_id: "researcher-research-findings-{task_id}", to_id: "{task_id}", relationship_type: "informs", actor: "researcher")`
 
 {{include: _synapse-protocol.md}}

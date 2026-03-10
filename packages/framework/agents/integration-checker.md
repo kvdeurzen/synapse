@@ -38,6 +38,31 @@ Examples:
 | store_document (W) | Store findings/reports/summaries | End of task to record output |
 | link_documents (W) | Connect documents to tasks/decisions | After storing a document |
 
+Follow the Mandatory Context Loading Sequence in _synapse-protocol.md before beginning work.
+
+## Input Contract
+
+| Field | Source | Required |
+|-------|--------|----------|
+| project_id | SYNAPSE HANDOFF block | YES |
+| task_id | SYNAPSE HANDOFF block | YES (feature-level task) |
+| context_doc_ids | task.context_doc_ids field | YES (children's output_doc_ids aggregated) |
+
+If context_doc_ids is null or empty: HALT. Report "Missing required context_doc_ids — child executor output_doc_ids not aggregated" to orchestrator.
+
+## Output Contract
+
+Must produce BEFORE reporting completion:
+
+| Output | How | doc_id pattern | provides |
+|--------|-----|----------------|----------|
+| On PASS: integration report | store_document(category: "integration_report") | `integration-checker-integration-report-{task_id}` | integration-report |
+| On FAIL: integration report | store_document(category: "integration_report") | `integration-checker-integration-report-{task_id}` | integration-report |
+
+Tags: `"|integration-checker|integration-report|provides:integration-report|{task_id}|stage:EXECUTION|"`
+
+Both PASS and FAIL produce an integration-report document. Completion report MUST list the doc_id produced.
+
 ### Level Context
 
 Check the domain mode for this task's domain from your injected context. Adjust behavior per the Domain Autonomy Modes section.
@@ -64,8 +89,8 @@ Note: You operate at feature and epic level only. Task-level validation is the V
 Report to orchestrator: feature integration verified.
 
 **Fail Integration -- store findings as document:**
-1. `store_document(project_id: "{project_id}", doc_id: "integration-findings-{feature_task_id}", title: "Integration Findings: {feature_title}", category: "integration_report", status: "active", tags: "|integration-checker|findings|{feature_task_id}|", content: "## Integration Issues\n{findings}\n\n## Contract Mismatches\n{details}\n\n## Affected Tasks\n{task_ids and descriptions}", actor: "integration-checker")`
-2. `link_documents(project_id: "{project_id}", from_id: "integration-findings-{feature_task_id}", to_id: "{feature_task_id}", relationship_type: "validates", actor: "integration-checker")`
+1. `store_document(project_id: "{project_id}", doc_id: "integration-checker-integration-report-{feature_task_id}", title: "Integration Report: {feature_title}", category: "integration_report", status: "active", tags: "|integration-checker|integration-report|provides:integration-report|{feature_task_id}|stage:EXECUTION|", content: "## Integration Issues\n{findings}\n\n## Contract Mismatches\n{details}\n\n## Affected Tasks\n{task_ids and descriptions}", actor: "integration-checker")`
+2. `link_documents(project_id: "{project_id}", from_id: "integration-checker-integration-report-{feature_task_id}", to_id: "{feature_task_id}", relationship_type: "validates", actor: "integration-checker")`
 3. `update_task(project_id: "{project_id}", task_id: "{feature_task_id}", status: "failed", actor: "integration-checker")` -- status only, findings are in the linked document
 
 ## Constraints

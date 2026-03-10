@@ -13,9 +13,6 @@ allowed_tools = [
   "Grep",
   "Task",
   "SendMessage",
-  "mcp__synapse__store_decision",
-  "mcp__synapse__query_decisions",
-  "mcp__synapse__check_precedent",
   "mcp__synapse__create_task",
   "mcp__synapse__update_task",
   "mcp__synapse__get_task_tree",
@@ -29,7 +26,6 @@ allowed_tools = [
   "mcp__synapse__index_codebase",
   "mcp__synapse__search_code",
   "mcp__synapse__get_index_status",
-  "mcp__synapse__init_project",
 ]
 
 [agents.product-strategist]

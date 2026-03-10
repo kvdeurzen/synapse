@@ -56,7 +56,7 @@ See [v2.0 Archive](milestones/v2.0-ROADMAP.md) for full details.
 - [~] **Phase 25: Agent Behavior Hardening** - fix DEGRADED issues from E2E run: orchestrator prompt discipline, RPEV stage gates, git workflow, token efficiency, audit attribution (INSERTED) — 5/6 plans complete, E2E re-validation (25-04) deferred to usage
 - [ ] **Phase 26: Usage Findings** - address issues discovered during real usage on rpi-camera-py before declaring v3.0 release
 - [x] **Phase 26.1: Further Improvements Agentic Framework** - gateway architecture, doer+reviewer pipeline, orchestrator scope reduction, decision draft flow (INSERTED) (completed 2026-03-10)
-- [ ] **Phase 26.2: Agent Handoff Tightening** - structured task fields, unified context loading, per-agent contracts, gateway protocol template (INSERTED)
+- [x] **Phase 26.2: Agent Handoff Tightening** - structured task fields, unified context loading, per-agent contracts, gateway protocol template (INSERTED) (completed 2026-03-10)
 
 ## Phase Details
 
@@ -354,4 +354,4 @@ Phase 26.2 depends on Phase 26.1 (tightens handoff contracts on the new agent ro
 | 25. Agent Behavior Hardening | v3.0 | 5/6 | Complete (25-04 deferred) | 2026-03-09 |
 | 26. Usage Findings | v3.0 | 0/0 | Pending | - |
 | 26.1. Further Improvements | 5/5 | Complete    | 2026-03-10 | - |
-| 26.2. Agent Handoff Tightening | 3/4 | In Progress|  | - |
+| 26.2. Agent Handoff Tightening | 4/4 | Complete   | 2026-03-10 | - |

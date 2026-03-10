@@ -21,7 +21,7 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-03)
 
 **Core value:** Agents get the right context for any task — from both project decisions and actual code — without wasting tokens on irrelevant content. The orchestrator ensures agents respect established decisions and decompose work to context-window-sized executable units.
-**Current focus:** Phase 26 — Usage Findings (awaiting findings from real usage before v3.0 release)
+**Current focus:** Phase 26.1 — Further Improvements Agentic Framework (context gathered, ready for planning)
 **Previous milestones:** v1.0 Data Layer (shipped 2026-03-01), v2.0 Agentic Framework (shipped 2026-03-02)
 
 ## Current Position
@@ -164,6 +164,7 @@ Key decisions affecting v3.0:
 ### Roadmap Evolution
 
 - Phase 25 inserted after Phase 24: Agent Behavior Hardening — fix 27 DEGRADED issues from E2E run to make RPEV cycle usable before declaring v3.0 complete (INSERTED 2026-03-07)
+- Phase 26.1 inserted after Phase 26: Further improvements agentic framework (URGENT)
 
 ### Blockers/Concerns
 
@@ -177,6 +178,6 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-03-09T12:00:00Z
-Stopped at: Phase 25 closed. Phase 26 created for usage findings.
-Resume file: .planning/phases/26-usage-findings/26-CONTEXT.md
+Last session: 2026-03-10
+Stopped at: Phase 26.1 context gathered — agentic framework redesign decisions captured
+Resume file: .planning/phases/26.1-further-improvements-agentic-framework/26.1-CONTEXT.md

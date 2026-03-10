@@ -2,15 +2,15 @@
 gsd_state_version: 1.0
 milestone: v3.0
 milestone_name: Working Prototype
-status: in_progress
-stopped_at: "Phase 25 complete (5/6 plans, 25-04 deferred). Phase 26 created for usage findings."
-last_updated: "2026-03-09T12:00:00Z"
-last_activity: 2026-03-09 — Phase 25 closed (25-05 research-driven decisions, 25-06 PR workflow complete; 25-04 E2E re-validation deferred to real usage). Phase 26 (Usage Findings) created as final buffer before v3.0 release.
+status: Phase 25 closed (5/6 plans; 25-04 E2E re-validation deferred). Phase 26 created for real usage findings.
+stopped_at: Completed 26.1-01-PLAN.md (gateway protocol + decision draft flow)
+last_updated: "2026-03-10T10:57:26.589Z"
+last_activity: 2026-03-09 — Phase 25 execution complete. Phase 26 created.
 progress:
-  total_phases: 12
-  completed_phases: 11
-  total_plans: 28
-  completed_plans: 27
+  total_phases: 13
+  completed_phases: 9
+  total_plans: 35
+  completed_plans: 29
   percent: 96
 ---
 
@@ -72,6 +72,7 @@ Progress: [█████████░] 96%
 | Phase 25-agent-behavior-hardening P03 | 5min | 2 tasks | 14 files |
 | Phase 25-agent-behavior-hardening P05 | 3min | 2 tasks | 4 files |
 | Phase 25-agent-behavior-hardening P06 | 4min | 1 task | 1 file |
+| Phase 26.1-further-improvements-agentic-framework P01 | 2 | 2 tasks | 3 files |
 
 ## Accumulated Context
 
@@ -160,6 +161,9 @@ Key decisions affecting v3.0:
 - [Phase 25-06]: PR workflow replaces direct merge to main — feature completion creates gh pr create with structured template linking RPEV stage doc, task commits, and decision references
 - [Phase 25-06]: Merge gate is involvement-mode dependent — autopilot/monitors auto-merge (gh pr merge --merge --delete-branch); co-pilot/reviews/drives set pending_approval=true and await user action
 - [Phase 25-06]: Rollback uses git revert not git reset — explicit revert commands for task rollback, feature rollback (pre-merge), and post-merge rollback; NEVER force-push to main
+- [Phase 26.1-01]: Gateway owns all user communication: subagents NEVER interact with user directly; gateway spawns only Product Researcher (refinement) and Orchestrator (dispatch) directly
+- [Phase 26.1-01]: Decision draft uses document-based workaround: store_decision has no draft status (only active/superseded/revoked), doers store decision_draft category documents, reviewers activate via store_decision
+- [Phase 26.1-01]: Tier 3 executor exception retained: executors store execution-level decisions directly as active; validators check post-hoc
 
 ### Roadmap Evolution
 
@@ -178,6 +182,6 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-03-10
-Stopped at: Phase 26.1 context gathered — agentic framework redesign decisions captured
-Resume file: .planning/phases/26.1-further-improvements-agentic-framework/26.1-CONTEXT.md
+Last session: 2026-03-10T10:57:26.578Z
+Stopped at: Completed 26.1-01-PLAN.md (gateway protocol + decision draft flow)
+Resume file: None

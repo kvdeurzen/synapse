@@ -333,4 +333,4 @@ Phase 26.1 depends on Phase 25 (restructures agent prompts and pipeline).
 | 24. E2E Validation | v3.0 | 2/2 | Complete | 2026-03-07 |
 | 25. Agent Behavior Hardening | v3.0 | 5/6 | Complete (25-04 deferred) | 2026-03-09 |
 | 26. Usage Findings | v3.0 | 0/0 | Pending | - |
-| 26.1. Further Improvements | 5/5 | Complete   | 2026-03-10 | - |
+| 26.1. Further Improvements | 5/5 | Complete    | 2026-03-10 | - |

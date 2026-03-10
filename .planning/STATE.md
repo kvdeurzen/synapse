@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v3.0
 milestone_name: Working Prototype
 status: Phase 25 closed (5/6 plans; 25-04 E2E re-validation deferred). Phase 26 created for real usage findings.
-stopped_at: Phase 26.2 context gathered
-last_updated: "2026-03-10T13:46:09.987Z"
+stopped_at: Completed 26.2-02-PLAN.md
+last_updated: "2026-03-10T14:24:58.611Z"
 last_activity: 2026-03-09 — Phase 25 execution complete. Phase 26 created.
 progress:
   total_phases: 14
   completed_phases: 10
-  total_plans: 35
-  completed_plans: 33
+  total_plans: 39
+  completed_plans: 34
   percent: 96
 ---
 
@@ -77,6 +77,7 @@ Progress: [█████████░] 96%
 | Phase 26.1-further-improvements-agentic-framework P03 | 7 | 2 tasks | 5 files |
 | Phase 26.1 P04 | 8min | 2 tasks | 4 files |
 | Phase 26.1-further-improvements-agentic-framework P05 | 8min | 3 tasks | 12 files |
+| Phase 26.2-agent-handoff-tightening P02 | 179 | 2 tasks | 2 files |
 
 ## Accumulated Context
 
@@ -177,6 +178,9 @@ Key decisions affecting v3.0:
 - [Phase 26.1]: Planner/Plan-Auditor and Task-Designer/Task-Auditor: doer/reviewer pairs for structure and spec stages of progressive decomposition pipeline
 - [Phase 26.1]: Task Auditor model is sonnet (spec review is pattern-matching, not creative work); Task Designer stays opus for spec synthesis quality
 - [Phase 26.1-05]: tier_authority maps to store_decision access: auditors (architecture-auditor=[1,2], plan-auditor=[2], task-auditor=[2,3]) hold authority; doer agents (architect, planner, task-designer) have [] because they draft documents, not store decisions directly
+- [Phase 26.2]: Structured fields (context_doc_ids, context_decision_ids) replace CONTEXT_REFS text-block parsing in orchestrator handoff building
+- [Phase 26.2]: Provides vocabulary is a fixed 11-slug set -- agents must not invent new slugs
+- [Phase 26.2]: Routing table does not modify context fields already set by Planner/Task Designer -- orchestrator only adds when fields are unpopulated
 
 ### Roadmap Evolution
 
@@ -196,6 +200,6 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-03-10T13:46:09.984Z
-Stopped at: Phase 26.2 context gathered
-Resume file: .planning/phases/26.2-agent-handoff-tightening/26.2-CONTEXT.md
+Last session: 2026-03-10T14:24:58.607Z
+Stopped at: Completed 26.2-02-PLAN.md
+Resume file: None

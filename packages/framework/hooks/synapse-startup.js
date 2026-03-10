@@ -352,6 +352,22 @@ process.stdin.on("end", () => {
       contextParts.push(skillContext);
     }
 
+    // Gateway protocol injection
+    try {
+      const gatewayMode = projectToml?.project?.gateway_mode ?? "always-on";
+      if (gatewayMode !== "explicit") {
+        const gatewayProtocolPath = path.join(projectRoot, ".synapse", "config", "gateway-protocol.md");
+        if (fs.existsSync(gatewayProtocolPath)) {
+          const gatewayProtocol = fs.readFileSync(gatewayProtocolPath, "utf8");
+          contextParts.push(gatewayProtocol);
+        }
+      }
+    } catch (gwErr) {
+      process.stderr.write(
+        `[synapse-startup] Warning: Could not load gateway protocol: ${gwErr.message}\n`,
+      );
+    }
+
     // Permission mode advisory — warn when not in bypassPermissions mode
     if (permissionMode && permissionMode !== "bypassPermissions") {
       contextParts.push([

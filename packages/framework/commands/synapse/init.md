@@ -41,10 +41,13 @@ Set up this project for Synapse: detect the project name, create config files, c
    project_id = "{{confirmed_project_id}}"
    name = "{{project_name}}"
    skills = []
+   gateway_mode = "always-on"
    created_at = "{{current ISO timestamp}}"
    ```
 
    Replace all `{{...}}` placeholders with the actual values. The `created_at` should be the current UTC timestamp in ISO 8601 format.
+
+   `gateway_mode` controls Synapse intake behavior: `always-on` (default) automatically routes non-trivial work through the pipeline. `explicit` requires manual `/synapse:refine` invocation.
 
 5. **Interactive RPEV configuration:** Walk the user through their involvement preferences for the recursive RPEV loop (Refine → Plan → Execute → Validate at each level). The involvement matrix has 16 entries (4 levels x 4 stages). Present the defaults and let the user adjust:
 
@@ -107,7 +110,13 @@ Set up this project for Synapse: detect the project name, create config files, c
 
    Use the Write tool to write the final trust.toml to `.synapse/config/trust.toml`.
 
-   **IMPORTANT:** Wait for the Write to complete successfully before proceeding to step 7. The DB registration depends on the config files existing.
+   **IMPORTANT:** Wait for the Write to complete successfully before proceeding to step 6b. The DB registration depends on the config files existing.
+
+6b. **Write gateway-protocol.md:** Copy the gateway protocol template to the project config:
+
+    Use the Read tool to read `packages/framework/config/gateway-protocol.md`, then use the Write tool to write it to `.synapse/config/gateway-protocol.md`.
+
+    This file defines how the main session routes user requests through the Synapse pipeline.
 
 7. **Register with Synapse DB:** Call `mcp__synapse__init_project` with:
    - `project_id`: the confirmed project_id
@@ -159,6 +168,7 @@ Set up this project for Synapse: detect the project name, create config files, c
     Created:
     - .synapse/config/project.toml
     - .synapse/config/trust.toml (RPEV involvement: 16-entry matrix, project=drives/co-pilot/monitors, epic=co-pilot/reviews/autopilot/monitors, feature/wp=autopilot)
+    - .synapse/config/gateway-protocol.md (gateway intake and routing rules)
 
     Synapse DB: {{tables_created}} tables ready, {{starters_seeded}} starter documents seeded
 

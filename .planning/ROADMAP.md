@@ -56,6 +56,7 @@ See [v2.0 Archive](milestones/v2.0-ROADMAP.md) for full details.
 - [~] **Phase 25: Agent Behavior Hardening** - fix DEGRADED issues from E2E run: orchestrator prompt discipline, RPEV stage gates, git workflow, token efficiency, audit attribution (INSERTED) — 5/6 plans complete, E2E re-validation (25-04) deferred to usage
 - [ ] **Phase 26: Usage Findings** - address issues discovered during real usage on rpi-camera-py before declaring v3.0 release
 - [x] **Phase 26.1: Further Improvements Agentic Framework** - gateway architecture, doer+reviewer pipeline, orchestrator scope reduction, decision draft flow (INSERTED) (completed 2026-03-10)
+- [ ] **Phase 26.2: Agent Handoff Tightening** - structured task fields, unified context loading, per-agent contracts, gateway protocol template (INSERTED)
 
 ## Phase Details
 
@@ -275,6 +276,24 @@ Deferred to v3.1 (#9, #18, #27):
 Plans:
 - *(plans will be added as usage findings are reported)*
 
+### Phase 26.2: Agent Handoff Tightening (INSERTED)
+**Goal**: Promote agent handoff data to first-class structured task fields, unify context loading in the shared protocol, add input/output contracts to every agent, and install gateway protocol as a configurable per-project template
+**Depends on**: Phase 26.1
+**Requirements**: HANDOFF-01, HANDOFF-02, HANDOFF-03, HANDOFF-04, HANDOFF-05, HANDOFF-06
+**Success Criteria** (what must be TRUE):
+  1. Tasks table has 23 fields (4 new: context_doc_ids, context_decision_ids, spec, output_doc_ids) and VALID_AGENT_ROLES has 14 entries
+  2. _synapse-protocol.md contains a unified 5-step context loading sequence, standard tag vocabulary, and 11-slug provides vocabulary
+  3. Orchestrator has a fixed routing table for upstream doc_id injection per agent dispatch
+  4. All 13 non-orchestrator agents have Input Contract and Output Contract sections
+  5. Gateway protocol template is installed by /synapse:init and injected by synapse-startup.js based on gateway_mode config
+**Plans**: 4 plans
+
+Plans:
+- [ ] 26.2-01-PLAN.md — Server schema + tools + tests: 4 new task fields, 14-role enum, CRUD tool updates (HANDOFF-01, HANDOFF-02)
+- [ ] 26.2-02-PLAN.md — Shared protocol + orchestrator wiring: 5-step context loading, tag/provides vocab, routing table (HANDOFF-03, HANDOFF-04)
+- [ ] 26.2-03-PLAN.md — Per-agent input/output contracts for all 13 non-orchestrator agents (HANDOFF-05)
+- [ ] 26.2-04-PLAN.md — Gateway protocol template + init.md + startup hook integration (HANDOFF-06)
+
 ### Phase 26.1: Further Improvements Agentic Framework
 **Goal**: Establish clear role separation with a gateway-led user interaction model, doer+reviewer pairs at every pipeline stage, and a draft->review->activate decision flow — making the RPEV pipeline more structured and the orchestrator stateless/restartable
 **Depends on**: Phase 25
@@ -298,11 +317,12 @@ Plans:
 ## Progress
 
 **Execution Order:**
-15 → 16 → 17 → 18 → 19 → 20 → 21 → 22 → 23 → 24 → 25 → 26 → 26.1
+15 → 16 → 17 → 18 → 19 → 20 → 21 → 22 → 23 → 24 → 25 → 26 → 26.1 → 26.2
 Parallelizable: Phase 17 (Tech Debt) and Phase 20 (Skills) can proceed in parallel with 18-19. Phase 20 depends only on Phase 15.
 Phase 25 depends on Phase 24 (failure log drives scope).
 Phase 26 depends on Phase 25 + real usage findings (plans created as issues arise).
 Phase 26.1 depends on Phase 25 (restructures agent prompts and pipeline).
+Phase 26.2 depends on Phase 26.1 (tightens handoff contracts on the new agent roster).
 
 | Phase | Milestone | Plans Complete | Status | Completed |
 |-------|-----------|----------------|--------|-----------|
@@ -334,3 +354,4 @@ Phase 26.1 depends on Phase 25 (restructures agent prompts and pipeline).
 | 25. Agent Behavior Hardening | v3.0 | 5/6 | Complete (25-04 deferred) | 2026-03-09 |
 | 26. Usage Findings | v3.0 | 0/0 | Pending | - |
 | 26.1. Further Improvements | 5/5 | Complete    | 2026-03-10 | - |
+| 26.2. Agent Handoff Tightening | v3.0 | 0/4 | Planned | - |

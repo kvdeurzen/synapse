@@ -2,7 +2,6 @@
 
 [agents.synapse-orchestrator]
 model = "opus"
-tier = 0
 role_skills = ["architecture-design", "brainstorming", "defining-requirements"]
 allowed_tools = [
   "Read",
@@ -28,23 +27,23 @@ allowed_tools = [
   "mcp__synapse__get_index_status",
 ]
 
-[agents.product-strategist]
+[agents.product-researcher]
 model = "opus"
-tier = 0
-role_skills = ["architecture-design", "brainstorming", "defining-requirements", "documentation"]
+role_skills = ["brainstorming", "defining-requirements", "documentation"]
 allowed_tools = [
   "Read",
   "Bash",
   "Glob",
   "Grep",
-  "mcp__synapse__store_decision",
+  "mcp__synapse__get_smart_context",
   "mcp__synapse__query_decisions",
   "mcp__synapse__check_precedent",
-  "mcp__synapse__create_task",
-  "mcp__synapse__update_task",
   "mcp__synapse__get_task_tree",
-  "mcp__synapse__get_smart_context",
   "mcp__synapse__project_overview",
+  "mcp__synapse__store_document",
+  "mcp__synapse__link_documents",
+  "mcp__synapse__query_documents",
+  "mcp__synapse__semantic_search",
 ]
 
 [agents.researcher]
@@ -69,28 +68,8 @@ allowed_tools = [
   "mcp__context7__query-docs",
 ]
 
-[agents.product-researcher]
-model = "opus"
-role_skills = ["architecture-design", "brainstorming", "defining-requirements", "documentation"]
-allowed_tools = [
-  "Read",
-  "Bash",
-  "Glob",
-  "Grep",
-  "mcp__synapse__check_precedent",
-  "mcp__synapse__get_smart_context",
-  "mcp__synapse__get_task_tree",
-  "mcp__synapse__link_documents",
-  "mcp__synapse__project_overview",
-  "mcp__synapse__query_decisions",
-  "mcp__synapse__query_documents",
-  "mcp__synapse__semantic_search",
-  "mcp__synapse__store_document",
-]
-
 [agents.architect]
 model = "opus"
-tier = 1
 role_skills = ["testing-strategy", "architecture-design", "security", "brainstorming", "defining-requirements", "documentation"]
 allowed_tools = [
   "Read",
@@ -98,115 +77,34 @@ allowed_tools = [
   "Glob",
   "Grep",
   "Task",
-  "mcp__synapse__check_precedent",
-  "mcp__synapse__get_smart_context",
-  "mcp__synapse__get_task_tree",
-  "mcp__synapse__link_documents",
   "mcp__synapse__query_decisions",
-  "mcp__synapse__query_documents",
+  "mcp__synapse__check_precedent",
+  "mcp__synapse__get_task_tree",
+  "mcp__synapse__get_smart_context",
   "mcp__synapse__store_document",
+  "mcp__synapse__link_documents",
+  "mcp__synapse__query_documents",
 ]
 
 [agents.architecture-auditor]
 model = "opus"
-tier = 1
-role_skills = ["architecture-design", "security", "defining-requirements"]
+role_skills = ["architecture-design", "security"]
 allowed_tools = [
   "Read",
   "Bash",
   "Glob",
   "Grep",
-  "mcp__synapse__check_precedent",
-  "mcp__synapse__get_smart_context",
   "mcp__synapse__get_task_tree",
-  "mcp__synapse__link_documents",
+  "mcp__synapse__get_smart_context",
   "mcp__synapse__query_decisions",
+  "mcp__synapse__check_precedent",
   "mcp__synapse__query_documents",
   "mcp__synapse__store_decision",
   "mcp__synapse__store_document",
+  "mcp__synapse__link_documents",
 ]
 
 [agents.planner]
-model = "opus"
-role_skills = ["architecture-design", "brainstorming", "defining-requirements", "documentation"]
-allowed_tools = [
-  "Read",
-  "Bash",
-  "Glob",
-  "Grep",
-  "Task",
-  "mcp__synapse__check_precedent",
-  "mcp__synapse__create_task",
-  "mcp__synapse__get_smart_context",
-  "mcp__synapse__get_task_tree",
-  "mcp__synapse__link_documents",
-  "mcp__synapse__query_decisions",
-  "mcp__synapse__query_documents",
-  "mcp__synapse__store_document",
-  "mcp__synapse__update_task",
-]
-
-[agents.plan-auditor]
-model = "opus"
-tier = 2
-role_skills = ["architecture-design", "security", "defining-requirements"]
-allowed_tools = [
-  "Read",
-  "Bash",
-  "Glob",
-  "Grep",
-  "mcp__synapse__check_precedent",
-  "mcp__synapse__get_smart_context",
-  "mcp__synapse__get_task_tree",
-  "mcp__synapse__link_documents",
-  "mcp__synapse__query_decisions",
-  "mcp__synapse__query_documents",
-  "mcp__synapse__store_decision",
-  "mcp__synapse__store_document",
-  "mcp__synapse__update_task",
-]
-
-[agents.task-designer]
-model = "opus"
-role_skills = ["architecture-design", "security", "defining-requirements"]
-allowed_tools = [
-  "Read",
-  "Bash",
-  "Glob",
-  "Grep",
-  "mcp__synapse__check_precedent",
-  "mcp__synapse__get_smart_context",
-  "mcp__synapse__get_task_tree",
-  "mcp__synapse__link_documents",
-  "mcp__synapse__query_decisions",
-  "mcp__synapse__query_documents",
-  "mcp__synapse__search_code",
-  "mcp__synapse__store_document",
-  "mcp__synapse__update_task",
-]
-
-[agents.task-auditor]
-model = "sonnet"
-tier = 2
-role_skills = ["security", "defining-requirements"]
-allowed_tools = [
-  "Read",
-  "Bash",
-  "Glob",
-  "Grep",
-  "mcp__synapse__check_precedent",
-  "mcp__synapse__get_smart_context",
-  "mcp__synapse__get_task_tree",
-  "mcp__synapse__link_documents",
-  "mcp__synapse__query_decisions",
-  "mcp__synapse__query_documents",
-  "mcp__synapse__search_code",
-  "mcp__synapse__store_decision",
-  "mcp__synapse__store_document",
-  "mcp__synapse__update_task",
-]
-
-[agents.decomposer]
 model = "opus"
 role_skills = ["testing-strategy", "security", "brainstorming", "defining-requirements"]
 allowed_tools = [
@@ -219,14 +117,14 @@ allowed_tools = [
   "mcp__synapse__update_task",
   "mcp__synapse__get_task_tree",
   "mcp__synapse__get_smart_context",
-  "mcp__synapse__store_decision",
   "mcp__synapse__store_document",
   "mcp__synapse__link_documents",
   "mcp__synapse__check_precedent",
   "mcp__synapse__query_decisions",
+  "mcp__synapse__query_documents",
 ]
 
-[agents.plan-reviewer]
+[agents.plan-auditor]
 model = "opus"
 role_skills = ["security"]
 allowed_tools = [
@@ -238,9 +136,50 @@ allowed_tools = [
   "mcp__synapse__get_smart_context",
   "mcp__synapse__query_decisions",
   "mcp__synapse__check_precedent",
+  "mcp__synapse__query_documents",
+  "mcp__synapse__store_decision",
   "mcp__synapse__update_task",
   "mcp__synapse__store_document",
   "mcp__synapse__link_documents",
+]
+
+[agents.task-designer]
+model = "opus"
+role_skills = ["testing-strategy", "architecture-design", "security", "documentation"]
+allowed_tools = [
+  "Read",
+  "Bash",
+  "Glob",
+  "Grep",
+  "mcp__synapse__get_task_tree",
+  "mcp__synapse__get_smart_context",
+  "mcp__synapse__update_task",
+  "mcp__synapse__query_decisions",
+  "mcp__synapse__check_precedent",
+  "mcp__synapse__query_documents",
+  "mcp__synapse__store_document",
+  "mcp__synapse__link_documents",
+  "mcp__synapse__search_code",
+]
+
+[agents.task-auditor]
+model = "sonnet"
+role_skills = ["testing-strategy", "security"]
+allowed_tools = [
+  "Read",
+  "Bash",
+  "Glob",
+  "Grep",
+  "mcp__synapse__get_task_tree",
+  "mcp__synapse__get_smart_context",
+  "mcp__synapse__query_decisions",
+  "mcp__synapse__check_precedent",
+  "mcp__synapse__query_documents",
+  "mcp__synapse__store_decision",
+  "mcp__synapse__update_task",
+  "mcp__synapse__store_document",
+  "mcp__synapse__link_documents",
+  "mcp__synapse__search_code",
 ]
 
 [agents.executor]

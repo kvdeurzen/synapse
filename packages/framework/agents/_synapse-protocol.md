@@ -40,3 +40,51 @@ Decisions follow a draft->review->activate flow. See `@packages/framework/workfl
 - **Doer agents** (architect, planner, task-designer): Store decision proposals as documents (`category: "decision_draft"`), NEVER call `store_decision` directly (except Tier 3 executors).
 - **Reviewer agents** (architecture-auditor, plan-auditor, task-auditor): Verify draft quality and call `store_decision` to activate approved proposals.
 - **Tier 3 exception:** Executors store Tier 3 decisions directly as active. Validators check post-hoc.
+
+### Mandatory Context Loading Sequence
+
+Every agent MUST complete these 5 steps before beginning agent-specific work:
+
+| Step | Action | Tool Call |
+|------|--------|-----------|
+| 1 | Parse SYNAPSE HANDOFF block | Extract: project_id, task_id, hierarchy_level, rpev_stage_doc_id, doc_ids, decision_ids |
+| 2 | Load task | `get_task_tree(project_id, root_task_id: task_id, max_depth: 0)` -- read `spec`, `context_doc_ids`, `context_decision_ids` |
+| 3 | Load documents | If task has `context_doc_ids`: parse JSON array, call `get_smart_context(mode: "detailed", doc_ids: [...])`. Else if handoff has doc_ids: use those. Else: `get_smart_context(mode: "overview", max_tokens: {level-appropriate})` |
+| 4 | Load decisions | If task has `context_decision_ids`: parse JSON array, call `query_decisions` for those IDs |
+| 5 | Begin work | Only now begin agent-specific work |
+
+Do NOT skip steps 1-4. Do NOT begin implementation/analysis before context is loaded.
+
+### Standard Tag Vocabulary
+
+Every `store_document` call MUST include the full tag set:
+
+| Tag Type | Format | Example |
+|----------|--------|---------|
+| Agent | `\|{actor-name}\|` | `\|architect\|` |
+| Type | `\|{document-type}\|` | `\|architecture\|` |
+| Provides | `\|provides:{capability}\|` | `\|provides:architecture\|` |
+| Task | `\|{task_id}\|` | `\|task-01J5K...\|` |
+| Stage | `\|stage:{RPEV-stage}\|` | `\|stage:PLANNING\|` |
+
+Example: `tags: "|architect|architecture|provides:architecture|task-01J5K...|stage:PLANNING|"`
+
+### Provides Vocabulary
+
+Fixed capability slugs for `provides:` tags and output contracts:
+
+| Slug | Producer | Description |
+|------|----------|-------------|
+| architecture | architect | Architecture document |
+| decision-draft | architect, planner, task-designer | Decision proposals |
+| plan | planner | Task tree decomposition |
+| task-spec | task-designer | Structured task specification |
+| implementation | executor | Code changes + commit |
+| validation-findings | validator | Pass/fail + findings |
+| debug-diagnosis | debugger | Root cause + fix |
+| research-findings | researcher, product-researcher | Research output |
+| audit-findings | architecture-auditor, plan-auditor, task-auditor | Review scores |
+| integration-report | integration-checker | Cross-component check |
+| code-analysis | codebase-analyst | Index update + findings |
+
+Use ONLY these slugs in `provides:` tags. Do not invent new ones.

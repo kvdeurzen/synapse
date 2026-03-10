@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v3.0
 milestone_name: Working Prototype
 status: Phase 25 closed (5/6 plans; 25-04 E2E re-validation deferred). Phase 26 created for real usage findings.
-stopped_at: Completed 26.1-04-PLAN.md — Stage 3-4 pipeline agents (planner, plan-auditor, task-designer, task-auditor)
-last_updated: "2026-03-10T11:10:59.039Z"
+stopped_at: Completed 26.1-05-PLAN.md — Config cleanup and reference updates (14-agent roster)
+last_updated: "2026-03-10T11:22:23.608Z"
 last_activity: 2026-03-09 — Phase 25 execution complete. Phase 26 created.
 progress:
   total_phases: 13
-  completed_phases: 9
+  completed_phases: 10
   total_plans: 35
-  completed_plans: 32
+  completed_plans: 33
   percent: 96
 ---
 
@@ -76,6 +76,7 @@ Progress: [█████████░] 96%
 | Phase 26.1-further-improvements-agentic-framework P02 | 4min | 1 tasks | 3 files |
 | Phase 26.1-further-improvements-agentic-framework P03 | 7 | 2 tasks | 5 files |
 | Phase 26.1 P04 | 8min | 2 tasks | 4 files |
+| Phase 26.1-further-improvements-agentic-framework P05 | 8min | 3 tasks | 12 files |
 
 ## Accumulated Context
 
@@ -175,6 +176,7 @@ Key decisions affecting v3.0:
 - [Phase 26.1-03]: Architecture Auditor tier_authority=[1,2] -- new reviewer agent; activates approved decision drafts from Architect; blocks deficient proposals; sole gatekeeper for Tier 1-2 decisions entering project log
 - [Phase 26.1]: Planner/Plan-Auditor and Task-Designer/Task-Auditor: doer/reviewer pairs for structure and spec stages of progressive decomposition pipeline
 - [Phase 26.1]: Task Auditor model is sonnet (spec review is pattern-matching, not creative work); Task Designer stays opus for spec synthesis quality
+- [Phase 26.1-05]: tier_authority maps to store_decision access: auditors (architecture-auditor=[1,2], plan-auditor=[2], task-auditor=[2,3]) hold authority; doer agents (architect, planner, task-designer) have [] because they draft documents, not store decisions directly
 
 ### Roadmap Evolution
 
@@ -193,6 +195,6 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-03-10T11:10:59.027Z
-Stopped at: Completed 26.1-04-PLAN.md — Stage 3-4 pipeline agents (planner, plan-auditor, task-designer, task-auditor)
+Last session: 2026-03-10T11:22:23.596Z
+Stopped at: Completed 26.1-05-PLAN.md — Config cleanup and reference updates (14-agent roster)
 Resume file: None

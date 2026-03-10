@@ -55,7 +55,7 @@ See [v2.0 Archive](milestones/v2.0-ROADMAP.md) for full details.
 - [x] **Phase 24: E2E Validation** - full RPEV cycle on a real task, hook verification, failure log, status verification (completed 2026-03-07)
 - [~] **Phase 25: Agent Behavior Hardening** - fix DEGRADED issues from E2E run: orchestrator prompt discipline, RPEV stage gates, git workflow, token efficiency, audit attribution (INSERTED) — 5/6 plans complete, E2E re-validation (25-04) deferred to usage
 - [ ] **Phase 26: Usage Findings** - address issues discovered during real usage on rpi-camera-py before declaring v3.0 release
-- [ ] **Phase 26.1: Further Improvements Agentic Framework** - gateway architecture, doer+reviewer pipeline, orchestrator scope reduction, decision draft flow (INSERTED)
+- [x] **Phase 26.1: Further Improvements Agentic Framework** - gateway architecture, doer+reviewer pipeline, orchestrator scope reduction, decision draft flow (INSERTED) (completed 2026-03-10)
 
 ## Phase Details
 
@@ -333,4 +333,4 @@ Phase 26.1 depends on Phase 25 (restructures agent prompts and pipeline).
 | 24. E2E Validation | v3.0 | 2/2 | Complete | 2026-03-07 |
 | 25. Agent Behavior Hardening | v3.0 | 5/6 | Complete (25-04 deferred) | 2026-03-09 |
 | 26. Usage Findings | v3.0 | 0/0 | Pending | - |
-| 26.1. Further Improvements | 4/5 | In Progress|  | - |
+| 26.1. Further Improvements | 5/5 | Complete   | 2026-03-10 | - |

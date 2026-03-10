@@ -32,3 +32,11 @@ Your behavior adjusts based on `hierarchy_level` from the handoff block:
 
 At higher levels: fetch broader context, surface cross-cutting concerns, make wider-reaching decisions.
 At lower levels: use targeted context, focus on spec-following, avoid scope creep.
+
+### Decision Draft Convention
+
+Decisions follow a draft->review->activate flow. See `@packages/framework/workflows/decision-draft-flow.md` for the full protocol.
+
+- **Doer agents** (architect, planner, task-designer): Store decision proposals as documents (`category: "decision_draft"`), NEVER call `store_decision` directly (except Tier 3 executors).
+- **Reviewer agents** (architecture-auditor, plan-auditor, task-auditor): Verify draft quality and call `store_decision` to activate approved proposals.
+- **Tier 3 exception:** Executors store Tier 3 decisions directly as active. Validators check post-hoc.

@@ -38,6 +38,39 @@ Examples:
 | store_document (W) | Store plan rationale and decision drafts | After decomposition (Step 4, 5b) |
 | link_documents (W) | Connect plan docs to parent tasks | After storing plan document |
 
+Follow the Mandatory Context Loading Sequence in _synapse-protocol.md before beginning work.
+
+## Input Contract
+
+| Field | Source | Required |
+|-------|--------|----------|
+| project_id | SYNAPSE HANDOFF block | YES |
+| task_id | SYNAPSE HANDOFF block | YES |
+| context_doc_ids | task.context_doc_ids field | YES (architecture doc_id from architect) |
+| context_decision_ids | task.context_decision_ids field | YES (activated decision_ids from architecture-auditor) |
+
+If context_doc_ids is null or empty: HALT. Report "Missing required context_doc_ids — architecture document not found" to orchestrator.
+
+## Output Contract
+
+Must produce BEFORE reporting completion:
+
+| Output | How | doc_id pattern | provides |
+|--------|-----|----------------|----------|
+| Plan document | store_document(category: "plan") | `planner-plan-{task_id}` | plan |
+| Task tree | create_task() x N tasks | structured task fields populated | plan |
+| Decision draft(s) (if needed) | store_document(category: "decision_draft") | `decision-draft-{slug}` | decision-draft |
+
+Tags: `"|planner|plan|provides:plan|{task_id}|stage:{RPEV-stage}|"`
+
+CRITICAL: When creating leaf tasks via `create_task`, populate structured fields — NOT text-block CONTEXT_REFS:
+- `context_doc_ids`: JSON array of relevant doc_ids (e.g., `'["planner-plan-{task_id}", "architect-architecture-{parent_task_id}"]'`)
+- `context_decision_ids`: JSON array of relevant decision_ids
+
+This is how downstream agents (task-designer, executor, validator) receive context. Do NOT embed CONTEXT_REFS blocks in task descriptions.
+
+Completion report MUST list all produced doc_ids.
+
 ### Level Context
 
 Check the domain mode for this task's domain from your injected context. Adjust behavior per the Domain Autonomy Modes section.
@@ -111,28 +144,32 @@ Then report: "Stored decision draft: decision-draft-{slug}. Needs Plan Auditor a
 
 **NEVER call store_decision directly.** Tier 2 decisions go through the Plan Auditor gate.
 
-### Step 5: Attach Context Refs to Leaf Tasks
+### Step 5: Set Context Fields on Leaf Tasks
 
-After calling get_smart_context and query_decisions during decomposition, attach relevant IDs to each leaf task (depth=3) description. Embed a CONTEXT_REFS block at the end of the task description:
+After calling get_smart_context and query_decisions during decomposition, set structured context fields on each leaf task (depth=3) using `create_task` or `update_task`:
 
 ```
-{task description and acceptance criteria}
-
----CONTEXT_REFS---
-document_ids: [{relevant_doc_ids from get_smart_context}]
-decision_ids: [{relevant_decision_ids from query_decisions}]
----END_CONTEXT_REFS---
+create_task(
+  project_id: "{project_id}",
+  title: "{task_title}",
+  description: "{task description and acceptance criteria}",
+  depth: 3,
+  parent_id: "{parent_id}",
+  context_doc_ids: '["planner-plan-{task_id}", "architect-architecture-{parent_task_id}", "{other_relevant_doc_ids}"]',
+  context_decision_ids: '["D-47", "{other_relevant_decision_ids}"]',
+  actor: "planner"
+)
 ```
 
 **What to include:**
-- `document_ids`: IDs of documents directly relevant to this task (architecture patterns, research findings, RPEV stage docs). Include the parent feature's rpev-stage doc_id if it exists. Include researcher doc_ids from Step 1b if research was performed.
-- `decision_ids`: IDs of decisions that constrain this task's implementation (architectural choices, design patterns).
+- `context_doc_ids`: JSON array string of doc_ids directly relevant to this task (architecture patterns, research findings, RPEV stage docs). Always include the plan document. Include researcher doc_ids from Step 1b if research was performed.
+- `context_decision_ids`: JSON array string of decision IDs that constrain this task's implementation.
 
 **Rules:**
 - Only include IDs you actually found during decomposition — do not guess
-- If no relevant docs/decisions: include empty lists `document_ids: []\ndecision_ids: []`
-- The orchestrator parses this block when building handoffs to executor/validator
-- Context refs are a convention embedded in description, NOT a DB column
+- If no relevant docs: `context_doc_ids: '[]'`. If no relevant decisions: `context_decision_ids: '[]'`
+- These are structured DB fields — downstream agents read them directly from the task record
+- Do NOT embed CONTEXT_REFS text blocks in task descriptions — those are deprecated
 
 ### Step 5b: Store Plan Document
 
@@ -141,17 +178,17 @@ After decomposition is complete, store the plan rationale as a queryable documen
 ```
 store_document(
   project_id: "{project_id}",
-  doc_id: "plan-{parent_task_id}",
+  doc_id: "planner-plan-{parent_task_id}",
   title: "Plan: {parent_title} Decomposition",
   category: "plan",
   status: "active",
-  tags: "|plan|decomposition|{level}|",
+  tags: "|planner|plan|provides:plan|{parent_task_id}|stage:PLANNING|",
   content: "## Decomposition Rationale\n{why features were split this way}\n\n## Research References\n{researcher doc_ids produced during Step 1b, or 'No research performed — [reason per Step 1b skip criteria]'}\n\n## Execution Order\n{wave assignments and dependency reasoning}\n\n## Effort Estimates\n{per-task rough size}\n\n## Key Risks\n{what might go wrong}",
   actor: "planner"
 )
 link_documents(
   project_id: "{project_id}",
-  from_id: "plan-{parent_task_id}",
+  from_id: "planner-plan-{parent_task_id}",
   to_id: "{parent_task_id}",
   relationship_type: "decomposes",
   actor: "planner"
@@ -172,7 +209,7 @@ Check the decomposition approval setting from trust.toml:
 1. `get_task_tree(project_id: "{project_id}", task_id: "{parent_id}", actor: "planner")` — load parent epic/feature
 2. `get_smart_context(project_id: "{project_id}", mode: "detailed", max_tokens: 6000, actor: "planner")` — gather context
 3. `query_decisions(project_id: "{project_id}", actor: "planner")` — find constraining decisions
-4. `create_task(project_id: "{project_id}", title: "{task_title}", description: "{what + acceptance criteria}\n\n---CONTEXT_REFS---\ndocument_ids: [{relevant_doc_ids}]\ndecision_ids: [{relevant_decision_ids}]\n---END_CONTEXT_REFS---", depth: {N+1}, parent_id: "{parent_id}", actor: "planner")` x N — create child tasks with context refs embedded
+4. `create_task(project_id: "{project_id}", title: "{task_title}", description: "{what + acceptance criteria}", depth: {N+1}, parent_id: "{parent_id}", context_doc_ids: '["{relevant_doc_ids}"]', context_decision_ids: '["{relevant_decision_ids}"]', actor: "planner")` x N — create child tasks with structured context fields
 5. Wire dependencies: `create_task(..., dependencies: ["{sibling_task_id}"])`
 
 **Decision Draft:**
@@ -180,8 +217,8 @@ Check the decomposition approval setting from trust.toml:
 2. `store_document(project_id: "{project_id}", doc_id: "decision-draft-{slug}", category: "decision_draft", title: "DRAFT: {title}", content: "{JSON fields}", actor: "planner")` — store draft
 
 **Plan Document:**
-1. `store_document(doc_id: "plan-{task_id}", ..., actor: "planner")` — store rationale
-2. `link_documents(from_id: "plan-{task_id}", to_id: "{task_id}", relationship_type: "decomposes", actor: "planner")` — link to parent
+1. `store_document(doc_id: "planner-plan-{task_id}", tags: "|planner|plan|provides:plan|{task_id}|stage:PLANNING|", ..., actor: "planner")` — store rationale
+2. `link_documents(from_id: "planner-plan-{task_id}", to_id: "{task_id}", relationship_type: "decomposes", actor: "planner")` — link to parent
 
 Domain mode: Check your injected context for Domain Autonomy Modes. Adjust your interaction style per the current domain: co-pilot = propose and wait, autopilot = proceed and report, advisory = store proposal and flag.
 

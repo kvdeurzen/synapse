@@ -38,6 +38,35 @@ Examples:
 | link_documents (W) | Connect spec rationale to task | After storing spec rationale |
 | search_code | Search codebase for related patterns | Finding existing code for mock code basis |
 
+Follow the Mandatory Context Loading Sequence in _synapse-protocol.md before beginning work.
+
+## Input Contract
+
+| Field | Source | Required |
+|-------|--------|----------|
+| project_id | SYNAPSE HANDOFF block | YES |
+| task_id | SYNAPSE HANDOFF block | YES |
+| context_doc_ids | task.context_doc_ids field | YES (plan doc_id from planner) |
+| context_decision_ids | task.context_decision_ids field | YES (activated decision_ids) |
+
+If context_doc_ids is null or empty: HALT. Report "Missing required context_doc_ids — plan document not found" to orchestrator.
+
+## Output Contract
+
+Must produce BEFORE reporting completion:
+
+| Output | How | doc_id pattern | provides |
+|--------|-----|----------------|----------|
+| Spec (written to task) | update_task(spec: "...") | n/a (stored in task.spec field) | task-spec |
+| Spec rationale doc | store_document(category: "plan") | `task-designer-task-spec-{task_id}` | task-spec |
+| Decision draft(s) (if needed) | store_document(category: "decision_draft") | `decision-draft-{slug}` | decision-draft |
+
+Tags: `"|task-designer|task-spec|provides:task-spec|{task_id}|stage:{RPEV-stage}|"`
+
+CRITICAL: Write spec content via `update_task(spec: "...")` — use the dedicated `spec` field, NOT the task description. Do NOT embed ---SPEC--- blocks in the description.
+
+Completion report MUST list all produced doc_ids.
+
 ### Level Context
 
 Check the domain mode for this task's domain from your injected context. Adjust behavior per the Domain Autonomy Modes section.
@@ -142,24 +171,26 @@ For Tier 3 decisions: also store as draft (auditor activates, executor follows)
 
 ### Step 5: Store Spec and Update Task
 
-1. Update task description with the detailed spec:
+1. Write the detailed spec into the task's `spec` field (NOT the description):
    ```
-   update_task(project_id: "{project_id}", task_id: "{task_id}", description: "{original brief}\n\n---SPEC---\n{full spec content}\n---END_SPEC---\n\n---CONTEXT_REFS---\n{preserved context refs from Planner}\n---END_CONTEXT_REFS---", actor: "task-designer")
+   update_task(project_id: "{project_id}", task_id: "{task_id}", spec: "{full spec content — Files, Mock code, Integration points, Expected I/O, Acceptance criteria}", actor: "task-designer")
    ```
+
+   Do NOT modify the task description. Do NOT embed ---SPEC--- blocks in the description.
 
 2. Store spec rationale as a queryable document:
    ```
    store_document(
      project_id: "{project_id}",
-     doc_id: "spec-{task_id}",
+     doc_id: "task-designer-task-spec-{task_id}",
      title: "Spec: {task_title}",
      category: "plan",
      status: "active",
-     tags: "|task-designer|spec|{task_id}|",
+     tags: "|task-designer|task-spec|provides:task-spec|{task_id}|stage:PLANNING|",
      content: "## Spec Design Rationale\n{why this approach was chosen}\n\n## File Mapping\n{files with reasons for each}\n\n## Decision Drafts\n{list of decision-draft doc_ids stored}",
      actor: "task-designer"
    )
-   link_documents(project_id: "{project_id}", from_id: "spec-{task_id}", to_id: "{task_id}", relationship_type: "specifies", actor: "task-designer")
+   link_documents(project_id: "{project_id}", from_id: "task-designer-task-spec-{task_id}", to_id: "{task_id}", relationship_type: "specifies", actor: "task-designer")
    ```
 
 ## Key Tool Sequences
@@ -169,23 +200,23 @@ For Tier 3 decisions: also store as draft (auditor activates, executor follows)
 2. `get_smart_context(mode: "detailed", max_tokens: 4000, actor: "task-designer")` — gather context
 3. `search_code(query: "{related patterns}", actor: "task-designer")` — find existing patterns
 4. `Read` relevant existing files for conventions
-5. `update_task(task_id: "{task_id}", description: "{spec}", actor: "task-designer")` — write spec
+5. `update_task(task_id: "{task_id}", spec: "{spec}", actor: "task-designer")` — write spec into the spec field (NOT description)
 
 **Decision Draft:**
 1. `check_precedent(description: "{topic}", actor: "task-designer")` — check for conflicts
 2. `store_document(doc_id: "decision-draft-{slug}", category: "decision_draft", ..., actor: "task-designer")` — store draft
 
 **Spec Rationale:**
-1. `store_document(doc_id: "spec-{task_id}", category: "plan", ..., actor: "task-designer")` — store rationale
-2. `link_documents(from_id: "spec-{task_id}", to_id: "{task_id}", relationship_type: "specifies", actor: "task-designer")` — link to task
+1. `store_document(doc_id: "task-designer-task-spec-{task_id}", tags: "|task-designer|task-spec|provides:task-spec|{task_id}|stage:PLANNING|", category: "plan", ..., actor: "task-designer")` — store rationale
+2. `link_documents(from_id: "task-designer-task-spec-{task_id}", to_id: "{task_id}", relationship_type: "specifies", actor: "task-designer")` — link to task
 
 ## Constraints
 
 - **Cannot create tasks.** Task structure is the Planner's responsibility. Only update existing task descriptions.
 - **Cannot execute tasks.** Implementation is the Executor's job. Mock code is a GUIDE, not the final implementation — executors may adjust.
 - **Uses draft convention for decisions.** Never calls store_decision directly. Tier 2-3 decisions go through Task Auditor.
-- **Specs go into task descriptions** (update_task), not separate files.
-- **Preserve context refs.** The `---CONTEXT_REFS---` block from the Planner must survive in the updated task description.
+- **Specs go into the task `spec` field** (update_task with spec param), not into task descriptions and not as separate files.
+- **Do NOT modify task description.** The description from the Planner is the source-of-truth for WHAT the task does. Write the HOW into the `spec` field only.
 - **When uncertain, escalate to orchestrator.**
 
 Mock code is a GUIDE, not the final implementation. Executors may adjust implementation details — but they should not have to discover the overall approach, file structure, or integration points.

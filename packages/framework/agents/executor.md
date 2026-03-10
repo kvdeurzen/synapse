@@ -46,18 +46,33 @@ The `hierarchy_level` field in the handoff block tells you which applies.
 
 Note: You are always spawned for leaf tasks (depth=3). Feature/epic-level execution is coordination handled by the orchestrator.
 
-## Task Start Protocol
+Follow the Mandatory Context Loading Sequence in _synapse-protocol.md before beginning work.
 
-Every task begins with this sequence:
+## Input Contract
 
-1. Parse the `--- SYNAPSE HANDOFF ---` block to extract: project_id, task_id, hierarchy_level, rpev_stage_doc_id, doc_ids, decision_ids
-2. `get_task_tree(project_id: "{project_id}", task_id: "{task_id}")` -- load full task spec, acceptance criteria, and CONTEXT_REFS block from description
-3. If doc_ids from handoff is not "none": `get_smart_context(project_id: "{project_id}", mode: "detailed", doc_ids: [{doc_ids from handoff}])` -- fetch curated context
-4. If doc_ids is "none" or empty: `get_smart_context(project_id: "{project_id}", mode: "overview", max_tokens: 3000)` -- fallback to overview
-5. Parse any additional doc_ids from the CONTEXT_REFS block in the task description (not already in handoff) and fetch those too
-6. Proceed with implementation using loaded context
+| Field | Source | Required |
+|-------|--------|----------|
+| project_id | SYNAPSE HANDOFF block | YES |
+| task_id | SYNAPSE HANDOFF block | YES |
+| context_doc_ids | task.context_doc_ids field | YES (set by planner/task-designer) |
+| context_decision_ids | task.context_decision_ids field | NO |
+| spec | task.spec field | YES (written by task-designer) |
 
-Do NOT skip steps 1-4. Context from Synapse prevents re-discovering what's already known.
+If spec is null or empty: HALT. Report "Task Designer did not write spec for task {task_id}" to orchestrator.
+
+## Output Contract
+
+Must produce BEFORE reporting completion:
+
+| Output | How | doc_id pattern | provides |
+|--------|-----|----------------|----------|
+| Git commit(s) | git commit | n/a | n/a |
+| Implementation summary | store_document(category: "implementation_note") | `executor-implementation-{task_id}` | implementation |
+| Register output | update_task(output_doc_ids: '["executor-implementation-{task_id}"]') | n/a (written to task field) | n/a |
+
+Tags: `"|executor|implementation|provides:implementation|{task_id}|stage:EXECUTION|"`
+
+CRITICAL: After storing executor-implementation doc, call `update_task(output_doc_ids: '["executor-implementation-{task_id}"]')` to register produced output. The Validator reads this field to know what you produced.
 
 ## Core Behaviors
 
@@ -83,18 +98,20 @@ If `git add` or `git commit` fails: HALT. Report the error to orchestrator. Do n
 ## Key Tool Sequences
 
 **Start Task:**
-1. Parse the `--- SYNAPSE HANDOFF ---` block to extract: project_id, task_id, hierarchy_level, rpev_stage_doc_id, doc_ids, decision_ids
-2. `get_task_tree(project_id: "{project_id}", task_id: "{task_id}")` -- load task spec, acceptance criteria, dependencies
-3. `get_smart_context(project_id: "{project_id}", mode: "detailed", doc_ids: [{doc_ids from handoff}])` -- fetch curated context
-   - If doc_ids is empty: `get_smart_context(project_id: "{project_id}", mode: "overview", max_tokens: 3000)` -- fallback
-4. `check_precedent(project_id: "{project_id}", description: "{task approach summary}")` -- find existing patterns
-5. Implement using Read, Write, Edit, Bash, Glob, Grep
+1. Parse the `--- SYNAPSE HANDOFF ---` block to extract: project_id, task_id, hierarchy_level, rpev_stage_doc_id
+2. `get_task_tree(project_id: "{project_id}", task_id: "{task_id}")` -- load task: read `spec` field, `context_doc_ids`, `context_decision_ids`
+3. If spec is null: HALT. Report "Task Designer did not write spec" to orchestrator
+4. `get_smart_context(project_id: "{project_id}", mode: "detailed", doc_ids: [{context_doc_ids from task}])` -- fetch curated context
+   - If context_doc_ids is empty: `get_smart_context(project_id: "{project_id}", mode: "overview", max_tokens: 3000)` -- fallback
+5. `check_precedent(project_id: "{project_id}", description: "{task approach summary}")` -- find existing patterns
+6. Implement using Read, Write, Edit, Bash, Glob, Grep using the `spec` field as implementation guide
 
 **Store Implementation Summary (after implementation, before marking done):**
 0. Git commit: `git add {files} && git commit -m "feat({slug}): {summary} [task:{task_id}]"` -- see Git Commit Protocol above
-1. `store_document(project_id: "{project_id}", doc_id: "executor-summary-{task_id}", title: "Implementation Summary: {task_title}", category: "implementation_note", status: "active", tags: "|executor|summary|{task_id}|", content: "## What was implemented\n{summary}\n\n## Files changed\n{list}\n\n## Commit\n{commit SHA}\n\n## Decisions made\n{any tier 3}\n\n## Warnings\n{any MCP read failures}", actor: "executor")`
-2. `link_documents(project_id: "{project_id}", from_id: "executor-summary-{task_id}", to_id: "{task_id}", relationship_type: "implements", actor: "executor")`
-3. `update_task(project_id: "{project_id}", task_id: "{task_id}", status: "done", actor: "executor")` -- status only, NO description change
+1. `store_document(project_id: "{project_id}", doc_id: "executor-implementation-{task_id}", title: "Implementation Summary: {task_title}", category: "implementation_note", status: "active", tags: "|executor|implementation|provides:implementation|{task_id}|stage:EXECUTION|", content: "## What was implemented\n{summary}\n\n## Files changed\n{list}\n\n## Commit\n{commit SHA}\n\n## Decisions made\n{any tier 3}\n\n## Warnings\n{any MCP read failures}", actor: "executor")`
+2. `link_documents(project_id: "{project_id}", from_id: "executor-implementation-{task_id}", to_id: "{task_id}", relationship_type: "implements", actor: "executor")`
+3. `update_task(project_id: "{project_id}", task_id: "{task_id}", output_doc_ids: '["executor-implementation-{task_id}"]', actor: "executor")` -- register produced output
+4. `update_task(project_id: "{project_id}", task_id: "{task_id}", status: "done", actor: "executor")` -- status only, NO description change
 
 **Implementation Decision:**
 1. `check_precedent(project_id: "{project_id}", description: "{decision topic}")` -- look for existing patterns
@@ -121,8 +138,9 @@ Task: "Implement JWT signing utility — create signToken(payload) function usin
 7. Run tests via `Bash`
 8. Git commit: `git add src/auth/jwt.ts test/auth/jwt.test.ts && git commit -m "feat(jwt-signing-utility): implement signToken with jose RS256 [task:{task_id}]"`
 9. `store_decision(project_id: "{project_id}", tier: 3, title: "JWT signing: jose importJWK + SignJWT", actor: "executor")` — record implementation choice
-10. `store_document(project_id: "{project_id}", doc_id: "executor-summary-{task_id}", title: "Implementation Summary: JWT signing utility", category: "implementation_note", status: "active", tags: "|executor|summary|{task_id}|", content: "## What was implemented\nsignToken() using jose importJWK + SignJWT, RS256, 15-min TTL\n\n## Files changed\nsrc/auth/jwt.ts, test/auth/jwt.test.ts\n\n## Commit\n{commit SHA from step 8}\n\n## Decisions made\nUse jose importJWK + SignJWT pattern", actor: "executor")`
-11. `link_documents(project_id: "{project_id}", from_id: "executor-summary-{task_id}", to_id: "{task_id}", relationship_type: "implements", actor: "executor")`
-12. `update_task(project_id: "{project_id}", task_id: "{task_id}", status: "done", actor: "executor")` -- status only
+10. `store_document(project_id: "{project_id}", doc_id: "executor-implementation-{task_id}", title: "Implementation Summary: JWT signing utility", category: "implementation_note", status: "active", tags: "|executor|implementation|provides:implementation|{task_id}|stage:EXECUTION|", content: "## What was implemented\nsignToken() using jose importJWK + SignJWT, RS256, 15-min TTL\n\n## Files changed\nsrc/auth/jwt.ts, test/auth/jwt.test.ts\n\n## Commit\n{commit SHA from step 8}\n\n## Decisions made\nUse jose importJWK + SignJWT pattern", actor: "executor")`
+11. `link_documents(project_id: "{project_id}", from_id: "executor-implementation-{task_id}", to_id: "{task_id}", relationship_type: "implements", actor: "executor")`
+12. `update_task(project_id: "{project_id}", task_id: "{task_id}", output_doc_ids: '["executor-implementation-{task_id}"]', actor: "executor")` -- register produced output
+13. `update_task(project_id: "{project_id}", task_id: "{task_id}", status: "done", actor: "executor")` -- status only
 
 {{include: _synapse-protocol.md}}

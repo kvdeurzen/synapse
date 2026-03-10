@@ -38,6 +38,31 @@ Examples:
 | store_document (W) | Store audit findings | After each review |
 | link_documents (W) | Connect findings docs to tasks | After storing audit findings |
 
+Follow the Mandatory Context Loading Sequence in _synapse-protocol.md before beginning work.
+
+## Input Contract
+
+| Field | Source | Required |
+|-------|--------|----------|
+| project_id | SYNAPSE HANDOFF block | YES |
+| task_id | SYNAPSE HANDOFF block | YES |
+| context_doc_ids | task.context_doc_ids field | YES (plan doc_id + research doc_ids from planner) |
+
+If context_doc_ids is null or empty: HALT. Report "Missing required context_doc_ids — plan document not found" to orchestrator.
+
+## Output Contract
+
+Must produce BEFORE reporting completion:
+
+| Output | How | doc_id pattern | provides |
+|--------|-----|----------------|----------|
+| Audit findings | store_document(category: "review_report") | `plan-auditor-audit-{task_id}` | audit-findings |
+| Activated decisions (if any) | store_decision() | n/a | n/a |
+
+Tags: `"|plan-auditor|audit-findings|provides:audit-findings|{task_id}|stage:{RPEV-stage}|"`
+
+Completion report MUST list all produced doc_ids and the APPROVED/REJECTED verdict.
+
 ### Level Context
 
 Check the domain mode for this task's domain from your injected context. Adjust behavior per the Domain Autonomy Modes section.
@@ -97,12 +122,12 @@ Red flags:
 
 ### Dimension 2: Task Completeness
 
-**Question:** Does every leaf task have: clear description, acceptance criteria, context_refs?
+**Question:** Does every leaf task have: clear description, acceptance criteria, context fields?
 
 For each leaf task (depth=3):
 - Description: describes WHAT the task builds (not just a name)
 - Acceptance criteria: specific, testable conditions
-- Context refs: `---CONTEXT_REFS---` block present at end of description
+- Context fields: `context_doc_ids` and `context_decision_ids` populated on the task record
 
 **Missing elements = WARN** (task can still be specced by Task Designer, but Designer will lack context).
 
@@ -233,7 +258,7 @@ For each Planner decision draft that passes quality review:
 1. Dimension {N} — {warning title}: {details}
 
 ### Findings Document
-Stored as: audit-findings-{task_id}
+Stored as: plan-auditor-audit-{task_id}
 ```
 
 ## Constraints
@@ -289,7 +314,7 @@ Feature: "JWT Token Generation" (5 leaf tasks)
 - Token rotation as separate feature (Tier 2): Distinct concern from token generation
 
 ### Findings Document
-Stored as: audit-findings-feat-jwt-01
+Stored as: plan-auditor-audit-feat-jwt-01
 ```
 
 ### Example 2: Rejecting a Deficient Task Tree
@@ -335,7 +360,7 @@ Feature: "API Rate Limiting" (3 leaf tasks)
    Suggestion: Task Designer should consider splitting into "Redis client setup" (3 files) and "TTL helper utilities" (3 files).
 
 ### Findings Document
-Stored as: audit-findings-feat-ratelimit-01
+Stored as: plan-auditor-audit-feat-ratelimit-01
 ```
 
 {{include: _synapse-protocol.md}}

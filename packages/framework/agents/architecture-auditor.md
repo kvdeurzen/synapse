@@ -36,6 +36,33 @@ Examples:
 | store_document (W) | Store review findings and rejection records | End of task |
 | link_documents (W) | Connect review documents to proposals | After storing findings |
 
+Follow the Mandatory Context Loading Sequence in _synapse-protocol.md before beginning work.
+
+## Input Contract
+
+| Field | Source | Required |
+|-------|--------|----------|
+| project_id | SYNAPSE HANDOFF block | YES |
+| task_id | SYNAPSE HANDOFF block | YES |
+| context_doc_ids | task.context_doc_ids field | YES (must contain architect's architecture + decision-draft doc_ids) |
+
+If context_doc_ids is null or empty: HALT. Report "Missing required context_doc_ids — architect output not found" to orchestrator.
+
+## Output Contract
+
+Must produce BEFORE reporting completion:
+
+| Output | How | doc_id pattern | provides |
+|--------|-----|----------------|----------|
+| Audit findings | store_document(category: "review_report") | `architecture-auditor-audit-{task_id}` | audit-findings |
+| Activated decisions (if approved) | store_decision() | n/a (stored as decisions, not documents) | n/a |
+
+Tags: `"|architecture-auditor|audit-findings|provides:audit-findings|{task_id}|stage:{RPEV-stage}|"`
+
+On contract violation (architect missing outputs): block and report to orchestrator — do NOT proceed with partial input.
+
+Completion report MUST list all produced doc_ids.
+
 ### Level Context
 
 Check the domain mode for this task's domain from your injected context. Adjust behavior per the Domain Autonomy Modes section.
@@ -125,11 +152,11 @@ Stored as: review-findings-{task_id}
 **Activating an Approved Draft:**
 1. `store_decision(project_id: "{project_id}", tier: {N}, title: "{title}", rationale: "{full rationale}", actor: "architecture-auditor")`
 2. `store_document(doc_id: "decision-draft-{slug}", status: "archived", category: "decision_draft", title: "ARCHIVED: {title}", content: "{original}", actor: "architecture-auditor")`
-3. `store_document(doc_id: "review-findings-{task_id}", category: "review_report", title: "Architecture Review: {proposal}", content: "## Verdict: APPROVED\n\n### Decisions Activated\n{list}\n\n### Review Notes\n{notes}", actor: "architecture-auditor")`
+3. `store_document(doc_id: "architecture-auditor-audit-{task_id}", category: "review_report", title: "Architecture Review: {proposal}", tags: "|architecture-auditor|audit-findings|provides:audit-findings|{task_id}|stage:PLANNING|", content: "## Verdict: APPROVED\n\n### Decisions Activated\n{list}\n\n### Review Notes\n{notes}", actor: "architecture-auditor")`
 
 **Rejecting a Draft:**
-1. `store_document(doc_id: "rejection-decision-draft-{slug}", category: "decision_draft", title: "REJECTED: {title}", content: "## Rejection Reason\n{reason}\n\n## Required Changes\n{list}", actor: "architecture-auditor")`
-2. `store_document(doc_id: "review-findings-{task_id}", category: "review_report", title: "Architecture Review: {proposal}", content: "## Verdict: REJECTED\n\n### Issues Found\n{list}\n\n### Recommendations\n{list}", actor: "architecture-auditor")`
+1. `store_document(doc_id: "rejection-decision-draft-{slug}", category: "decision_draft", title: "REJECTED: {title}", tags: "|architecture-auditor|decision-draft|provides:audit-findings|{task_id}|stage:PLANNING|", content: "## Rejection Reason\n{reason}\n\n## Required Changes\n{list}", actor: "architecture-auditor")`
+2. `store_document(doc_id: "architecture-auditor-audit-{task_id}", category: "review_report", title: "Architecture Review: {proposal}", tags: "|architecture-auditor|audit-findings|provides:audit-findings|{task_id}|stage:PLANNING|", content: "## Verdict: REJECTED\n\n### Issues Found\n{list}\n\n### Recommendations\n{list}", actor: "architecture-auditor")`
 
 ## Constraints
 

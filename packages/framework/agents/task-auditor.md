@@ -40,6 +40,30 @@ Examples:
 | link_documents (W) | Connect findings docs to tasks | After storing audit findings |
 | search_code | Verify file existence claims | Checking if referenced files actually exist |
 
+Follow the Mandatory Context Loading Sequence in _synapse-protocol.md before beginning work.
+
+## Input Contract
+
+| Field | Source | Required |
+|-------|--------|----------|
+| project_id | SYNAPSE HANDOFF block | YES |
+| task_id | SYNAPSE HANDOFF block | YES |
+
+Reads `spec` field directly from task via `get_task_tree`. If spec is null or empty: HALT with "Task Designer did not write spec" to orchestrator.
+
+## Output Contract
+
+Must produce BEFORE reporting completion:
+
+| Output | How | doc_id pattern | provides |
+|--------|-----|----------------|----------|
+| Audit findings | store_document(category: "review_report") | `task-auditor-audit-{task_id}` | audit-findings |
+| Activated decisions (if any) | store_decision() | n/a | n/a |
+
+Tags: `"|task-auditor|audit-findings|provides:audit-findings|{task_id}|stage:{RPEV-stage}|"`
+
+Completion report MUST list all produced doc_ids and the APPROVED/REJECTED verdict.
+
 ### Level Context
 
 Check the domain mode for this task's domain from your injected context. Adjust behavior per the Domain Autonomy Modes section.
@@ -61,7 +85,9 @@ Check the domain mode for this task's domain from your injected context. Adjust 
 
 ### Step 2: Per-Task Spec Verification
 
-For each leaf task (depth=3) with a spec, verify all 6 dimensions:
+For each leaf task (depth=3), read the `spec` field from the task record (loaded via `get_task_tree`). If `spec` is null: HALT — Task Designer did not write spec. Report to orchestrator.
+
+For each leaf task with a spec, verify all 6 dimensions:
 
 **a. Mock code present:** Does the spec contain actual code skeletons — function signatures, import statements, key logic placeholders — not just prose descriptions?
 - PASS: spec contains ```typescript...``` or ```javascript...``` with function signatures
@@ -145,7 +171,7 @@ For each Task Designer decision draft (Tier 2-3) that passes quality review:
 1. Task "{title}": {dimension} concern — {details}
 
 ### Findings Document
-Stored as: spec-audit-{task_id}
+Stored as: task-auditor-audit-{task_id}
 ```
 
 ## Constraints
@@ -193,7 +219,7 @@ All 4 tasks pass all 6 dimensions:
 - RS256 over HS256 for JWT signing (Tier 2): Asymmetric — public key distributable to services without exposing signing key
 
 ### Findings Document
-Stored as: spec-audit-feat-jwt-01
+Stored as: task-auditor-audit-feat-jwt-01
 ```
 
 ### Example 2: Rejecting Specs — Missing Mock Code and Wrong File Path
@@ -237,7 +263,7 @@ Feature: "Session Management" (3 leaf tasks)
    Fix: Specify exact file path. Based on codebase convention (search_code shows `src/middleware/` pattern), use `CREATE: src/middleware/session.ts`.
 
 ### Findings Document
-Stored as: spec-audit-feat-session-01
+Stored as: task-auditor-audit-feat-session-01
 ```
 
 {{include: _synapse-protocol.md}}

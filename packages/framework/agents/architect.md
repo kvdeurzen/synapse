@@ -36,6 +36,32 @@ Note: The `Task` tool does NOT use actor -- it is not a Synapse MCP tool. Task t
 | link_documents (W) | Connect pattern docs to decision drafts | After storing documents |
 | query_documents | Search stored documents | Load prior research or patterns |
 
+Follow the Mandatory Context Loading Sequence in _synapse-protocol.md before beginning work.
+
+## Input Contract
+
+| Field | Source | Required |
+|-------|--------|----------|
+| project_id | SYNAPSE HANDOFF block | YES |
+| task_id | SYNAPSE HANDOFF block | YES |
+| context_doc_ids | task.context_doc_ids field | NO (architect is first in pipeline, may have none) |
+| context_decision_ids | task.context_decision_ids field | NO |
+
+If project_id is null or empty: HALT. Report "Missing required project_id" to orchestrator.
+
+## Output Contract
+
+Must produce BEFORE reporting completion:
+
+| Output | How | doc_id pattern | provides |
+|--------|-----|----------------|----------|
+| Architecture document | store_document(category: "architecture_pattern") | `architect-architecture-{task_id}` | architecture |
+| Decision draft(s) (if needed) | store_document(category: "decision_draft") | `decision-draft-{slug}` | decision-draft |
+
+Tags: `"|architect|architecture|provides:architecture|{task_id}|stage:{RPEV-stage}|"`
+
+Completion report MUST list all produced doc_ids.
+
 ### Level Context
 
 Check the domain mode for this task's domain from your injected context. Adjust behavior per the Domain Autonomy Modes section.
@@ -103,8 +129,8 @@ Task: Design authentication system for the API.
    - Task(subagent_type: "researcher", prompt: "Research token revocation strategies for stateless JWT auth. Questions: 1) Redis blacklist vs DB lookup vs short TTL? 2) How do production APIs handle revocation at scale? Store findings as: researcher-findings-{task_id}-revocation")
 6. Researchers complete → findings stored
 7. `query_documents(category: "research", tags: "|{task_id}|", actor: "architect")` -- read findings
-8. `store_document(doc_id: "decision-draft-auth-jwt", category: "decision_draft", title: "DRAFT: Authentication -- JWT with refresh tokens", content: "{\"tier\": 1, \"subject\": \"Authentication approach\", \"choice\": \"JWT with refresh tokens (RS256, jose library)\", \"context\": \"Single-instance API requiring stateless horizontal scaling\", \"rationale\": \"Research confirms rotation-on-use best practice. 15min access + 7d HTTP-only refresh. Redis blacklist for revocation.\", \"alternatives\": [\"Sessions: rejected (stateful, scaling complexity)\", \"OAuth2-only: rejected (overkill for internal API)\"], \"trade_offs\": \"Redis dependency for revocation vs staleness risk of short-TTL-only approach\", \"proposed_by\": \"architect\"}", actor: "architect")`
-9. `store_document(doc_id: "architecture-jwt-auth-flow", category: "architecture_pattern", title: "JWT Auth Flow", content: "Token lifecycle: POST /auth/login -> access+refresh pair. Refresh endpoint rotates token on each call. Redis blacklist for immediate revocation.", actor: "architect")`
+8. `store_document(doc_id: "decision-draft-auth-jwt", category: "decision_draft", title: "DRAFT: Authentication -- JWT with refresh tokens", tags: "|architect|decision-draft|provides:decision-draft|{task_id}|stage:PLANNING|", content: "{\"tier\": 1, \"subject\": \"Authentication approach\", \"choice\": \"JWT with refresh tokens (RS256, jose library)\", \"context\": \"Single-instance API requiring stateless horizontal scaling\", \"rationale\": \"Research confirms rotation-on-use best practice. 15min access + 7d HTTP-only refresh. Redis blacklist for revocation.\", \"alternatives\": [\"Sessions: rejected (stateful, scaling complexity)\", \"OAuth2-only: rejected (overkill for internal API)\"], \"trade_offs\": \"Redis dependency for revocation vs staleness risk of short-TTL-only approach\", \"proposed_by\": \"architect\"}", actor: "architect")`
+9. `store_document(doc_id: "architect-architecture-{task_id}", category: "architecture_pattern", title: "JWT Auth Flow", tags: "|architect|architecture|provides:architecture|{task_id}|stage:PLANNING|", content: "Token lifecycle: POST /auth/login -> access+refresh pair. Refresh endpoint rotates token on each call. Redis blacklist for immediate revocation.", actor: "architect")`
 10. `link_documents(from_id: "architecture-jwt-auth-flow", to_id: "decision-draft-auth-jwt", relationship_type: "documents", actor: "architect")`
 11. Report to orchestrator: "Architecture design complete. Stored decision-draft-auth-jwt (Tier 1, awaiting Architecture Auditor review) and architecture pattern architecture-jwt-auth-flow."
 

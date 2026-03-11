@@ -110,7 +110,7 @@ This checks prerequisites, copies agents/hooks/commands/skills/server into `.cla
 
 ```
 .claude/
-  agents/          # 11 agent definitions
+  agents/          # 14 agent definitions
   hooks/           # 7 hook scripts + lib/
   commands/synapse/ # 5 slash commands
   skills/          # 18 skill definitions
@@ -164,7 +164,7 @@ After install, run `/synapse:init` in Claude Code to initialize your project. Fo
 bun test
 ```
 
-612 tests across 37 test files. Tests cover tool behavior, chunking strategies, embedding integration, search quality, code indexing, decision tracking, task hierarchy, and edge cases.
+752 tests across 47 test files. Tests cover tool behavior, chunking strategies, embedding integration, search quality, code indexing, decision tracking, task hierarchy, and edge cases.
 
 ## Project Status
 
@@ -175,7 +175,7 @@ bun test
 - [x] Decision tracking with semantic precedent search (Phase 10)
 - [x] Recursive task hierarchy with cascade propagation (Phase 11)
 - [x] Framework bootstrap with TOML config and test harness (Phase 12)
-- [x] 10 specialized agents, skill loading system, trust matrix (Phase 13)
+- [x] 14 specialized agents, skill loading system, trust matrix (Phase 13)
 - [x] Quality gates and Plan-Execute-Validate workflow (Phase 14)
 
 **v3.0 Working Prototype** — in progress. Wiring everything into a usable end-to-end product:
@@ -188,9 +188,11 @@ bun test
 - [x] Agent pool — configurable slots, auto-assignment, work queue (Phase 21)
 - [x] Installation & setup — install script, smoke test, usage manual (Phase 22)
 - [ ] Visibility + notifications — statusline, blocked counter (Phase 23)
-- [ ] E2E workflow validation — full RPEV cycle on a real project (Phase 24)
+- [x] E2E workflow validation — full RPEV cycle on a real project (Phase 24)
+- [x] Agent behavior hardening — prompt discipline, audit attribution, research (Phase 25)
+- [x] Usage findings and agentic pipeline redesign — gateway architecture, doer+reviewer pairs (Phase 26)
 
-Agents are level-aware: Brainstorm, Planner, Executor, Validator, and others adjust their rigor, criteria, and focus based on hierarchy level (Project → Epic → Feature → Work Package). Coordinated through a skill loading system, configurable trust tiers, and the recursive RPEV cycle.
+Agents follow a gateway-led pipeline with doer+reviewer pairs at every stage: Product Researcher → Architect → Planner → Task Designer → Executor, each paired with an auditor that reviews output and activates decisions. Coordinated through a skill loading system, configurable trust tiers, and the recursive RPEV cycle.
 
 ## License
 

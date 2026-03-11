@@ -8,6 +8,14 @@
             "command": "bun $CLAUDE_PROJECT_DIR/.claude/hooks/synapse-startup.js"
           }
         ]
+      },
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node .claude/hooks/gsd-check-update.js"
+          }
+        ]
       }
     ],
     "PreToolUse": [
@@ -40,6 +48,14 @@
           {
             "type": "command",
             "command": "bun $CLAUDE_PROJECT_DIR/.claude/hooks/audit-log.js"
+          }
+        ]
+      },
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node .claude/hooks/gsd-context-monitor.js"
           }
         ]
       }

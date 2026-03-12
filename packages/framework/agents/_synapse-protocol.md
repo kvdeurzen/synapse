@@ -79,6 +79,7 @@ Fixed capability slugs for `provides:` tags and output contracts:
 | decision-draft | architect, planner, task-designer | Decision proposals |
 | plan | planner | Task tree decomposition |
 | task-spec | task-designer | Structured task specification |
+| test-contract | test-designer | Executable failing tests |
 | implementation | executor | Code changes + commit |
 | validation-findings | validator | Pass/fail + findings |
 | debug-diagnosis | debugger | Root cause + fix |

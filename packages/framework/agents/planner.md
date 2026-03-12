@@ -116,6 +116,7 @@ Follow `@packages/framework/workflows/research-decision-flow.md` for the full re
 - Brief description with acceptance criteria: what does "done" look like for this task?
 - Size constraint: 2-5 files, single concern, ~50% context window budget
 - The Task Designer will later add mock code, exact file paths, and integration points
+- The Test Designer will then write executable failing tests from the spec and your test expectations
 
 ### Step 3: Wire Dependencies
 For each task, identify:
@@ -281,14 +282,27 @@ Dependencies: Tasks 2 and 3 depend on Task 1. Task 4 depends on Tasks 2 and 3.
 
 When decomposing any feature into tasks, ALWAYS create the following validation tasks in addition to implementation tasks:
 
-### Per Leaf Task: Unit Test Expectations
+### Per Leaf Task: Test Expectations (Test-Designer Input)
 
-For every leaf task (depth=3) you create, include a "unit test expectations" description in that task's description field:
+For every leaf task (depth=3) you create, include a "test expectations" section in that task's description field. These serve as input to the Test Designer agent, which transforms them into executable failing tests:
 - What conditions must the tests verify (specific behaviors, edge cases, error paths)
-- Which test files should exist and roughly what they should assert
+- What the expected inputs and outputs are for each test scenario
+- Which boundary conditions or error cases must be tested
 - What constitutes "passing" for the Validator agent
 
-This is embedded in the task description — not a separate task — but must be explicit enough that the Validator can independently assess pass/fail.
+Frame these as requirements for the test-designer to implement, not as guidance for the validator. The test-designer will transform this prose into executable assertions with @requirement tracing.
+
+Example:
+```
+Test expectations (for test-designer):
+- signToken('access') returns a JWT decodable with jose, exp = now + 15min
+- signToken('refresh') returns JWT with 7-day expiry
+- signToken throws when PRIVATE_KEY_PEM env is missing
+- Decoded JWT contains sub, email, iat, exp, type claims
+- At least 5 tests covering valid sign, TTL values, missing key error
+```
+
+This is embedded in the task description — not a separate task — but must be explicit enough that the Test Designer can derive executable assertions, and the Validator can independently assess pass/fail.
 
 ### Per Feature: Integration Test Task
 

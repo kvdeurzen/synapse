@@ -99,6 +99,16 @@ Requirements for Working Prototype milestone. Each maps to roadmap phases.
 - [ ] **ABH-07**: Researcher uses WebSearch/WebFetch/Context7 for external research with confidence tiers; Architect and Decomposer spawn researchers before decisions/decomposition; orchestrator chains researcher doc_ids to downstream agents
 - [x] **ABH-08**: Feature completion creates PRs via `gh pr create` with RPEV context; merge gate respects involvement mode; rollback protocol has explicit git commands
 
+### TDD Pipeline
+
+- [x] **TDD-01**: test-designer.md agent exists as standalone Opus agent with Convention Discovery, Test Design Protocol, RED verification, and @requirement tracing
+- [x] **TDD-02**: Task-auditor triangulates planner requirements + task-designer spec + test-designer tests; runs tests independently; routes rejections to appropriate owner
+- [x] **TDD-03**: Executor MUST NOT modify/delete test-designer tests; reports structured status (DONE/DONE_WITH_CONCERNS/BLOCKED/NEEDS_CONTEXT); performs self-review before handoff
+- [x] **TDD-04**: Validator runs TDD Verification Protocol (immutability check, run tests, spec compliance, executor status review)
+- [x] **TDD-05**: Planner frames test expectations as test-designer input with @requirement tracing
+- [x] **TDD-06**: Orchestrator dispatches test-designer after task-designer and before task-auditor; handles TDD escalation routing (BLOCKED/DONE_WITH_CONCERNS/NEEDS_CONTEXT)
+- [x] **TDD-07**: agents.toml registers test-designer; trust.toml has test-designer tier authority; shared protocol has test-contract as provides vocabulary slug
+
 ## Future Requirements
 
 Deferred to future release. Tracked but not in current roadmap.
@@ -197,12 +207,19 @@ Which phases cover which requirements. Updated during roadmap creation.
 | ABH-06 | Phase 25-04 | Planned |
 | ABH-07 | Phase 25-05 | Complete |
 | ABH-08 | Phase 25-06 | Complete |
+| TDD-01 | Phase 26.3 | Complete |
+| TDD-02 | Phase 26.3 | Complete |
+| TDD-03 | Phase 26.3 | Complete |
+| TDD-04 | Phase 26.3 | Complete |
+| TDD-05 | Phase 26.3 | Complete |
+| TDD-06 | Phase 26.3 | Complete |
+| TDD-07 | Phase 26.3 | Complete |
 
 **Coverage:**
-- v3.0 requirements: 59 total (39 original + 8 RPEV + 4 Agent Pool + 8 Agent Behavior Hardening)
-- Mapped to phases: 59
+- v3.0 requirements: 66 total (39 original + 8 RPEV + 4 Agent Pool + 8 Agent Behavior Hardening + 7 TDD Pipeline)
+- Mapped to phases: 66
 - Unmapped: 0
 
 ---
 *Requirements defined: 2026-03-03*
-*Last updated: 2026-03-07 after Phase 25 planning (ABH requirements added)*
+*Last updated: 2026-03-12 after Phase 26.3 execution (TDD requirements added)*

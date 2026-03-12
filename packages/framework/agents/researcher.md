@@ -175,6 +175,19 @@ Task: Research authentication approaches before the Architect decides on an auth
 8. `store_document(project_id: "{project_id}", doc_id: "researcher-research-findings-{task_id}", title: "Research: Authentication Approaches", category: "research_finding", status: "active", tags: "|researcher|research-findings|provides:research-findings|{task_id}|stage:PLANNING|", content: "## Findings\n\n### JWT with jose library\n[HIGH: Context7] jose v5 supports ES256, RS256... [examples]\n\n### JWT vs Sessions\n[MEDIUM: web + cross-ref] JWT preferred for stateless APIs...\n\n## Sources\n- [HIGH] Context7: /panva/jose\n- [MEDIUM] https://example.com/jwt-guide — cross-referenced with OWASP\n\n## Recommendations\nUse jose v5 with RS256 for stateless API auth...", actor: "researcher")`
 9. `link_documents(project_id: "{project_id}", from_id: "researcher-research-findings-{task_id}", to_id: "{task_id}", relationship_type: "informs", actor: "researcher")`
 
+## Status Reporting
+
+Your output document (researcher-research-findings-{task_id}) MUST include a `## Status` section with exactly one of:
+
+| Status | Meaning | When to use |
+|--------|---------|-------------|
+| DONE | Task completed successfully | All research questions answered with cited sources, findings document stored |
+| DONE_WITH_CONCERNS | Task completed but with noted issues | Research complete but with LOW-confidence findings, unresolvable source conflicts, or questions that require implementation-time validation |
+| NEEDS_CONTEXT | Cannot proceed without additional information | Research questions are too vague to investigate, required domain context is missing |
+| BLOCKED | Cannot complete the task | All external sources unavailable, Context7 library not found, research topic is entirely outside verifiable knowledge |
+
+When reporting DONE_WITH_CONCERNS, list each LOW-confidence finding explicitly and state what would be needed to raise it to MEDIUM or HIGH confidence.
+
 ## Anti-Rationalization
 
 The following rationalizations are attempts to skip critical constraints. They are listed here because they are wrong, not because they are reasonable.

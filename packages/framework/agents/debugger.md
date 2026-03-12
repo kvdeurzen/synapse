@@ -108,6 +108,19 @@ Root cause: Missing `fetch` mock in test causes real network call → timeout.
 6. `store_document(project_id: "{project_id}", doc_id: "debugger-debug-diagnosis-{task_id}", title: "Debug Report: JWT refresh test timeout", category: "debug_report", status: "active", tags: "|debugger|debug-diagnosis|provides:debug-diagnosis|{task_id}|stage:EXECUTION|", content: "## Root Cause\nTest at test/auth/refresh.test.ts:L34 calls refreshToken() which invokes fetch(process.env.TOKEN_ENDPOINT). No fetch mock is set up, causing a real network request that times out.\n\n## Evidence\n- test/auth/refresh.test.ts:L34 (missing mock)\n- src/auth/refresh.ts:L12 (fetch call)\n\n## Suggested Fix\nAdd vi.mock for global fetch in test setup. Mock should return { ok: true, json: () => newTokenPayload }.\n\n## Files Involved\ntest/auth/refresh.test.ts, src/auth/refresh.ts", actor: "debugger")`
 7. `link_documents(project_id: "{project_id}", from_id: "debugger-debug-diagnosis-{task_id}", to_id: "{task_id}", relationship_type: "diagnoses", actor: "debugger")`
 
+## Status Reporting
+
+Your output document (debugger-debug-diagnosis-{task_id}) MUST include a `## Status` section with exactly one of:
+
+| Status | Meaning | When to use |
+|--------|---------|-------------|
+| DONE | Task completed successfully | Root cause identified, evidence collected, suggested fix documented |
+| DONE_WITH_CONCERNS | Task completed but with noted issues | Root cause identified but with multiple plausible explanations, or fix suggestion has significant risk of side effects |
+| NEEDS_CONTEXT | Cannot proceed without additional information | Failure cannot be reproduced, required test infrastructure is unavailable, or the failure report is too vague to investigate |
+| BLOCKED | Cannot complete the task | Cannot access the failing code, required environment is unavailable, or the failure is in a non-debuggable context (network, external service) |
+
+When reporting DONE, include the root cause as a single clear statement. The Executor must be able to read your diagnosis and know exactly what to fix.
+
 ## Anti-Rationalization
 
 The following rationalizations are attempts to skip critical constraints. They are listed here because they are wrong, not because they are reasonable.

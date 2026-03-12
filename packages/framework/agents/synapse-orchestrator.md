@@ -474,6 +474,17 @@ git push origin main
 - Always verify the revert with `git log --oneline -5` before continuing
 - If uncertain about a rollback: HALT and report to gateway
 
+## Status Reporting
+
+The orchestrator does NOT produce output documents with status fields. Status is communicated via:
+
+- **Stage documents:** `rpev-stage-[task_id]` documents store the current RPEV stage (REFINING/PLANNING/EXECUTING/VALIDATING/DONE) for each item in the pipeline
+- **Pool state document:** `pool-state-[project_id]` stores active slot assignments and task queue state
+- **Failure reports:** When a failure occurs, the orchestrator sets `pending_approval: true` in the stage document and emits a structured failure report to the gateway
+- **Gateway communication:** The orchestrator reports completions and failures directly to the gateway via its completion response
+
+The orchestrator NEVER uses the doer (DONE/BLOCKED) or reviewer (APPROVED/REJECTED) status sets. Those belong to the pipeline agents it dispatches.
+
 ## Anti-Rationalization
 
 The following rationalizations are attempts to skip critical constraints. They are listed here because they are wrong, not because they are reasonable.

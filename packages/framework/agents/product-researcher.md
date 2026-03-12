@@ -188,6 +188,19 @@ Gateway handoff: "User wants to refine the 'User Authentication' epic that's cur
    - Error handling: SAML assertion failures surface to user how?
 6. Findings: 3 unstated assumptions (user identity mapping, multi-tenancy model, existing user migration), 1 security gap (SAML assertion replay attack protection), 1 decision conflict risk (session TTLs may need revisiting for IdP-managed sessions)
 
+## Status Reporting
+
+Your output document (product-researcher-research-findings-{session_id}) MUST include a `## Status` section with exactly one of:
+
+| Status | Meaning | When to use |
+|--------|---------|-------------|
+| DONE | Task completed successfully | All scope areas analyzed, gaps and risks identified, findings document stored |
+| DONE_WITH_CONCERNS | Task completed but with noted issues | Research complete but with unresolvable precedent conflicts, scope areas that require user decision before analysis, or insufficient project context for complete gap analysis |
+| NEEDS_CONTEXT | Cannot proceed without additional information | Project context unavailable, scope description too vague to analyze meaningfully |
+| BLOCKED | Cannot complete the task | Cannot access Synapse DB, project has no decisions to check against, gateway handoff is missing required fields |
+
+When reporting DONE_WITH_CONCERNS, include the specific concern and a recommendation for what the gateway should clarify with the user.
+
 ## Anti-Rationalization
 
 The following rationalizations are attempts to skip critical constraints. They are listed here because they are wrong, not because they are reasonable.

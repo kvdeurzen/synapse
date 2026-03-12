@@ -301,6 +301,20 @@ Feature: "Session Management" (3 leaf tasks)
 Stored as: task-auditor-audit-feat-session-01
 ```
 
+## Status Reporting
+
+Your output document (task-auditor-audit-{task_id}) MUST include a `## Status` section with exactly one of:
+
+| Status | Meaning | When to use |
+|--------|---------|-------------|
+| APPROVED | Review passed | All task specs pass all 6 dimensions (a-f) and TDD triangulation (g), RED state independently verified |
+| REJECTED | Review failed | One or more task specs fail — routes back to the appropriate agent (test-designer, task-designer, or planner) per rejection routing rules |
+| NEEDS_REVISION | Changes required | Minor spec improvements needed that don't block execution — routes back to task-designer or test-designer with targeted feedback |
+
+On APPROVED: activate all qualifying Task Designer decision drafts via store_decision.
+
+On REJECTED: provide per-task dimension scoring table with specific "Fix" instructions for each failure, including which agent the fix should route to.
+
 ## Anti-Rationalization
 
 The following rationalizations are attempts to skip critical constraints. They are listed here because they are wrong, not because they are reasonable.

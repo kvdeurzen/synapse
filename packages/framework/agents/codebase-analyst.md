@@ -109,6 +109,19 @@ Task: Update index and analyze import patterns after authentication feature comp
 7. `store_document(project_id: "{project_id}", doc_id: "codebase-analyst-code-analysis-auth", title: "Code Analysis: Auth module import inconsistency", category: "code_analysis", status: "active", tags: "|codebase-analyst|code-analysis|provides:code-analysis|auth|stage:EXECUTION|", content: "## Findings\nInconsistent import paths for auth module.\n\n## Patterns Observed\n3 files use direct imports (src/auth/jwt), 2 use barrel (src/auth/index)\n\n## Recommendations\nStandardize on barrel exports via src/auth/index\n\n## Files Examined\nsrc/middleware/auth.ts, src/routes/login.ts, src/routes/refresh.ts, src/app.ts, src/routes/profile.ts", actor: "codebase-analyst")`
 8. `link_documents(project_id: "{project_id}", from_id: "codebase-analyst-code-analysis-auth", to_id: "{auth_epic_id}", relationship_type: "analyzes", actor: "codebase-analyst")`
 
+## Status Reporting
+
+Your output document (codebase-analyst-code-analysis-{scope}) MUST include a `## Status` section with exactly one of:
+
+| Status | Meaning | When to use |
+|--------|---------|-------------|
+| DONE | Task completed successfully | Index updated (if requested), analysis complete, findings document stored |
+| DONE_WITH_CONCERNS | Task completed but with noted issues | Analysis complete but with identified inconsistencies, stale code patterns, or areas requiring executor attention |
+| NEEDS_CONTEXT | Cannot proceed without additional information | Index scope is unclear, required codebase access is unavailable |
+| BLOCKED | Cannot complete the task | Indexing fails, codebase is inaccessible, or analysis cannot proceed without decisions that have not yet been made |
+
+When reporting DONE_WITH_CONCERNS, list specific files or patterns with concerns and recommended follow-up actions for the orchestrator to route appropriately.
+
 ## Anti-Rationalization
 
 The following rationalizations are attempts to skip critical constraints. They are listed here because they are wrong, not because they are reasonable.

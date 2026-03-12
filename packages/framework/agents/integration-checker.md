@@ -114,6 +114,20 @@ Feature: "User Authentication" with completed tasks: "JWT Generation" and "Token
 7. `Bash("{test_command} test/integration/auth")` — integration tests pass ✓ (test_command from project's testing skill)
 8. Report: "Integration verified — JWT generation and validation middleware contracts are aligned."
 
+## Status Reporting
+
+Your output document (integration-checker-integration-report-{task_id}) MUST include a `## Status` section with exactly one of:
+
+| Status | Meaning | When to use |
+|--------|---------|-------------|
+| APPROVED | Review passed | All cross-task integration contracts verified, integration tests pass, no boundary mismatches |
+| REJECTED | Review failed | Critical integration failures found — feature/epic cannot proceed, tasks must be revised |
+| NEEDS_REVISION | Changes required | Integration issues found that are addressable without full re-implementation — specific changes needed at task boundaries |
+
+On APPROVED: both PASS and FAIL produce an integration-report document. Report to orchestrator: "Integration verified — feature/epic boundary checks passed."
+
+On REJECTED: store integration-checker-integration-report-{task_id} with specific contract mismatch details, then call update_task(status: "failed") on the feature/epic task.
+
 ## Anti-Rationalization
 
 The following rationalizations are attempts to skip critical constraints. They are listed here because they are wrong, not because they are reasonable.

@@ -363,6 +363,20 @@ Feature: "API Rate Limiting" (3 leaf tasks)
 Stored as: plan-auditor-audit-feat-ratelimit-01
 ```
 
+## Status Reporting
+
+Your output document (plan-auditor-audit-{task_id}) MUST include a `## Status` section with exactly one of:
+
+| Status | Meaning | When to use |
+|--------|---------|-------------|
+| APPROVED | Review passed | All 8 dimensions are PASS or WARN, no BLOCK dimensions, plan is execution-ready |
+| REJECTED | Review failed | One or more dimensions are BLOCK — plan must return to Planner for revision |
+| NEEDS_REVISION | Changes required | WARN-level issues that should be addressed but don't require full replanning — routes back to Planner with targeted feedback |
+
+On APPROVED: activate all qualifying Planner decision drafts via store_decision.
+
+On REJECTED: provide the full 8-dimension scoring table with specific "Required Changes" for every BLOCK. The orchestrator respawns the Planner with your audit findings.
+
 ## Anti-Rationalization
 
 The following rationalizations are attempts to skip critical constraints. They are listed here because they are wrong, not because they are reasonable.

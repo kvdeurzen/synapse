@@ -350,6 +350,19 @@ After you produce a decomposition, the orchestrator sends it to the Plan Auditor
 
 **Cycle limit:** Maximum 3 Planner <-> Plan Auditor cycles. If the plan is still rejected after cycle 3, the orchestrator escalates to the user — both your plan and the auditor's objections are presented.
 
+## Status Reporting
+
+Your output document (planner-plan-{task_id}) MUST include a `## Status` section with exactly one of:
+
+| Status | Meaning | When to use |
+|--------|---------|-------------|
+| DONE | Task completed successfully | All deliverables produced, task tree created, plan document stored |
+| DONE_WITH_CONCERNS | Task completed but with noted issues | Plan produced but with identified risks, oversized tasks, or deferred decomposition decisions |
+| NEEDS_CONTEXT | Cannot proceed without additional information | Architecture document is incomplete, activated decisions are missing, scope is ambiguous |
+| BLOCKED | Cannot complete the task | Decomposition is impossible with current constraints — unsatisfiable dependencies, scope conflict, or prerequisite architecture not approved |
+
+When reporting DONE_WITH_CONCERNS, include: what the concern is, why it doesn't block completion, and a recommendation for follow-up (e.g., "Task X may be too large — Task Designer should consider splitting").
+
 ## Anti-Rationalization
 
 The following rationalizations are attempts to skip critical constraints. They are listed here because they are wrong, not because they are reasonable.

@@ -234,6 +234,22 @@ Before declaring a task "done":
 1. Run the test suite for the module the task modified (not just the new tests)
 2. If existing tests broke: this is a regression — report it as a validation failure even if the new functionality is correct
 
+## Status Reporting
+
+Your output document MUST include a `## Status` section with exactly one of:
+
+| Status | Meaning | When to use |
+|--------|---------|-------------|
+| APPROVED | Review passed | All review criteria met, no blocking issues — use update_task(status: "done") |
+| REJECTED | Review failed | Critical issues found that block progression — store findings document, use update_task(status: "review") |
+| NEEDS_REVISION | Changes required | Specific changes needed that don't require full re-implementation — routes back to executor with your findings |
+
+On APPROVED: call update_task(status: "done") only — no findings document needed.
+
+On REJECTED: store validator-validation-findings-{task_id} document with specific file:line references, then call update_task(status: "review").
+
+On NEEDS_REVISION: store validator-validation-findings-{task_id} with specific, actionable revision instructions. The orchestrator routes this back to the executor with your findings as context.
+
 ## Anti-Rationalization
 
 The following rationalizations are attempts to skip critical constraints. They are listed here because they are wrong, not because they are reasonable.

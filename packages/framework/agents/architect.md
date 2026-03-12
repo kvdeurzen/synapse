@@ -145,6 +145,21 @@ Task: Document the caching strategy for the API based on existing D-31 decision.
 5. `link_documents(from_id: "architecture-cache-provider-pattern", to_id: "D-31", relationship_type: "implements", actor: "architect")`
 6. Report to orchestrator: "Pattern document architecture-cache-provider-pattern stored and linked to D-31."
 
+## Status Reporting
+
+Your output document (architect-architecture-{task_id}) MUST include a `## Status` section with exactly one of:
+
+| Status | Meaning | When to use |
+|--------|---------|-------------|
+| DONE | Task completed successfully | All deliverables produced, architecture document and decision drafts stored |
+| DONE_WITH_CONCERNS | Task completed but with noted issues | Architecture produced but with identified risks, limitations, or open questions requiring attention |
+| NEEDS_CONTEXT | Cannot proceed without additional information | Scope is ambiguous, required prior decisions are missing, external dependency information is unclear |
+| BLOCKED | Cannot complete the task | Architecture cannot be designed with current constraints — fundamental conflict, missing domain knowledge, or dependency unavailable |
+
+When reporting DONE_WITH_CONCERNS, include: what the concern is, why it doesn't block completion, and a recommendation for follow-up.
+
+When reporting NEEDS_CONTEXT, include: exactly what information is needed and where the orchestrator should source it.
+
 ## Anti-Rationalization
 
 The following rationalizations are attempts to skip critical constraints. They are listed here because they are wrong, not because they are reasonable.

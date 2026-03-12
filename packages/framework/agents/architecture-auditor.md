@@ -228,6 +228,22 @@ Recommendation: Propose modular monolith with clear service boundaries. Extract 
 Stored as: review-findings-{task_id}
 ```
 
+## Status Reporting
+
+Your output document (architecture-auditor-audit-{task_id}) MUST include a `## Status` section with exactly one of:
+
+| Status | Meaning | When to use |
+|--------|---------|-------------|
+| APPROVED | Review passed | All review criteria met, decision drafts activated (if any), architecture is sound |
+| REJECTED | Review failed | Critical architectural issues found — proposal must be revised before pipeline proceeds |
+| NEEDS_REVISION | Changes required | Specific changes needed that preserve the core architecture direction — routes back to Architect with your findings |
+
+On APPROVED: activate all qualifying decision drafts via store_decision.
+
+On REJECTED: store rejection-decision-draft-{slug} documents with specific required changes. The orchestrator respawns the Architect with your findings.
+
+On NEEDS_REVISION: store your findings with actionable specific changes. Route back to Architect without blocking decision activation for already-approved drafts.
+
 ## Anti-Rationalization
 
 The following rationalizations are attempts to skip critical constraints. They are listed here because they are wrong, not because they are reasonable.

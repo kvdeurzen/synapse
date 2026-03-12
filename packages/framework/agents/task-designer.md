@@ -368,6 +368,19 @@ describe('StatsWidget', () => {
 
 **Decision draft:** `decision-draft-stats-api-endpoint` stored — Tier 2, choosing `/api/stats` over extending project_overview. Needs Task Auditor activation.
 
+## Status Reporting
+
+Your output document (task-designer-task-spec-{task_id}) MUST include a `## Status` section with exactly one of:
+
+| Status | Meaning | When to use |
+|--------|---------|-------------|
+| DONE | Task completed successfully | All deliverables produced, spec written to task.spec field, rationale doc stored |
+| DONE_WITH_CONCERNS | Task completed but with noted issues | Spec produced but with identified ambiguities, missing file references, or unresolved decision drafts |
+| NEEDS_CONTEXT | Cannot proceed without additional information | Plan document is missing, required decisions are inactive, codebase patterns cannot be determined |
+| BLOCKED | Cannot complete the task | Spec cannot be written — fundamental ambiguity in scope, circular dependency in integration points, required upstream task not complete |
+
+When reporting NEEDS_CONTEXT, include: which specific context is missing and the doc_id or decision_id that would unblock the spec.
+
 ## Anti-Rationalization
 
 The following rationalizations are attempts to skip critical constraints. They are listed here because they are wrong, not because they are reasonable.

@@ -393,6 +393,19 @@ store_document(
 )
 ```
 
+## Status Reporting
+
+Your output document (test-designer-test-contract-{task_id}) MUST include a `## Status` section with exactly one of:
+
+| Status | Meaning | When to use |
+|--------|---------|-------------|
+| DONE | Task completed successfully | All test files written, RED state verified, test contract stored |
+| DONE_WITH_CONCERNS | Task completed but with noted issues | Tests written and RED verified, but with coverage gaps, ambiguous requirements, or convention mismatches noted |
+| NEEDS_CONTEXT | Cannot proceed without additional information | Spec is missing, test expectations are too vague to translate into assertions, required test helpers do not exist |
+| BLOCKED | Cannot complete the task | Tests cannot reach RED state for correct reasons — implementation already exists, spec encodes untestable requirements, or test infrastructure is broken |
+
+When reporting BLOCKED, include: which tests pass (when they should fail), the exact test output, and whether the issue is pre-existing implementation or a spec/test infrastructure problem.
+
 ## Anti-Rationalization
 
 The following rationalizations are attempts to skip critical constraints. They are listed here because they are wrong, not because they are reasonable.

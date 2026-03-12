@@ -295,7 +295,7 @@ Plans:
 - [ ] 26.4-01-PLAN.md — output-contracts.toml config + output-contract-gate.js PostToolUse hook + unit tests (BEH-03)
 - [ ] 26.4-02-PLAN.md — Brainstorming SKILL.md rewrite + all skill anti-rationalization tables + pressure testing protocol (BEH-09, BEH-10, BEH-02)
 - [ ] 26.4-03-PLAN.md — code-quality-reviewer agent + config registration + anti-sycophancy protocol + provides slug (BEH-04, BEH-08, BEH-11)
-- [ ] 26.4-04-PLAN.md — Orchestrator fresh-agent/inline-spec/code-quality-reviewer dispatch + validator independence + executor verification gate (BEH-01, BEH-05, BEH-06, BEH-07)
+- [ ] 26.4-04-PLAN.md — Orchestrator fresh-agent/inline-spec/code-quality-reviewer dispatch + validator independence + executor verification gate (BEH-01, BEH-05, BEH-06)
 - [ ] 26.4-05-PLAN.md — Anti-rationalization tables + structured escalation statuses for all 16 agents (BEH-01, BEH-07)
 
 ### Phase 26.3: TDD (INSERTED)

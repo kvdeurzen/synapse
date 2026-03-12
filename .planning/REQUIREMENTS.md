@@ -117,7 +117,7 @@ Requirements for Working Prototype milestone. Each maps to roadmap phases.
 - [x] **BEH-04**: code-quality-reviewer.md agent exists (Sonnet model) for craftsmanship + security + performance review after validator passes; registered in agents.toml and trust.toml
 - [x] **BEH-05**: Orchestrator mandates fresh agent per task, includes inline task spec in handoffs, dispatches code-quality-reviewer after validator PASS
 - [x] **BEH-06**: Validator forms independent verdict (run tests, read code, assess) BEFORE reading executor's implementation summary
-- [ ] **BEH-07**: All doer agents report DONE/DONE_WITH_CONCERNS/NEEDS_CONTEXT/BLOCKED; all reviewer agents report APPROVED/REJECTED/NEEDS_REVISION
+- [x] **BEH-07**: All doer agents report DONE/DONE_WITH_CONCERNS/NEEDS_CONTEXT/BLOCKED; all reviewer agents report APPROVED/REJECTED/NEEDS_REVISION
 - [x] **BEH-08**: _synapse-protocol.md contains anti-sycophancy review-reception protocol (verify, evaluate, respond) and quality-review as 13th provides slug
 - [x] **BEH-09**: Brainstorming SKILL.md rewritten to 7-step sequential checklist with hard gate (no implementation before design approval) and one-question-at-a-time enforcement
 - [x] **BEH-10**: All 18 existing skill SKILL.md files have anti-rationalization sections with externally-sourced entries

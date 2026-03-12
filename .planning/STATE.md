@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v3.0
 milestone_name: Working Prototype
 status: Phase 25 closed (5/6 plans; 25-04 E2E re-validation deferred). Phase 26 created for real usage findings.
-stopped_at: Completed 26.3-02-PLAN.md
-last_updated: "2026-03-12T20:01:09.228Z"
+stopped_at: Completed 26.4-01-PLAN.md
+last_updated: "2026-03-12T20:34:26.531Z"
 last_activity: 2026-03-09 — Phase 25 execution complete. Phase 26 created.
 progress:
   total_phases: 16
   completed_phases: 12
-  total_plans: 42
-  completed_plans: 40
+  total_plans: 47
+  completed_plans: 41
   percent: 96
 ---
 
@@ -84,6 +84,7 @@ Progress: [█████████░] 96%
 | Phase 26.3-tdd P01 | 3min | 2 tasks | 4 files |
 | Phase 26.3-tdd P03 | 2 | 1 tasks | 1 files |
 | Phase 26.3-tdd P02 | 3min | 2 tasks | 4 files |
+| Phase 26.4-best-lessons-from-superpowers P01 | 127 | 1 tasks | 3 files |
 
 ## Accumulated Context
 
@@ -206,6 +207,8 @@ Key decisions affecting v3.0:
 - [Phase 26.3-tdd]: Executor structured status: DONE, DONE_WITH_CONCERNS, BLOCKED, NEEDS_CONTEXT in output document
 - [Phase 26.3-tdd]: Validator TDD Verification Protocol: Steps A-D (immutability, run tests, spec compliance, executor status review)
 - [Phase 26.3-tdd]: Planner test expectations framed as test-designer input with @requirement tracing — not validator guidance
+- [Phase 26.4]: output-contracts.toml is single source of truth for agent output contracts; task-designer omitted (spec field not doc); validator uses required_on_fail_only=true for pass/fail asymmetry
+- [Phase 26.4]: output-contract-gate.js PostToolUse hook enforces contracts: agents not in config pass freely, fail-closed on missing config, {task_id} pattern substitution in doc_id matching
 
 ### Roadmap Evolution
 
@@ -227,6 +230,6 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-03-12T19:57:30.136Z
-Stopped at: Completed 26.3-02-PLAN.md
+Last session: 2026-03-12T20:34:26.528Z
+Stopped at: Completed 26.4-01-PLAN.md
 Resume file: None

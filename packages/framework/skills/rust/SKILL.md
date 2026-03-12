@@ -50,6 +50,15 @@ user-invocable: false
 - Ignoring clippy warnings — they encode community best practices
 - Using `String` parameter types where `&str` suffices — forces unnecessary allocation
 
+## Anti-Rationalization
+
+| Rationalization | Why It's Wrong | What To Do Instead |
+|----------------|----------------|-------------------|
+| "I'll use `.unwrap()` here and clean it up later" | `.unwrap()` in production code is a deferred panic. It will fire at runtime, in production, on the exact input that wasn't tested. The "later" cleanup almost never happens. (Rust community: "unwrap is technical debt with interest") | Use `?` to propagate the error, or `expect("descriptive reason")` if panic is truly intended. The message tells the responder what went wrong. |
+| "Cloning here avoids the borrow checker complaint" | Cloning to satisfy the borrow checker means you haven't understood the ownership structure yet. The clone is masking a design problem — who should own this data? (Rust Book: "borrow checker complaints are design feedback") | Understand the ownership. Restructure to pass references or redesign ownership. Cloning has runtime cost and hides intent. |
+| "This `unsafe` block is fine — I know the invariants" | Unsafe blocks are promises to the compiler that the programmer cannot verify mechanically. Every unsafe block is a human-verified contract that must be documented. If the invariant isn't written down, it will be violated during the next refactor. (Rust Reference: "every unsafe block requires a SAFETY comment") | Add a `// SAFETY:` comment explaining exactly which invariants make this block safe. If you can't write the comment, the block is not safe. |
+| "Clippy warnings are overly pedantic for this codebase" | Clippy warnings encode Rust community best practices derived from real-world bugs and performance issues. Each warning suppressed is a known pitfall left unaddressed. (Rust team: "clippy warnings are applied best practices, not style preferences") | Fix clippy warnings. If a specific warning is a false positive, use `#[allow(clippy::specific_lint)]` with a comment explaining why. |
+
 ## Commands
 
 - Build: `cargo build`

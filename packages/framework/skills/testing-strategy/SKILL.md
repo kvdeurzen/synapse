@@ -56,6 +56,16 @@ user-invocable: false
 - Running full E2E suite on every commit — reserve for nightly or pre-merge on main (caduh.com)
 - Writing integration tests that depend on production data or external network connections
 
+## Anti-Rationalization
+
+| Rationalization | Why It's Wrong | What To Do Instead |
+|----------------|----------------|-------------------|
+| "This function is too simple to test" | Untested simple functions become the unchecked assumptions that cause bugs in complex functions. The test is not for now — it's for the refactor that happens in 3 months when the "simple" function changes. (Fowler: "tests are the specification, not the verification") | Write the test. If it truly is simple, the test takes 2 minutes and documents the behavior permanently. |
+| "I'll write tests after the implementation is working" | Tests written after implementation test the implementation, not the behavior. They are shaped by what the code does, not what it should do. Bugs in the implementation become assumptions in the tests. (Superpowers TDD skill: "tests written after are rationalization tests, not specification tests") | Write tests before or during implementation. The behavior spec must precede the implementation. |
+| "Mocking the database makes tests too brittle — I'll use the real one" | Unit tests with real databases are integration tests. They run orders of magnitude slower, require database setup, and fail for network/state reasons unrelated to the code under test. The test pyramid breaks down. (Fowler: "mock at boundaries, use real dependencies in integration tests only") | Mock the DB in unit tests. Write separate integration tests against a real DB for boundary verification. |
+| "Coverage is at 80%, we don't need more tests" | Coverage measures which lines ran, not whether they are correct. 80% line coverage with weak assertions is "coverage theater" — tests that run code without verifying behavior. (caduh.com: "assert correctness, not execution") | Check branch coverage and assertion quality. Coverage is a floor, not a target. |
+| "E2E tests verify the whole stack, so unit tests are redundant" | E2E tests verify one path through the stack. They cannot isolate which component is wrong, they are slow to run, and they cannot test edge cases or error paths cost-effectively. Unit tests verify components; E2E tests verify integration. (Fowler testing pyramid: "E2E is for smoke, not regression") | Maintain all three pyramid levels. E2E tests find what unit tests miss by design, not by substitution. |
+
 ## Commands
 
 This is a strategy skill. For actual test commands, read the project's language-specific testing skill (e.g., pytest, cargo-test, vitest, go-test).

@@ -49,6 +49,15 @@ user-invocable: false
 - Putting test helpers in the same `#[cfg(test)]` block without `#[test]` attribute — they compile in test mode only; put shared helpers in a separate module if needed in integration tests
 - Writing one giant `#[test]` function that tests multiple behaviors — split into focused test functions
 
+## Anti-Rationalization
+
+| Rationalization | Why It's Wrong | What To Do Instead |
+|----------------|----------------|-------------------|
+| "Using `.unwrap()` in tests makes them shorter" | `.unwrap()` in tests produces panic messages with no context about which assertion failed or why. When a test panics, the output shows the unwrap location, not the test intent. (Rust testing docs: "return Result from tests to propagate errors with context") | Return `Result<(), Box<dyn std::error::Error>>` from test functions. Use `?` to propagate. Failures show the chain of causes. |
+| "Integration tests can access private internals for better coverage" | Integration tests that access private internals are not integration tests — they are whitebox tests with the cost of both integration and unit tests and the benefits of neither. When internals change, both the code and the integration test break. (Rust testing docs: "tests/ directory tests the public API as an external user would") | Test the public API in `tests/`. Test internals via the `#[cfg(test)]` module in the source file. Each test type has a purpose. |
+| "One large `#[test]` function covers the whole feature quickly" | A single large test function has a single success/failure status. When it fails, you know the feature is broken but not which behavior failed. Splitting into focused functions makes failures instantly diagnosable. (Rust community: "one test function = one behavior under test") | Split into focused test functions, each covering one behavior. The name of the failing function IS the diagnosis. |
+| "I'll skip `#[ignore]` on slow integration tests — they only run in CI anyway" | Slow tests without `#[ignore]` run on every `cargo test` invocation during development, even locally. Slow local test runs discourage running tests frequently, which is when tests are most valuable. (cargo test docs: "use #[ignore] to separate fast and slow tests explicitly") | Mark slow integration tests with `#[ignore]`. Run them explicitly with `cargo test -- --ignored` or in CI only. |
+
 ## Commands
 
 - Run all tests: `cargo test`

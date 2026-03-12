@@ -51,6 +51,15 @@ user-invocable: false
 - Using weak password hashing (MD5, SHA-1, bcrypt work factor < 10) — use Argon2 or bcrypt with cost ≥ 12
 - Adding new dependencies without explicit security review and vulnerability scan (Van-LLM-Crew)
 
+## Anti-Rationalization
+
+| Rationalization | Why It's Wrong | What To Do Instead |
+|----------------|----------------|-------------------|
+| "Security can be added as a layer later once the feature works" | Security is an architectural property, not a feature. Adding authentication, parameterized queries, or input sanitization after the fact requires touching every data path — the retrofit cost is 10-100x higher than building it in. (OWASP: "security must be designed in, not bolted on") | Address the security properties (who can call this, what input is allowed, what is logged) when designing the feature, not after. |
+| "This is an internal API, so authentication isn't necessary" | Internal APIs become external APIs when services are compromised, credentials are phished, or the network boundary changes. The absence of auth on internal APIs is the primary amplifier in lateral movement attacks. (OWASP: "assume breach; defense in depth") | Authenticate all APIs. Internal callers can use service credentials. The auth cost is minimal compared to breach response cost. |
+| "Logging this sensitive value makes debugging easier" | Sensitive values in logs propagate to log aggregators, backup systems, monitoring dashboards, and log exports — all of which have broader access than the application itself. Once in logs, sensitive values are nearly impossible to fully remove. (Van-LLM-Crew: "log destinations have wider access than application memory") | Log identifiers (user ID, session ID) not values (tokens, passwords, PII). If you need to debug, redact in the log formatter. |
+| "LLM-generated code is cleaner than what I'd write, no need to review for security" | LLMs reproduce patterns from training data, including patterns with known vulnerabilities. LLM-generated code is statistically likely to include the most common vulnerability patterns. (Goedecke: "LLM output is untrusted input") | Review LLM-generated code for the same vulnerabilities you would review in any PR: injection, auth bypass, information disclosure, missing validation. |
+
 ## Commands
 
 - Node.js audit: `npm audit`

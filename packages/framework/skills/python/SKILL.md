@@ -47,6 +47,15 @@ user-invocable: false
 - Circular imports — use lazy imports (`import x` inside a function) or restructure modules
 - `time.sleep()` in async code — blocks the event loop; use `await asyncio.sleep()` instead
 
+## Anti-Rationalization
+
+| Rationalization | Why It's Wrong | What To Do Instead |
+|----------------|----------------|-------------------|
+| "Type hints are optional, Python works fine without them" | Type hints are not for the interpreter — they're for the developer, the reviewer, and the tools. `mypy --strict` catches entire classes of bugs (wrong argument types, None returns, missing attributes) that only appear at runtime otherwise. (mypy documentation: "type hints as lightweight formal verification") | Add type hints to all public function signatures. Let mypy catch the bugs before runtime does. |
+| "A bare `except:` is fine here, I want to catch everything" | Bare `except:` catches `KeyboardInterrupt`, `SystemExit`, and `GeneratorExit` — signals that Python uses for process control. Swallowing them causes programs that cannot be killed and resources that are never released. (Python docs: "bare except is almost always wrong") | Catch `Exception` for broad catches, or better, the specific exceptions you expect and handle. |
+| "Using `os.path` is fine, I know that API" | `pathlib.Path` is the idiomatic Python 3 API. It's object-oriented, composable, and handles platform differences. Mixing `os.path` and `pathlib` in the same codebase creates inconsistency. (PEP 428, Python docs: "pathlib is the preferred API since 3.6") | Use `pathlib.Path`. `Path("dir") / "file.txt"` is cleaner than `os.path.join("dir", "file.txt")`. |
+| "This dict is fine for passing structured data between functions" | Raw dicts lose type information, IDE autocomplete, and validation. When the shape changes, callers fail silently at runtime instead of at the type-checker. (Pydantic docs + dataclasses PEP 557: "structured data deserves structured types") | Use a `dataclass` or Pydantic model. The field names, types, and defaults are explicit and checked. |
+
 ## Commands
 
 - Run script: `python -m <module>`

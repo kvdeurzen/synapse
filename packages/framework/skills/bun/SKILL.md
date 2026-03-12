@@ -36,6 +36,15 @@ user-invocable: false
 - Installing `node-fetch` or `cross-fetch` — `fetch` is globally available in Bun
 - Using `jest` or `vitest` when `bun:test` is built-in and faster
 
+## Anti-Rationalization
+
+| Rationalization | Why It's Wrong | What To Do Instead |
+|----------------|----------------|-------------------|
+| "Using `require()` here is fine — it works at runtime" | Bun supports `require()` for compatibility but ESM is the designed and supported module system. Mixing `require()` and `import` creates inconsistent behavior across bundling, tree-shaking, and tooling. (Bun documentation: "ESM-first is the designed module system") | Convert to `import`/`export`. If a dependency only exports CJS, wrap it in an ESM adapter. |
+| "I'll use `node:fs` — it's more familiar" | `Bun.file()` is faster, returns a typed `BunFile` object, and is the idiomatic Bun API. Using `node:fs` when `Bun.file()` exists is choosing the slower, less idiomatic path without reason. (Bun benchmarks: Bun.file() is 3-4x faster than node:fs for reads) | Use `Bun.file(path).text()` or `Bun.file(path).json()` for file reads. |
+| "I'll add `node-fetch` since I know its API well" | `fetch` is a global in Bun — no import or polyfill needed. Adding `node-fetch` adds a dependency, slows installs, and introduces an unnecessary abstraction layer. (Bun global APIs: fetch, WebSocket, FormData are all built-in) | Use global `fetch()` directly. No import. Same API as `node-fetch` 3.x. |
+| "Using jest/vitest is fine — the project already has it configured" | `bun:test` is built into Bun, runs 20x faster than Jest for typical suites, and requires no configuration. Adding vitest/jest adds a dependency and configuration burden for no behavioral benefit. (Bun test docs: compatible with Jest's API) | Use `import { describe, test, expect } from "bun:test"` and run with `bun test`. |
+
 ## Commands
 
 - Run file: `bun <file.ts>`

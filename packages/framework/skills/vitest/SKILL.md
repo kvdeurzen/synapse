@@ -38,6 +38,15 @@ user-invocable: false
 - Testing third-party library behavior — test your integration code, not the library itself
 - Over-mocking: mocking so much that the test only validates the mock configuration
 
+## Anti-Rationalization
+
+| Rationalization | Why It's Wrong | What To Do Instead |
+|----------------|----------------|-------------------|
+| "Testing implementation details is fine — I know the internals won't change" | Implementation tests couple the test to how the code works, not what it does. When you refactor (and you will), tests break even when behavior is preserved. The refactor becomes gated by test rewrites. (Fowler: "test behavior, not implementation") | Test through the public API. If behavior is the same, the test should not break on refactor. |
+| "Shared mutable state across tests makes setup simpler" | Tests that share mutable state become order-dependent. They pass in one order and fail in another. The failure appears intermittent, making it nearly impossible to debug. (vitest docs: "each test must be independent") | Use `beforeEach` to reset state. The setup cost is minimal; the debugging cost of order-dependent tests is not. |
+| "This test needs a `setTimeout` to let async operations settle" | `setTimeout` creates a timing dependency that makes tests flaky. On a slow machine or under load, the timeout is too short. On a fast machine, it is wasted time. (caduh.com: "control time explicitly; never use sleep") | Use `await` with the actual promise, or use fake timers (`vi.useFakeTimers()`) to control time deterministically. |
+| "Over-mocking makes the test more isolated" | Over-mocked tests only validate that mock configuration is correct — they say nothing about whether the real code works. The more you mock, the less the test proves. (caduh.com: "mocking the code under test creates false positives") | Mock at boundaries (external services, I/O). Keep real logic in the code under test. |
+
 ## Commands
 
 - Run all: `bun test` (bun:test) or `npx vitest` (vitest)

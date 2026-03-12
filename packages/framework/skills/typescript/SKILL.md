@@ -41,6 +41,15 @@ user-invocable: false
 - Using `interface` for union types — use `type` instead
 - Mutable arrays where readonly would suffice
 
+## Anti-Rationalization
+
+| Rationalization | Why It's Wrong | What To Do Instead |
+|----------------|----------------|-------------------|
+| "Adding `any` here is just temporary until I figure out the right type" | Temporary `any` types are permanent in practice. Every `any` is a type hole that silently disables checking for all values flowing through it — including runtime crashes. (TypeScript handbook: "every `any` is a local type system opt-out") | Use `unknown` and narrow it explicitly. The narrowing code documents the actual shape you expect. |
+| "This assertion is safe because I know what the runtime value will be" | Type assertions bypass the compiler's verification. When runtime behavior changes (API schema update, refactor, new caller), the assertion silently becomes wrong. The compiler no longer warns you. (TypeScript community: "type assertions are promises to the compiler, not proofs") | Use a Zod schema or type guard that validates the shape at runtime. |
+| "Explicit return types add verbosity without value" | Explicit return types prevent accidental type widening and catch interface drift immediately at the function signature, not at every call site. They are the cheapest way to make a function's contract visible. (TypeScript style guides: "return types are the function's public contract") | Add the return type. TypeScript infers it anyway — you are just making the contract explicit and checked. |
+| "This external data is always well-formed, no need to validate" | External data that is always well-formed remains well-formed until it isn't — API version changes, new callers, encoding errors. The validation is cheap; the debugging session when it fails is not. (OWASP: validate all external data at boundaries) | Use Zod to validate the shape at the boundary. Keep the schema close to where the data enters your code. |
+
 ## Commands
 
 - Type-check: `npx tsc --noEmit`

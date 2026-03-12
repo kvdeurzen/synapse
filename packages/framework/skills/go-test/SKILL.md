@@ -48,6 +48,15 @@ user-invocable: false
 - Table-driven tests without a `name` field — failure output becomes impossible to trace
 - Using `log.Fatal` or `os.Exit` in test code — bypasses cleanup and panics goroutines
 
+## Anti-Rationalization
+
+| Rationalization | Why It's Wrong | What To Do Instead |
+|----------------|----------------|-------------------|
+| "Writing a single test function that covers multiple behaviors is more concise" | One function covering multiple behaviors produces failure messages that don't identify which behavior failed. Adding a case requires modifying a large function instead of adding a row to a table. (Go testing community: "table-driven tests are the canonical Go testing pattern") | Use table-driven tests with `t.Run()`. Each case has a name, and failures are immediately traceable. |
+| "Test helpers don't need `t.Helper()` — the line numbers are close enough" | Without `t.Helper()`, a failure in a helper function reports the helper's line number, not the test's line number. The failure appears to be in the shared helper, not in the test that triggered it. (Go testing docs: "t.Helper() is required for correct failure attribution") | Add `t.Helper()` as the first line of every test helper function. |
+| "Running tests in parallel everywhere could cause race conditions" | Tests that cannot safely run in parallel have implicit shared state or implicit ordering dependencies. Both are bugs. `t.Parallel()` makes safe tests faster and makes unsafe tests reveal their problems. (Go testing docs: "parallel tests expose race conditions that sequential tests hide") | Add `t.Parallel()` to tests that are independent. Fix the shared state or ordering dependency in tests that fail with parallel execution. |
+| "I'll inline test data rather than use testdata/ files for this complex case" | Large inline test data clutters the test function, makes diffs hard to review, and cannot be versioned independently of the test logic. Binary test data cannot be inlined at all. (Go community: "testdata/ is the canonical location for test fixtures") | Put complex input/output data in `testdata/` files. Load them with `os.ReadFile`. Update them with golden file patterns. |
+
 ## Commands
 
 - Run all tests: `go test ./...`

@@ -52,6 +52,15 @@ user-invocable: false
 - Generating documentation from boilerplate templates instead of writing accurate descriptions
 - Inconsistent doc comment style across the codebase — pick one format (JSDoc, rustdoc, etc.) and enforce it
 
+## Anti-Rationalization
+
+| Rationalization | Why It's Wrong | What To Do Instead |
+|----------------|----------------|-------------------|
+| "I'll add doc comments after the API stabilizes" | Doc comments are hardest to write accurately after the API stabilizes — by then, the author has lost the design context that makes comments valuable. The moment of writing is the moment of maximum context. (DEV Community: "write the comment when you have the context, not when you have the time") | Write doc comments at the time of implementation. The comment explains the reasoning that won't be obvious in 6 months. |
+| "A comment explaining what the code does is better than nothing" | Comments that restate what the code does add visual noise without information. They become incorrect when the code changes but the comment is not updated — worse than no comment. (Community consensus: "comments that describe the what are technical debt") | Delete the what-comment. Improve the name if the code is not self-explanatory. If reasoning context is needed, write the why. |
+| "Keeping documentation in multiple places ensures people find it" | Documentation in multiple places is documentation in disagreement. When the primary source is updated and the copy is not, the copy is wrong. Wrong documentation is more harmful than absent documentation. (Markin: "single source of truth; link rather than restate") | Document in one place. Link from other places. When the primary changes, the links are still correct. |
+| "Generated documentation from templates is good enough for internal tools" | Template-generated documentation has the shape of documentation but not the content. It creates the false impression that a function is documented when it is not. Internal tools built on misunderstood APIs cause more bugs than external APIs. (awesome-cursorrules: "lines of generated documentation = lines of debt") | Write accurate descriptions. If accuracy requires effort, the effort is worth making — internal misuse is still misuse. |
+
 ## Commands
 
 - TypeScript docs: `typedoc`

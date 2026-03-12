@@ -56,6 +56,16 @@ user-invocable: false
 - Tight coupling between adapters — adapters depend on ports, never on each other directly
 - Skipping interface definition when "only one implementation exists" — testability requires the interface anyway
 
+## Anti-Rationalization
+
+| Rationalization | Why It's Wrong | What To Do Instead |
+|----------------|----------------|-------------------|
+| "The architecture is obvious for this small feature" | Obvious architectures skip option enumeration — the step that surfaces the constraint you weren't thinking about. Small features have caused the most irreversible architectural debt when "obvious" choices accumulated unchecked. (Hexagonal Architecture community: "every dependency direction violation starts as obvious") | Enumerate at least 3 approaches even for small features. If the obvious choice is right, enumeration confirms it in minutes. |
+| "I can write the ADR after we see if this works" | ADRs capture the reasoning at the moment of decision — when you know the context, constraints, and alternatives considered. Writing after-the-fact produces a justification, not a decision record. (joelparkerhenderson ADR methodology: "context is irreplaceable") | Write the ADR before implementation. The reasoning IS the valuable artifact, not the outcome description. |
+| "Skipping the interface definition saves time — there's only one implementation" | Interfaces are required for testability, not just for multiple implementations. A class without an interface cannot be replaced with a test double. The time "saved" is paid back with interest in untestable code. (Hexagonal Architecture: ports exist for testability, not polymorphism) | Define the port/interface first. It takes minutes and unlocks the entire testing strategy. |
+| "The dependency direction doesn't matter here, it's just a utility" | Every infrastructure import in domain code is "just a utility" until you need to swap the infrastructure. Silent violations accumulate until the architecture is unmovable. (DDD + Hexagonal: dependency direction is a non-negotiable invariant) | Route the dependency through a port at the domain boundary, even if it feels over-engineered today. |
+| "We can refactor the architecture later when it matters" | Architecture is hardest to change when it matters most — under deadline pressure with existing users. The cost of a wrong dependency direction grows with every feature built on top of it. (Martin Fowler: "architecture is the decisions that are hard to change later") | Make the architectural decision explicitly now, document it, and accept the constraints that follow. |
+
 ## Commands
 
 This is a cognitive skill — no executable commands. ADR files go in `docs/decisions/` or `docs/adr/` using the naming format: `NNN-title-with-dashes.md`.

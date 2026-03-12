@@ -49,6 +49,15 @@ user-invocable: false
 - `DROP TABLE` without `IF EXISTS` in migrations — causes failure on fresh environments
 - Unindexed `WHERE` clauses on large tables — check with `EXPLAIN ANALYZE`
 
+## Anti-Rationalization
+
+| Rationalization | Why It's Wrong | What To Do Instead |
+|----------------|----------------|-------------------|
+| "This query is just for an internal admin tool, SQL injection doesn't matter" | SQL injection vulnerabilities have no scope limit. "Internal" tools are frequently exploited via SSRF, compromised internal accounts, or after perimeter breaches. The parameterization cost is two characters. (OWASP Top 10: SQL injection is consistently the top application vulnerability) | Parameterize every query, regardless of who will use it. The habit is the protection. |
+| "I'll add an index on that column later when it gets slow" | Performance problems from missing indexes grow non-linearly with table size. A query that runs in 10ms on 10,000 rows takes 10 seconds on 10 million rows. The index must be added before the data grows, not after. (PostgreSQL docs: "missing indexes are the primary cause of query performance degradation") | Add indexes when you define foreign keys and frequently queried columns. `EXPLAIN ANALYZE` before the table is large. |
+| "Using `SELECT *` is fine in this query, it's clearer" | `SELECT *` includes columns the application doesn't use (wasting bandwidth), breaks when schema changes add columns, and prevents the optimizer from doing index-only scans. (PostgreSQL performance docs: "explicit column lists enable covering indexes") | List columns explicitly. If the query grows, add columns as needed. |
+| "I don't need a migration file for this schema change — I ran it directly" | Schema changes without migration files cannot be reproduced on fresh environments, other developers' machines, or production deployments. The database becomes impossible to recreate from scratch. (Flyway/Liquibase docs: "every schema change is a migration") | Write the migration file first, run it locally, commit it. The migration file IS the change. |
+
 ## Commands
 
 - PostgreSQL CLI: `psql -d <database> -f <file.sql>`

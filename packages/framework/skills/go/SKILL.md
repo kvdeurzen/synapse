@@ -48,6 +48,15 @@ user-invocable: false
 - Package-level global variables for mutable state — use dependency injection to pass state explicitly
 - Panic in library code — return errors; panic is reserved for unrecoverable programmer errors
 
+## Anti-Rationalization
+
+| Rationalization | Why It's Wrong | What To Do Instead |
+|----------------|----------------|-------------------|
+| "Ignoring this error with `_` is fine — it can't fail in practice" | "Can't fail in practice" is a prediction about all future inputs, all future environments, and all future refactors. When it does fail, the error is silently discarded and the program continues in an undefined state. (Go FAQ: "error handling is not optional") | Handle or explicitly propagate the error. If ignoring it is intentional, document why with a comment. |
+| "Using `interface{}` is simpler than generics for this utility function" | `interface{}` moves type checking from compile time to runtime. The function's callers can pass any type and the error only appears at the assertion inside the function — if the assertion is even written. (Go 1.18 generics proposal: "type safety should not require verbosity trade-offs") | Use generics (`[T any]`) for type-safe utilities. Use concrete types when the domain is well-defined. |
+| "A goroutine that runs until the program exits doesn't need a termination signal" | Goroutines without termination signals leak when the service shuts down. In test contexts, they cause "goroutine still running" errors and race conditions. In production, they exhaust the goroutine pool over time. (Go concurrency patterns: "every goroutine needs a clear lifetime") | Pass a `context.Context` for all goroutines. Cancel it on shutdown. Use `WaitGroup` to wait for clean termination. |
+| "String comparison for error checking is simpler than sentinel errors" | String comparison breaks when the error message is changed, translated, or wrapped. It is also brittle across Go version updates. (Go errors package docs: "use errors.Is and errors.As, never string comparison") | Define package-level sentinel errors with `var ErrXxx = errors.New("...")` and check with `errors.Is`. |
+
 ## Commands
 
 - Build: `go build ./...`

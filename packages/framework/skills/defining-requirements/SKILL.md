@@ -55,6 +55,15 @@ user-invocable: false
 - Mixing requirements and design in the same document — keep them separate with explicit phase gates
 - Undeclared dependencies between requirements — trace cross-requirement dependencies explicitly with IDs
 
+## Anti-Rationalization
+
+| Rationalization | Why It's Wrong | What To Do Instead |
+|----------------|----------------|-------------------|
+| "The requirements are obvious from the description — I can skip writing them down" | Obvious requirements are obvious to you, not to every future developer, reviewer, and tester. The act of writing requirements surfaces implicit assumptions and ambiguities that are invisible when reasoning in prose. (nikiforovall: "zero improvisation means the spec IS the work") | Write the requirements down. If they were truly obvious, they will take minutes to write. The written form is the deliverable. |
+| "I can start coding while the requirements are still being refined" | Implementation that precedes stable requirements embeds assumptions that become dependencies. Changing a requirement after code exists requires changing both the requirement and every piece of code built on the wrong assumption. (Kiro: "sequential gate process means requirements gate design, design gates implementation") | Finish requirements before design. Finish design before implementation. Phase gates are not overhead — they are the defect prevention mechanism. |
+| "Acceptance criteria are just documentation — testers will figure out what to verify" | Acceptance criteria that cannot be derived from requirements produce tests that verify implementation rather than behavior. The test plan is untestable if the requirement is ambiguous. (Gherkin community: "Given/When/Then is the executable specification") | Write acceptance criteria as Given/When/Then scenarios. If you can't write them, the requirement is ambiguous and must be refined first. |
+| "This requirement doesn't need a unique ID — it's obvious which one it is" | Requirements without unique IDs cannot be traced to test cases, cannot be referenced in ADRs, and cannot be tracked across specification changes. Traceability is impossible without IDs. (Prolifics Testing: "the ID is the requirement's primary key in the project knowledge base") | Assign a unique ID to every requirement (REQ-001, AUTH-01, etc.). The ID enables cross-referencing, gap analysis, and traceability. |
+
 ## Commands
 
 This is a cognitive skill — no executable commands. Spec files go in `specs/{feature}/requirements.md` (Kiro convention) or equivalent project structure.

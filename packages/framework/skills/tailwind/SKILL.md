@@ -50,6 +50,15 @@ user-invocable: false
 - Hardcoding arbitrary color values when `@theme` tokens would create a consistent palette
 - Using `text-[#2563eb]` arbitrary values when a `text-blue-600` utility class exists
 
+## Anti-Rationalization
+
+| Rationalization | Why It's Wrong | What To Do Instead |
+|----------------|----------------|-------------------|
+| "Using `@apply` is cleaner than repeating utility classes" | `@apply` recreates the CSS specificity and cascade complexity that Tailwind eliminates. It creates CSS that is harder to override, debug, and prune. The Tailwind team explicitly recommends against `@apply` for anything other than integrating third-party styles. (Tailwind docs: "if you feel the urge to use @apply, extract a component instead") | Extract a React/HTML component that encapsulates the utility pattern. Components compose; CSS classes fight. |
+| "Arbitrary values like `w-[347px]` are fine for one-off cases" | Arbitrary values create design inconsistency and bypass the spacing scale that makes designs coherent. Every arbitrary value is a deviation that requires manual design review. (Tailwind docs: "the spacing scale exists to create visual rhythm") | Use the nearest scale value. If the design requires a specific value frequently, add it to the theme. |
+| "I'll handle dark mode later, once the light mode is done" | Adding dark mode after the fact requires touching every component. Dark mode variants are one extra class per color or background — the marginal cost is near zero when adding them alongside the light variant. (Tailwind community: "dark mode must be added alongside, not after") | Add `dark:` variants when you add the light mode classes. The habit is cheap; the retrofit is not. |
+| "Inline `style={}` is fine alongside Tailwind for this one thing" | Mixing inline styles with Tailwind creates two sources of truth for the element's appearance. The cascade interaction is unpredictable, and the element is now harder to reason about. (Tailwind core principles: "choose one styling approach per element") | Use an arbitrary value in Tailwind if no utility exists. Keep styling in one place. |
+
 ## Commands
 
 - Build CSS: `bunx @tailwindcss/cli -i input.css -o output.css`

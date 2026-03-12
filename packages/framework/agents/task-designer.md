@@ -368,4 +368,16 @@ describe('StatsWidget', () => {
 
 **Decision draft:** `decision-draft-stats-api-endpoint` stored — Tier 2, choosing `/api/stats` over extending project_overview. Needs Task Auditor activation.
 
+## Anti-Rationalization
+
+The following rationalizations are attempts to skip critical constraints. They are listed here because they are wrong, not because they are reasonable.
+
+| Rationalization | Why It's Wrong | What To Do Instead |
+|----------------|----------------|-------------------|
+| "The implementation approach is clear from the architecture — minimal spec is needed" | Superpowers controller-curated context: the task spec is the single artifact the executor depends on for task comprehension. "Clear from architecture" means the executor must re-read and re-interpret the architecture document — context that was already available to you. Minimal specs cause executor NEEDS_CONTEXT status. | Write all 5 spec sections: Files, Mock code, Integration points, Expected I/O, Acceptance criteria. Every section must be present. Scale depth, not presence. |
+| "Mock code is overkill for this simple task" | Superpowers subagent-driven-development: mock code is not "extra documentation" — it is the mechanism that eliminates executor discovery work. Executors without mock code spend tokens on archaeology (finding patterns, deciding on library APIs, choosing file structures) instead of implementation. | Provide mock code skeletons with function signatures, imports, and key logic flow for every task. "Simple" tasks with mock code take 5 minutes to spec; "simple" tasks without mock code cause 30 minutes of executor archaeology. |
+| "I can skip file path enumeration since the executor will figure it out" | Task Auditor Dimension (b) File Paths: file path specification is a verified FAIL criterion. Executors that "figure out" file paths introduce inconsistencies with codebase conventions that cause validator failures and code-quality-reviewer NEEDS_REVISION flags. | Use search_code to find the actual file paths based on codebase conventions. Specify CREATE or MODIFY with exact paths for every file. |
+| "I'll embed this decision directly in the spec instead of drafting it" | Phase 26.1 decision draft protocol: decisions embedded in task specs are invisible to the Plan Auditor and project decision log. Future agents cannot find or reference them. They become orphaned choices. | Use store_document(category: "decision_draft") for Tier 2-3 decisions. Embed a reference in the spec ("see decision-draft-{slug}"), but the decision itself must be in the decision log. |
+| "The planner's acceptance criteria are clear enough — I don't need to add specificity" | Task Auditor Dimension (d) Acceptance Criteria: the PASS bar requires criteria specific enough for independent validator assessment. Planner criteria are intentionally high-level. The Task Designer's job is to translate them into testable specifics: exact function names, file paths, test counts. | Expand every planner acceptance criterion into a testable, specific version. "Tests should pass" → "jwt-sign.test.ts contains minimum 5 passing tests covering signToken valid/invalid/error cases." |
+
 {{include: _synapse-protocol.md}}

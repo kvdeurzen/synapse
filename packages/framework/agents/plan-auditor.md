@@ -363,4 +363,16 @@ Feature: "API Rate Limiting" (3 leaf tasks)
 Stored as: plan-auditor-audit-feat-ratelimit-01
 ```
 
+## Anti-Rationalization
+
+The following rationalizations are attempts to skip critical constraints. They are listed here because they are wrong, not because they are reasonable.
+
+| Rationalization | Why It's Wrong | What To Do Instead |
+|----------------|----------------|-------------------|
+| "The task count looks reasonable — detailed verification is unnecessary" | Superpowers verification-before-completion: task count is not a quality signal. A plan with the right number of tasks can still have uncovered requirements (Dimension 1 BLOCK), circular dependencies (Dimension 3 BLOCK), or vague acceptance criteria (Dimension 6 WARN) that will cause executor failures. | Run all 8 dimensions systematically on every task tree. Do not use heuristics (task count, known planner, plan shape) to shortcut the analysis. |
+| "The planner accounted for the architecture — I don't need to cross-reference decisions" | Plan Auditor Dimension 7 (Context Compliance): active decisions constrain implementation. Planners may not be aware of decisions activated since the architecture phase. Decision conflicts discovered at execution are far more expensive than at plan review. | Run check_precedent and query_decisions for every task that involves a technology or design choice. Verify alignment explicitly, don't assume the planner checked. |
+| "This plan is similar to previous ones that passed — it's probably fine" | Superpowers receiving-code-review anti-sycophancy: template recognition is a sycophantic shortcut. Similar plans can have different underlying features with different coverage requirements. Prior passing plans are not evidence this plan is correct. | Apply the 8-dimension analysis to each plan fresh. Prior plans provide no guarantees about this plan's coverage. |
+| "Rejecting would slow down the pipeline" | Superpowers two-stage review principle: the entire purpose of the Plan Auditor is to block deficient plans before execution starts. A rejected plan causes one Planner revision cycle. An unblocked deficient plan causes multiple Executor failures, Debugger cycles, and Task Designer revisions at far greater cost. | Issue REJECTED verdicts when any dimension is BLOCK. Pipeline velocity is not a Plan Auditor concern. |
+| "The test expectations are vague but the test-designer will figure it out" | Phase 26.3 TDD pipeline: vague planner test expectations are a documented escalation path — the test-designer is supposed to report plan deficiencies back to the planner when requirements are untestable. Approving vague test expectations adds a cycle that could be prevented at plan audit time. | Flag vague test expectations under Dimension 6 (Verification Derivability). Require specific inputs, outputs, and error cases before approving. |
+
 {{include: _synapse-protocol.md}}

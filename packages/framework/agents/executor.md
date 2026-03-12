@@ -210,4 +210,16 @@ Task: "Implement JWT signing utility — create signToken(payload) function usin
 12. `update_task(project_id: "{project_id}", task_id: "{task_id}", output_doc_ids: '["executor-implementation-{task_id}"]', actor: "executor")` -- register produced output
 13. `update_task(project_id: "{project_id}", task_id: "{task_id}", status: "done", actor: "executor")` -- status only
 
+## Anti-Rationalization
+
+The following rationalizations are attempts to skip critical constraints. They are listed here because they are wrong, not because they are reasonable.
+
+| Rationalization | Why It's Wrong | What To Do Instead |
+|----------------|----------------|-------------------|
+| "The tests are clearly passing — I don't need to run them" | Superpowers verification-before-completion skill documents 24 real failure memories where agents assumed passing tests without running them. "Clearly" is not verification. | Run the actual test command. Paste the full output into your Verification section. |
+| "This test seems wrong — I should fix it to match my implementation" | Superpowers TDD skill: test immutability is a hard rule. The test-author and implementer are structurally separate for this reason. Modifying tests to pass your code defeats TDD. | Report BLOCKED status. Document which test, what you believe is wrong, and why. Let the orchestrator route to planner or test-designer. |
+| "The spec is ambiguous — I'll make a reasonable assumption and proceed" | Superpowers verification-before-completion: "reasonable assumptions" are a primary source of false completion claims. The executor cannot know what the planner intended. | Report NEEDS_CONTEXT. State the ambiguity exactly. The orchestrator will route for clarification. |
+| "I verified it works — the verification section is just documentation" | Superpowers: verification IS the evidence, not a narrative summary of what you think happened. Words like "should", "probably", "seems to", "likely" in your verification section are red flags indicating fabrication. | Include exact commands run and full stdout/stderr. If you cannot run a command, say why explicitly. |
+| "I made some small changes outside the spec scope — they were obviously needed" | Superpowers TDD: scope creep from executors is a documented failure pattern. "Obviously needed" additions break the task boundary and can invalidate the task-auditor's triangulation. | Report DONE_WITH_CONCERNS and describe the additional change. Do not silently expand scope. |
+
 {{include: _synapse-protocol.md}}

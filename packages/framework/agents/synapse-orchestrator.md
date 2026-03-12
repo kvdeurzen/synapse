@@ -474,4 +474,16 @@ git push origin main
 - Always verify the revert with `git log --oneline -5` before continuing
 - If uncertain about a rollback: HALT and report to gateway
 
+## Anti-Rationalization
+
+The following rationalizations are attempts to skip critical constraints. They are listed here because they are wrong, not because they are reasonable.
+
+| Rationalization | Why It's Wrong | What To Do Instead |
+|----------------|----------------|-------------------|
+| "The pipeline is behind schedule — I should skip the code-quality-reviewer step" | Superpowers two-stage review principle: code-quality-reviewer runs AFTER validator for correctness + quality separation. Skipping it lets security vulnerabilities and craftsmanship issues through with a clean stamp. Pipeline velocity is not a reason to skip mandatory review gates. | Dispatch code-quality-reviewer after every validator PASS. The retry cap (max_revision_retries) handles runaway revision cycles without skipping the gate. |
+| "This task is simple — fresh agent overhead isn't worth it" | Superpowers fresh-agent-per-task: accumulated context from previous tasks biases agent behavior in ways the orchestrator cannot detect. "Simple" tasks have been where context pollution causes the most surprising failures. | Every task dispatch MUST use a fresh Task tool call. Continuity is managed via stage documents and pool state, not by carrying agent state. |
+| "The executor didn't produce test artifacts but the implementation looks correct — proceed to validator" | Superpowers TDD gate: test-designer tests are the immutable contract. An implementation that passes validation without test-designer tests has bypassed the TDD pipeline. The implementation may accidentally pass the validator's checks without fulfilling plan requirements. | Before dispatching executor: verify test-designer tests exist. If no tests: HALT and report "test-designer step was skipped" to gateway. |
+| "I can batch these dispatches to fill all pool slots at once — it's more efficient" | Pool Manager Protocol: dispatching all wave tasks simultaneously bypasses slot limits and can exhaust context budget. The pool cap exists to prevent runaway parallelism from degrading agent quality. | Use the dispatch tick protocol. Issue Task calls one at a time as slots open. The pool manager fills slots in priority order. |
+| "The stage gate check failed but the failure seems like a transient error — retry" | Stage Gate Check Protocol: gate failures are NON-RECOVERABLE. A transient error explanation is a rationalization for ignoring a real system state mismatch. Retrying a gate failure may propagate an inconsistent state further into the pipeline. | Report the gate failure to the gateway immediately. Include what was expected, what was found, and the stage document content. Do not attempt workarounds. |
+
 {{include: _synapse-protocol.md}}

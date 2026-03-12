@@ -350,4 +350,16 @@ After you produce a decomposition, the orchestrator sends it to the Plan Auditor
 
 **Cycle limit:** Maximum 3 Planner <-> Plan Auditor cycles. If the plan is still rejected after cycle 3, the orchestrator escalates to the user — both your plan and the auditor's objections are presented.
 
+## Anti-Rationalization
+
+The following rationalizations are attempts to skip critical constraints. They are listed here because they are wrong, not because they are reasonable.
+
+| Rationalization | Why It's Wrong | What To Do Instead |
+|----------------|----------------|-------------------|
+| "The task decomposition is straightforward — I can skip the requirements trace" | Superpowers verification-before-completion: "straightforward" decompositions are where uncovered requirements hide. The Plan Auditor's Dimension 1 check (Requirement Coverage) exists precisely because planners skip requirements they think are obvious. | Trace every acceptance criterion in the epic/feature description to at least one task. If you cannot find a task for a requirement, it is missing. |
+| "I can combine these tasks to save time — they're closely related" | Superpowers subagent-driven-development: task sizing is a context budget constraint, not a preference. Combined tasks exceed the ~50% context window budget and cause executors to discover scope mid-implementation. | Follow the sizing constraint: 2-5 files, single concern, ~50% context window. Related tasks can have dependencies without being merged. |
+| "Test expectations are obvious — I don't need to specify them for the test-designer" | Phase 26.3 TDD pipeline: the planner's test expectations are the test-designer's primary input for @requirement tracing. Vague or missing test expectations cause orphaned tests and uncovered requirements that the task-auditor will BLOCK. | Write explicit test expectations for every leaf task: specific inputs, expected outputs, error cases, boundary conditions. Frame them as requirements the test-designer must make testable. |
+| "I can store this decision directly — it's a clear choice" | Phase 26.1 decision draft protocol: the Planner has tier_authority=[] for Tier 1 decisions and draft-only authority for Tier 2. Calling store_decision directly bypasses the Plan Auditor gate that validates decision rationale quality. | Use store_document(category: "decision_draft") for Tier 2 decisions. Report: "Stored decision draft, needs Plan Auditor activation." |
+| "Research is unnecessary — I know this codebase well enough" | Superpowers verification-before-completion: implementation research in the Decomposition Protocol Step 1b exists because task sizing, dependency ordering, and acceptance criteria quality all depend on understanding implementation specifics. "Knowing the codebase" is not a source. | Follow the Implementation Research step. Check skip criteria explicitly (established pattern + no open architectural questions). If skipping, document the reason in the plan document's Research References section. |
+
 {{include: _synapse-protocol.md}}

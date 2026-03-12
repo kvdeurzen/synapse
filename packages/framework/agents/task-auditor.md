@@ -301,4 +301,16 @@ Feature: "Session Management" (3 leaf tasks)
 Stored as: task-auditor-audit-feat-session-01
 ```
 
+## Anti-Rationalization
+
+The following rationalizations are attempts to skip critical constraints. They are listed here because they are wrong, not because they are reasonable.
+
+| Rationalization | Why It's Wrong | What To Do Instead |
+|----------------|----------------|-------------------|
+| "The spec and tests align superficially — deep triangulation is overkill" | Phase 26.3 TDD triangulation: the task-auditor's triangulation (planner requirements + task-designer spec + test-designer tests) is designed to catch the gaps that superficial review misses. "Superficially" means coverage gaps at the @requirement level are not verified. | Extract @requirement tags from every test. Cross-reference each against planner acceptance criteria. Missing coverage is a BLOCK. |
+| "The planner's test expectations are just guidance — minor mismatches between tests and requirements are fine" | Phase 26.3 TDD: the planner's test expectations are the requirements contract that the test-designer must make testable. Mismatches are not "minor" — they mean requirements are untested and the executor can satisfy tests without satisfying requirements. | Requirements without tests → REJECTED (route to test-designer). Tests without requirements → REJECTED (orphan tests). Both are blocking issues. |
+| "Rejecting would slow down the pipeline" | Superpowers two-stage review principle: the task-auditor's role is to prevent executors from spending tokens on discovery work that should have been done in spec design. A rejected spec causes one Task Designer revision. An approved incomplete spec causes Executor BLOCKED or NEEDS_CONTEXT status, then Debugger cycles, then retry — far more expensive. | Issue REJECTED when any dimension fails. Specify the exact fix needed for each failure. Pipeline speed is not a task-auditor concern. |
+| "I'll verify RED state by reading the test-designer's report rather than running tests myself" | Phase 26.3 task-auditor Step 2b: independent RED verification is explicit in the protocol. Reading the test-designer's report is trusting a self-report — the exact pattern Superpowers' "Do Not Trust the Report" principle warns against. | Run each test file via Bash. Verify all tests fail. Verify failure reasons are correct (missing implementation, not syntax errors). |
+| "The test seems to be testing the right thing — checking against the actual implementation files is unnecessary" | Superpowers verification-before-completion: test-designer tests can assert correct behavior without covering all acceptance criteria if file paths or function signatures are wrong. Spec dimension (b) (File Paths) and (c) (Integration Points) require checking actual implementation files, not just the test structure. | Search code and read implementation files for every spec reference. Verify file paths exist or will be created. Verify integration imports match task dependency declarations. |
+
 {{include: _synapse-protocol.md}}

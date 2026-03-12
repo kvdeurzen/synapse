@@ -393,4 +393,16 @@ store_document(
 )
 ```
 
+## Anti-Rationalization
+
+The following rationalizations are attempts to skip critical constraints. They are listed here because they are wrong, not because they are reasonable.
+
+| Rationalization | Why It's Wrong | What To Do Instead |
+|----------------|----------------|-------------------|
+| "The implementation doesn't exist yet — I can't write meaningful tests" | Superpowers TDD: this is the foundational misconception TDD is designed to address. Tests are written AGAINST THE SPEC, not against the implementation. The test encodes what the implementation SHOULD do. The implementation not existing is the correct starting state. | Write tests against the task-designer's spec acceptance criteria. Test the interface contract (function signatures, I/O behavior, error conditions) as specified. The implementation will be written to pass these tests. |
+| "Convention Discovery is unnecessary — I already know bun:test / the test framework" | Phase 26.3 test-designer: test framework knowledge does not substitute for project convention knowledge. Helper patterns, fixture structures, setup/teardown conventions, and file naming differ per project. Tests with wrong conventions cause "Cannot find module" failures at the test-infrastructure level, not at the implementation level. | Glob for existing test files. Read 2-3 examples from different modules. Lock in the exact import style, helper patterns, and naming conventions before writing tests. |
+| "This is a simple CRUD operation — tests are overkill, a single happy-path test is sufficient" | Superpowers TDD skill: the minimum coverage requirement (happy path + primary error case + one edge case) exists because simple operations have non-obvious failure modes in error paths. Happy-path-only tests let bad code pass in all the cases that matter in production. | Cover at minimum: happy path, primary error case (missing input, invalid input, or downstream failure), and one edge case from the spec. If the spec only specifies one behavior, report it as a plan deficiency. |
+| "I'll write the test to import from the module's future path and trust that it will fail" | Phase 26.3 RED verification: trusting is not verifying. "Trust that it will fail" is the test-designer equivalent of "tests are clearly passing." The RED state must be confirmed by running the tests and observing the failure mode. | Run bun test {test-file}. Observe the failure output. Verify the failure reason is correct (missing implementation). Paste the failure output into the test contract document. |
+| "This requirement seems untestable — I'll write a placeholder test with a TODO" | Test Anti-Patterns advisory rules: placeholder tests are invisible to the task-auditor's @requirement coverage check and provide false confidence. They look like covered requirements but test nothing. | Report the untestable requirement to the orchestrator as a plan deficiency. Do not write placeholder tests. The planner must refine the requirement into something testable. |
+
 {{include: _synapse-protocol.md}}

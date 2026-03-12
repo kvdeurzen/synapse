@@ -114,14 +114,14 @@ Requirements for Working Prototype milestone. Each maps to roadmap phases.
 - [ ] **BEH-01**: Every agent (all 16 files) has an inline Anti-Rationalization table with at least 3 externally-sourced entries specific to its critical constraints
 - [x] **BEH-02**: Skill pressure testing protocol document exists with RED-GREEN-REFACTOR methodology and 2-3 worked example scenarios
 - [x] **BEH-03**: output-contracts.toml config is single source of truth for agent output contracts; output-contract-gate.js PostToolUse hook enforces contracts fail-closed
-- [ ] **BEH-04**: code-quality-reviewer.md agent exists (Sonnet model) for craftsmanship + security + performance review after validator passes; registered in agents.toml and trust.toml
+- [x] **BEH-04**: code-quality-reviewer.md agent exists (Sonnet model) for craftsmanship + security + performance review after validator passes; registered in agents.toml and trust.toml
 - [ ] **BEH-05**: Orchestrator mandates fresh agent per task, includes inline task spec in handoffs, dispatches code-quality-reviewer after validator PASS
 - [ ] **BEH-06**: Validator forms independent verdict (run tests, read code, assess) BEFORE reading executor's implementation summary
 - [ ] **BEH-07**: All doer agents report DONE/DONE_WITH_CONCERNS/NEEDS_CONTEXT/BLOCKED; all reviewer agents report APPROVED/REJECTED/NEEDS_REVISION
-- [ ] **BEH-08**: _synapse-protocol.md contains anti-sycophancy review-reception protocol (verify, evaluate, respond) and quality-review as 13th provides slug
+- [x] **BEH-08**: _synapse-protocol.md contains anti-sycophancy review-reception protocol (verify, evaluate, respond) and quality-review as 13th provides slug
 - [x] **BEH-09**: Brainstorming SKILL.md rewritten to 7-step sequential checklist with hard gate (no implementation before design approval) and one-question-at-a-time enforcement
 - [x] **BEH-10**: All 18 existing skill SKILL.md files have anti-rationalization sections with externally-sourced entries
-- [ ] **BEH-11**: trust.toml has max_revision_retries = 2 for NEEDS_REVISION cycle limits; Provides vocabulary expanded to 13 slugs
+- [x] **BEH-11**: trust.toml has max_revision_retries = 2 for NEEDS_REVISION cycle limits; Provides vocabulary expanded to 13 slugs
 
 ## Future Requirements
 

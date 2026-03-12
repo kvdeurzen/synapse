@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v3.0
 milestone_name: Working Prototype
 status: Phase 25 closed (5/6 plans; 25-04 E2E re-validation deferred). Phase 26 created for real usage findings.
-stopped_at: Completed 26.3-01-PLAN.md
-last_updated: "2026-03-12T19:52:04.897Z"
+stopped_at: Completed 26.3-03-PLAN.md
+last_updated: "2026-03-12T19:56:29.532Z"
 last_activity: 2026-03-09 — Phase 25 execution complete. Phase 26 created.
 progress:
   total_phases: 16
   completed_phases: 11
   total_plans: 42
-  completed_plans: 38
+  completed_plans: 39
   percent: 96
 ---
 
@@ -82,6 +82,7 @@ Progress: [█████████░] 96%
 | Phase 26.2-agent-handoff-tightening P04 | 4min | 1 tasks | 3 files |
 | Phase 26.2-agent-handoff-tightening P03 | 10min | 2 tasks | 13 files |
 | Phase 26.3-tdd P01 | 3min | 2 tasks | 4 files |
+| Phase 26.3-tdd P03 | 2 | 1 tasks | 1 files |
 
 ## Accumulated Context
 
@@ -197,6 +198,8 @@ Key decisions affecting v3.0:
 - [Phase 26.3-tdd]: test-designer has Write/Edit tools (unlike task-designer) — writes real test files to disk
 - [Phase 26.3-tdd]: test-contract is 12th provides vocabulary slug — inserted after task-spec in pipeline ordering
 - [Phase 26.3-tdd]: Convention Discovery is CRITICAL required step before writing tests — prevents framework mismatch
+- [Phase 26.3-03]: Orchestrator dispatches test-designer after task-designer and before task-auditor in the per-task pipeline — completes the TDD pipeline wiring
+- [Phase 26.3-03]: Pool Manager step 1b: check executor status before validator routing — prevents validator wasting tokens on BLOCKED/NEEDS_CONTEXT tasks
 
 ### Roadmap Evolution
 
@@ -218,6 +221,6 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-03-12T19:52:04.890Z
-Stopped at: Completed 26.3-01-PLAN.md
+Last session: 2026-03-12T19:56:29.525Z
+Stopped at: Completed 26.3-03-PLAN.md
 Resume file: None

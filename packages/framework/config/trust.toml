@@ -34,6 +34,7 @@ integration-checker = []
 researcher = []
 debugger = []
 codebase-analyst = []
+code-quality-reviewer = []
 
 # Per-agent domain overrides (optional -- uncomment to customize)
 # [agent_overrides.executor.domains]
@@ -83,3 +84,5 @@ max_pool_slots = 3
 max_retries_task = 3
 max_retries_feature = 2
 max_retries_epic = 1
+# Maximum NEEDS_REVISION cycles from code-quality-reviewer before escalation
+max_revision_retries = 2

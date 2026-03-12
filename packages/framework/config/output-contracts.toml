@@ -13,9 +13,9 @@
 # Pattern variables:
 #   {task_id} -- replaced with the actual task_id from the update_task call
 #
-# Provides slugs (canonical vocabulary from _synapse-protocol.md):
+# Provides slugs (canonical vocabulary -- this file is the authoritative source):
 #   architecture, decision-draft, plan, task-spec, test-contract,
-#   implementation, validation-findings, debug-diagnosis,
+#   implementation, validation-findings, quality-review, debug-diagnosis,
 #   research-findings, audit-findings, integration-report, code-analysis
 #
 # Agents NOT listed here (e.g., synapse-orchestrator) may call
@@ -90,4 +90,9 @@ required_docs = [
 [agents.codebase-analyst]
 required_docs = [
   { doc_id_pattern = "codebase-analyst-code-analysis-{task_id}", provides = "code-analysis" }
+]
+
+[agents.code-quality-reviewer]
+required_docs = [
+  { doc_id_pattern = "code-quality-reviewer-quality-review-{task_id}", provides = "quality-review" }
 ]

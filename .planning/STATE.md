@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v3.0
 milestone_name: Working Prototype
 status: Phase 25 closed (5/6 plans; 25-04 E2E re-validation deferred). Phase 26 created for real usage findings.
-stopped_at: Completed 26.3-03-PLAN.md
-last_updated: "2026-03-12T19:56:29.532Z"
+stopped_at: Completed 26.3-02-PLAN.md
+last_updated: "2026-03-12T19:57:30.142Z"
 last_activity: 2026-03-09 — Phase 25 execution complete. Phase 26 created.
 progress:
   total_phases: 16
-  completed_phases: 11
+  completed_phases: 12
   total_plans: 42
-  completed_plans: 39
+  completed_plans: 40
   percent: 96
 ---
 
@@ -83,6 +83,7 @@ Progress: [█████████░] 96%
 | Phase 26.2-agent-handoff-tightening P03 | 10min | 2 tasks | 13 files |
 | Phase 26.3-tdd P01 | 3min | 2 tasks | 4 files |
 | Phase 26.3-tdd P03 | 2 | 1 tasks | 1 files |
+| Phase 26.3-tdd P02 | 3min | 2 tasks | 4 files |
 
 ## Accumulated Context
 
@@ -200,6 +201,11 @@ Key decisions affecting v3.0:
 - [Phase 26.3-tdd]: Convention Discovery is CRITICAL required step before writing tests — prevents framework mismatch
 - [Phase 26.3-03]: Orchestrator dispatches test-designer after task-designer and before task-auditor in the per-task pipeline — completes the TDD pipeline wiring
 - [Phase 26.3-03]: Pool Manager step 1b: check executor status before validator routing — prevents validator wasting tokens on BLOCKED/NEEDS_CONTEXT tasks
+- [Phase 26.3-tdd]: Task-auditor triangulates planner requirements, task-designer spec, AND test-designer tests before issuing verdict — three artifacts must align
+- [Phase 26.3-tdd]: Executor test immutability is a HARD RULE — BLOCKED status required if test seems wrong, executor never self-fixes test-designer tests
+- [Phase 26.3-tdd]: Executor structured status: DONE, DONE_WITH_CONCERNS, BLOCKED, NEEDS_CONTEXT in output document
+- [Phase 26.3-tdd]: Validator TDD Verification Protocol: Steps A-D (immutability, run tests, spec compliance, executor status review)
+- [Phase 26.3-tdd]: Planner test expectations framed as test-designer input with @requirement tracing — not validator guidance
 
 ### Roadmap Evolution
 
@@ -221,6 +227,6 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-03-12T19:56:29.525Z
-Stopped at: Completed 26.3-03-PLAN.md
+Last session: 2026-03-12T19:57:30.136Z
+Stopped at: Completed 26.3-02-PLAN.md
 Resume file: None

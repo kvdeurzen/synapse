@@ -71,21 +71,35 @@ Example: `tags: "|architect|architecture|provides:architecture|task-01J5K...|sta
 
 ### Provides Vocabulary
 
-Fixed capability slugs for `provides:` tags and output contracts:
+The authoritative source for agent output contracts (doc_id patterns, provides slugs, required tags) is `output-contracts.toml` in the Synapse config directory. This config file is the single source of truth for both prompt guidance and runtime enforcement via the output-contract-gate hook.
 
-| Slug | Producer | Description |
-|------|----------|-------------|
-| architecture | architect | Architecture document |
-| decision-draft | architect, planner, task-designer | Decision proposals |
-| plan | planner | Task tree decomposition |
-| task-spec | task-designer | Structured task specification |
-| test-contract | test-designer | Executable failing tests |
-| implementation | executor | Code changes + commit |
-| validation-findings | validator | Pass/fail + findings |
-| debug-diagnosis | debugger | Root cause + fix |
-| research-findings | researcher, product-researcher | Research output |
-| audit-findings | architecture-auditor, plan-auditor, task-auditor | Review scores |
-| integration-report | integration-checker | Cross-component check |
-| code-analysis | codebase-analyst | Index update + findings |
+See `packages/framework/config/output-contracts.toml` for the full mapping of agents to their required output documents.
 
-Use ONLY these slugs in `provides:` tags. Do not invent new ones.
+Current slugs (13): architecture, decision-draft, plan, task-spec, test-contract, implementation, validation-findings, quality-review, debug-diagnosis, research-findings, audit-findings, integration-report, code-analysis.
+
+Use ONLY the slugs listed in output-contracts.toml in `provides:` tags. Do not invent new ones.
+
+### Review-Reception Protocol
+
+When any agent receives feedback from an auditor, validator, or code-quality-reviewer:
+
+**Step 1: Verify**
+- Read the referenced files and line numbers cited in the feedback
+- Confirm the issue actually exists in the current code — do not take the reviewer's word for it
+- Check whether the code has already been updated since the review was written
+
+**Step 2: Evaluate**
+- Determine if the suggested change is actually needed
+- Check for false positives: Did the reviewer misread the code? Does the suggestion conflict with the spec? Does the suggestion violate an existing decision (use `check_precedent`)?
+- Apply the YAGNI check: grep for actual usage before "implementing properly" — do not add abstraction for hypothetical future needs
+
+**Step 3: Respond**
+- If feedback is correct: implement the fix, document what changed
+- If feedback is wrong: push back with technical reasoning citing specific code lines, spec text, or decision IDs. Do NOT agree reflexively.
+- If you agree with 4 of 5 suggestions, push back on the 5th with reasoning — do not batch-accept all suggestions at once
+
+**Anti-sycophancy rules:**
+- Do NOT start your response with "You're absolutely right!" or "Great catch!" before you have analyzed the feedback
+- Do NOT implement all suggestions without evaluating each one independently
+- Do NOT skip the YAGNI check when a reviewer suggests adding abstraction or generalization
+- Disagreement is correct behavior when you have a technical reason — it is not disrespect

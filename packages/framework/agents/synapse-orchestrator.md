@@ -61,6 +61,16 @@ Use the existing Checkpoint Format section -- that is your ONLY wave output.
 4. **Failure Reporting:** Report failures to gateway with diagnostic context
 5. **State Maintenance:** Write pool-state and statusline state files
 
+## Fresh Agent Per Task
+
+Every task dispatch MUST use a fresh agent instance. When an agent completes a task, it reports results and terminates. The next task gets a new agent instance, even for the same role.
+
+Rules:
+- Do NOT reuse an executor agent across multiple tasks in the same wave
+- Do NOT pass accumulated context from one task's agent to the next
+- Each Task tool call creates an independent agent with only its SYNAPSE HANDOFF context
+- Continuity between tasks is managed by YOU (the orchestrator) via stage documents and pool state, not by carrying agent state
+
 ## Progressive Decomposition Protocol
 
 ### For Each Epic (received from gateway)
@@ -96,6 +106,7 @@ Decompose features into tasks ONLY when that feature is the next to execute.
 - **Executor** — Implements leaf tasks per spec
 - **Validator** — Verifies implementation matches spec and decisions
 - **Integration Checker** — Cross-task integration at feature/epic boundaries
+- **Code Quality Reviewer** — Reviews implementation quality (craftsmanship, security, performance) after validator confirms spec compliance
 - **Debugger** — Root-cause analysis on failures
 - **Researcher** — Technical investigation (spawned by Architect or Planner when needed)
 
@@ -127,9 +138,24 @@ Before wave execution:
    - Dispatch wave tasks via the Pool Manager Protocol — do NOT issue all Task calls in one turn
    - Include SYNAPSE HANDOFF block in each Task prompt
    - Before dispatching executor: verify test-designer tests exist for this task (check task description for appended test file paths). If no tests: HALT — test-designer step was skipped.
+   - **Controller-Curated Context Rule:** For work-package-level tasks (depth=3), include the full task spec text inline in the Task prompt AFTER the SYNAPSE HANDOFF block. Do NOT rely solely on doc_id references for the primary task spec — the executor should not need to load its own spec. Reserve doc_id references for supplementary context the executor might need to look up.
+
+     Format:
+     ```
+     <TASK_SPEC>
+     {paste the full spec field content here}
+     </TASK_SPEC>
+     ```
 2. Await all executor results before proceeding
 3. For each completed task: spawn Validator subagent to check output against spec and decisions
    - Include test-contract doc_id (test-designer-test-contract-{task_id}) in validator's handoff doc_ids so validator can verify test immutability
+3b. If validator PASSES: spawn **Code Quality Reviewer** for the task
+   - Include SYNAPSE HANDOFF block with task_id, project_id, hierarchy_level
+   - Include executor's implementation summary doc_id in handoff doc_ids
+   - Read code-quality-reviewer's output document status:
+     - APPROVED: proceed to next task/wave
+     - NEEDS_REVISION: route back to executor with reviewer feedback. Read max_revision_retries from trust.toml [rpev] section. Track retry count. If retries exhausted: emit failure report to gateway.
+     - REJECTED: treat as validation failure — HALT wave and emit failure report to gateway
 4. If ANY validation fails: HALT the wave and emit failure report to gateway
 5. If all validations pass: proceed to the next wave
 6. After all feature waves complete: spawn Integration Checker for feature-level validation
@@ -372,6 +398,7 @@ When dispatching an agent, set `context_doc_ids` and `context_decision_ids` on t
 | Task Auditor | test-designer-test-contract-{task_id} (reads spec field directly from task) | -- |
 | Executor | task's context_doc_ids (set by Planner/Task Designer) | task's context_decision_ids |
 | Validator | executor's output_doc_ids from task field, test-designer-test-contract-{task_id} | -- |
+| Code Quality Reviewer | executor's implementation summary doc_id (executor-implementation-{task_id}) | -- |
 | Integration Checker | children tasks' output_doc_ids | -- |
 | Debugger | validator-findings or integration-findings doc_id | -- |
 

@@ -1,0 +1,93 @@
+# Output contracts -- single source of truth for agent output documents
+#
+# Each pipeline agent is mapped to the documents it MUST produce before
+# calling update_task(status: "done"). This file is enforced at runtime
+# by the output-contract-gate.js PostToolUse hook.
+#
+# Schema per agent entry:
+#   [agents.{agent-name}]
+#   required_docs = [
+#     { doc_id_pattern = "{agent}-{type}-{task_id}", provides = "{slug}" }
+#   ]
+#
+# Pattern variables:
+#   {task_id} -- replaced with the actual task_id from the update_task call
+#
+# Provides slugs (canonical vocabulary from _synapse-protocol.md):
+#   architecture, decision-draft, plan, task-spec, test-contract,
+#   implementation, validation-findings, debug-diagnosis,
+#   research-findings, audit-findings, integration-report, code-analysis
+#
+# Agents NOT listed here (e.g., synapse-orchestrator) may call
+# update_task(status: "done") freely -- typically to close parent tasks
+# after child completion, which has no output document requirement.
+
+[agents.architect]
+required_docs = [
+  { doc_id_pattern = "architect-architecture-{task_id}", provides = "architecture" }
+]
+
+[agents.planner]
+required_docs = [
+  { doc_id_pattern = "planner-plan-{task_id}", provides = "plan" }
+]
+
+# task-designer writes spec via update_task(spec: ...) field -- no document required
+# No entry for task-designer intentionally; spec is stored as a task field, not a document.
+
+[agents.test-designer]
+required_docs = [
+  { doc_id_pattern = "test-designer-test-contract-{task_id}", provides = "test-contract" }
+]
+
+[agents.executor]
+required_docs = [
+  { doc_id_pattern = "executor-implementation-{task_id}", provides = "implementation" }
+]
+
+# validator stores findings only on FAIL; on PASS it calls update_task directly.
+# required_on_fail_only = true means the hook skips the doc check on status=done
+# (validator reaching "done" implies the validation passed with no required doc).
+[agents.validator]
+required_docs = []
+required_on_fail_only = true
+
+[agents.architecture-auditor]
+required_docs = [
+  { doc_id_pattern = "architecture-auditor-audit-findings-{task_id}", provides = "audit-findings" }
+]
+
+[agents.plan-auditor]
+required_docs = [
+  { doc_id_pattern = "plan-auditor-audit-findings-{task_id}", provides = "audit-findings" }
+]
+
+[agents.task-auditor]
+required_docs = [
+  { doc_id_pattern = "task-auditor-audit-findings-{task_id}", provides = "audit-findings" }
+]
+
+[agents.integration-checker]
+required_docs = [
+  { doc_id_pattern = "integration-checker-integration-report-{task_id}", provides = "integration-report" }
+]
+
+[agents.researcher]
+required_docs = [
+  { doc_id_pattern = "researcher-research-findings-{task_id}", provides = "research-findings" }
+]
+
+[agents.product-researcher]
+required_docs = [
+  { doc_id_pattern = "product-researcher-research-findings-{task_id}", provides = "research-findings" }
+]
+
+[agents.debugger]
+required_docs = [
+  { doc_id_pattern = "debugger-debug-diagnosis-{task_id}", provides = "debug-diagnosis" }
+]
+
+[agents.codebase-analyst]
+required_docs = [
+  { doc_id_pattern = "codebase-analyst-code-analysis-{task_id}", provides = "code-analysis" }
+]

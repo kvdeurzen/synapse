@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v3.0
 milestone_name: Working Prototype
 status: Phase 25 closed (5/6 plans; 25-04 E2E re-validation deferred). Phase 26 created for real usage findings.
-stopped_at: Completed 26.4-03-PLAN.md
-last_updated: "2026-03-12T20:47:55.018Z"
+stopped_at: Completed 26.4-04-PLAN.md
+last_updated: "2026-03-12T20:53:04.179Z"
 last_activity: 2026-03-09 — Phase 25 execution complete. Phase 26 created.
 progress:
   total_phases: 16
   completed_phases: 12
   total_plans: 47
-  completed_plans: 43
+  completed_plans: 44
   percent: 96
 ---
 
@@ -87,6 +87,7 @@ Progress: [█████████░] 96%
 | Phase 26.4-best-lessons-from-superpowers P01 | 127 | 1 tasks | 3 files |
 | Phase 26.4-best-lessons-from-superpowers P02 | 9min | 2 tasks | 19 files |
 | Phase 26.4-best-lessons-from-superpowers P03 | 8 | 2 tasks | 5 files |
+| Phase 26.4-best-lessons-from-superpowers P04 | 3min | 2 tasks | 3 files |
 
 ## Accumulated Context
 
@@ -218,6 +219,11 @@ Key decisions affecting v3.0:
 - [Phase 26.4-03]: Review-Reception Protocol in shared _synapse-protocol.md footer: Verify->Evaluate->Respond with YAGNI check and no batch-accept rule
 - [Phase 26.4-03]: Provides Vocabulary table fully removed from _synapse-protocol.md; output-contracts.toml is sole source of truth with quality-review as 13th slug
 - [Phase 26.4-03]: max_revision_retries = 2 added to trust.toml [rpev] section to cap NEEDS_REVISION cycles from code-quality-reviewer
+- [Phase 26.4-best-lessons-from-superpowers]: [Phase 26.4-04]: Fresh Agent Per Task is an explicit mandate in orchestrator — no agent reuse across tasks in same wave; orchestrator manages continuity via stage docs and pool state
+- [Phase 26.4-best-lessons-from-superpowers]: [Phase 26.4-04]: Controller-Curated Context Rule: orchestrator pastes full task spec inline in TASK_SPEC block for depth=3 tasks — executor gets spec directly, not via doc_id fetch
+- [Phase 26.4-best-lessons-from-superpowers]: [Phase 26.4-04]: Two-stage review dispatch wired: validator PASS triggers code-quality-reviewer with APPROVED/NEEDS_REVISION/REJECTED routing; NEEDS_REVISION cycles capped by max_revision_retries from trust.toml
+- [Phase 26.4-best-lessons-from-superpowers]: [Phase 26.4-04]: Validator Independence Rule: 5-step sequence mandates forming own verdict (tests + code read) BEFORE reading executor output document in step 5
+- [Phase 26.4-best-lessons-from-superpowers]: [Phase 26.4-04]: Executor Verification Evidence: output contract now requires exact commands run, full output, and pass/fail — no summarized or fabricated verification
 
 ### Roadmap Evolution
 
@@ -239,6 +245,6 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-03-12T20:47:55.014Z
-Stopped at: Completed 26.4-03-PLAN.md
+Last session: 2026-03-12T20:53:04.175Z
+Stopped at: Completed 26.4-04-PLAN.md
 Resume file: None

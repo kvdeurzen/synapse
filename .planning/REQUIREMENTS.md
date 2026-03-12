@@ -109,6 +109,20 @@ Requirements for Working Prototype milestone. Each maps to roadmap phases.
 - [x] **TDD-06**: Orchestrator dispatches test-designer after task-designer and before task-auditor; handles TDD escalation routing (BLOCKED/DONE_WITH_CONCERNS/NEEDS_CONTEXT)
 - [x] **TDD-07**: agents.toml registers test-designer; trust.toml has test-designer tier authority; shared protocol has test-contract as provides vocabulary slug
 
+### Behavioral Enforcement (Best Practices)
+
+- [ ] **BEH-01**: Every agent (all 16 files) has an inline Anti-Rationalization table with at least 3 externally-sourced entries specific to its critical constraints
+- [ ] **BEH-02**: Skill pressure testing protocol document exists with RED-GREEN-REFACTOR methodology and 2-3 worked example scenarios
+- [ ] **BEH-03**: output-contracts.toml config is single source of truth for agent output contracts; output-contract-gate.js PostToolUse hook enforces contracts fail-closed
+- [ ] **BEH-04**: code-quality-reviewer.md agent exists (Sonnet model) for craftsmanship + security + performance review after validator passes; registered in agents.toml and trust.toml
+- [ ] **BEH-05**: Orchestrator mandates fresh agent per task, includes inline task spec in handoffs, dispatches code-quality-reviewer after validator PASS
+- [ ] **BEH-06**: Validator forms independent verdict (run tests, read code, assess) BEFORE reading executor's implementation summary
+- [ ] **BEH-07**: All doer agents report DONE/DONE_WITH_CONCERNS/NEEDS_CONTEXT/BLOCKED; all reviewer agents report APPROVED/REJECTED/NEEDS_REVISION
+- [ ] **BEH-08**: _synapse-protocol.md contains anti-sycophancy review-reception protocol (verify, evaluate, respond) and quality-review as 13th provides slug
+- [ ] **BEH-09**: Brainstorming SKILL.md rewritten to 7-step sequential checklist with hard gate (no implementation before design approval) and one-question-at-a-time enforcement
+- [ ] **BEH-10**: All 18 existing skill SKILL.md files have anti-rationalization sections with externally-sourced entries
+- [ ] **BEH-11**: trust.toml has max_revision_retries = 2 for NEEDS_REVISION cycle limits; Provides vocabulary expanded to 13 slugs
+
 ## Future Requirements
 
 Deferred to future release. Tracked but not in current roadmap.
@@ -214,12 +228,23 @@ Which phases cover which requirements. Updated during roadmap creation.
 | TDD-05 | Phase 26.3 | Complete |
 | TDD-06 | Phase 26.3 | Complete |
 | TDD-07 | Phase 26.3 | Complete |
+| BEH-01 | Phase 26.4 | Planned |
+| BEH-02 | Phase 26.4 | Planned |
+| BEH-03 | Phase 26.4 | Planned |
+| BEH-04 | Phase 26.4 | Planned |
+| BEH-05 | Phase 26.4 | Planned |
+| BEH-06 | Phase 26.4 | Planned |
+| BEH-07 | Phase 26.4 | Planned |
+| BEH-08 | Phase 26.4 | Planned |
+| BEH-09 | Phase 26.4 | Planned |
+| BEH-10 | Phase 26.4 | Planned |
+| BEH-11 | Phase 26.4 | Planned |
 
 **Coverage:**
-- v3.0 requirements: 66 total (39 original + 8 RPEV + 4 Agent Pool + 8 Agent Behavior Hardening + 7 TDD Pipeline)
-- Mapped to phases: 66
+- v3.0 requirements: 77 total (39 original + 8 RPEV + 4 Agent Pool + 8 Agent Behavior Hardening + 7 TDD Pipeline + 11 Behavioral Enforcement)
+- Mapped to phases: 77
 - Unmapped: 0
 
 ---
 *Requirements defined: 2026-03-03*
-*Last updated: 2026-03-12 after Phase 26.3 execution (TDD requirements added)*
+*Last updated: 2026-03-12 after Phase 26.4 planning (Behavioral Enforcement requirements added)*

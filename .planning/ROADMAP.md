@@ -276,15 +276,27 @@ Deferred to v3.1 (#9, #18, #27):
 Plans:
 - *(plans will be added as usage findings are reported)*
 
-### Phase 26.4: Best lessons from superpowers (INSERTED)
-
-**Goal:** [Urgent work - to be planned]
-**Requirements**: TBD
-**Depends on:** Phase 26
-**Plans:** 0 plans
+### Phase 26.4: Best Lessons from Superpowers (INSERTED)
+**Goal**: Close the gap between Synapse's structural pipeline design and runtime agent behavior — anti-rationalization tables for all agents and skills, output contract enforcement via hooks, two-stage review pipeline with code-quality-reviewer, structured escalation statuses, validator independence, controller-curated context, fresh-agent mandate, and brainstorming skill rewrite
+**Depends on**: Phase 26.3
+**Requirements**: BEH-01, BEH-02, BEH-03, BEH-04, BEH-05, BEH-06, BEH-07, BEH-08, BEH-09, BEH-10, BEH-11
+**Success Criteria** (what must be TRUE):
+  1. Every agent (16 files) has an inline Anti-Rationalization table with at least 3 externally-sourced entries
+  2. output-contracts.toml exists as single source of truth; output-contract-gate.js hook enforces contracts fail-closed
+  3. code-quality-reviewer.md agent runs after validator PASS for craftsmanship + security + performance review
+  4. Validator forms independent verdict before reading executor's implementation summary
+  5. Orchestrator mandates fresh agent per task and includes inline task spec in handoffs
+  6. All doer agents report DONE/DONE_WITH_CONCERNS/NEEDS_CONTEXT/BLOCKED; all reviewers report APPROVED/REJECTED/NEEDS_REVISION
+  7. Brainstorming SKILL.md has 7-step sequential checklist with hard gate; all 18 skills have anti-rationalization tables
+  8. _synapse-protocol.md has anti-sycophancy review-reception protocol and quality-review as 13th provides slug
+**Plans**: 5 plans
 
 Plans:
-- [ ] TBD (run /gsd:plan-phase 26.4 to break down)
+- [ ] 26.4-01-PLAN.md — output-contracts.toml config + output-contract-gate.js PostToolUse hook + unit tests (BEH-03)
+- [ ] 26.4-02-PLAN.md — Brainstorming SKILL.md rewrite + all skill anti-rationalization tables + pressure testing protocol (BEH-09, BEH-10, BEH-02)
+- [ ] 26.4-03-PLAN.md — code-quality-reviewer agent + config registration + anti-sycophancy protocol + provides slug (BEH-04, BEH-08, BEH-11)
+- [ ] 26.4-04-PLAN.md — Orchestrator fresh-agent/inline-spec/code-quality-reviewer dispatch + validator independence + executor verification gate (BEH-01, BEH-05, BEH-06, BEH-07)
+- [ ] 26.4-05-PLAN.md — Anti-rationalization tables + structured escalation statuses for all 16 agents (BEH-01, BEH-07)
 
 ### Phase 26.3: TDD (INSERTED)
 **Goal**: Add TDD as a core methodology to the RPEV pipeline — a new test-designer agent writes executable failing tests from specs, task-auditor triangulates spec+tests+requirements, executor is constrained to make tests pass without modifying them, and the orchestrator dispatches the test-designer in the per-task pipeline
@@ -346,13 +358,14 @@ Plans:
 ## Progress
 
 **Execution Order:**
-15 → 16 → 17 → 18 → 19 → 20 → 21 → 22 → 23 → 24 → 25 → 26 → 26.1 → 26.2 → 26.3
+15 → 16 → 17 → 18 → 19 → 20 → 21 → 22 → 23 → 24 → 25 → 26 → 26.1 → 26.2 → 26.3 → 26.4
 Parallelizable: Phase 17 (Tech Debt) and Phase 20 (Skills) can proceed in parallel with 18-19. Phase 20 depends only on Phase 15.
 Phase 25 depends on Phase 24 (failure log drives scope).
 Phase 26 depends on Phase 25 + real usage findings (plans created as issues arise).
 Phase 26.1 depends on Phase 25 (restructures agent prompts and pipeline).
 Phase 26.2 depends on Phase 26.1 (tightens handoff contracts on the new agent roster).
 Phase 26.3 depends on Phase 26.2 (adds TDD to the pipeline with the new agent roster).
+Phase 26.4 depends on Phase 26.3 (adds behavioral enforcement on top of TDD pipeline).
 
 | Phase | Milestone | Plans Complete | Status | Completed |
 |-------|-----------|----------------|--------|-----------|
@@ -386,3 +399,4 @@ Phase 26.3 depends on Phase 26.2 (adds TDD to the pipeline with the new agent ro
 | 26.1. Further Improvements | 5/5 | Complete    | 2026-03-10 | - |
 | 26.2. Agent Handoff Tightening | 4/4 | Complete    | 2026-03-10 | - |
 | 26.3. TDD | 3/3 | Complete    | 2026-03-12 | - |
+| 26.4. Best Lessons from Superpowers | 0/5 | Planned    | - | - |

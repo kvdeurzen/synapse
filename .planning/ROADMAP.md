@@ -399,4 +399,4 @@ Phase 26.4 depends on Phase 26.3 (adds behavioral enforcement on top of TDD pipe
 | 26.1. Further Improvements | 5/5 | Complete    | 2026-03-10 | - |
 | 26.2. Agent Handoff Tightening | 4/4 | Complete    | 2026-03-10 | - |
 | 26.3. TDD | 3/3 | Complete    | 2026-03-12 | - |
-| 26.4. Best Lessons from Superpowers | 5/5 | Complete   | 2026-03-12 | - |
+| 26.4. Best Lessons from Superpowers | 5/5 | Complete    | 2026-03-12 | - |

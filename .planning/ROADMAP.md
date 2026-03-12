@@ -276,6 +276,35 @@ Deferred to v3.1 (#9, #18, #27):
 Plans:
 - *(plans will be added as usage findings are reported)*
 
+### Phase 26.4: Best lessons from superpowers (INSERTED)
+
+**Goal:** [Urgent work - to be planned]
+**Requirements**: TBD
+**Depends on:** Phase 26
+**Plans:** 0 plans
+
+Plans:
+- [ ] TBD (run /gsd:plan-phase 26.4 to break down)
+
+### Phase 26.3: TDD (INSERTED)
+**Goal**: Add TDD as a core methodology to the RPEV pipeline — a new test-designer agent writes executable failing tests from specs, task-auditor triangulates spec+tests+requirements, executor is constrained to make tests pass without modifying them, and the orchestrator dispatches the test-designer in the per-task pipeline
+**Depends on**: Phase 26.2
+**Requirements**: TDD-01, TDD-02, TDD-03, TDD-04, TDD-05, TDD-06, TDD-07
+**Success Criteria** (what must be TRUE):
+  1. test-designer.md exists as a standalone Opus agent with Read, Write, Edit, Glob, Grep, Bash, search_code tools — writes executable failing tests, verifies RED, stores test-contract summary
+  2. Task-auditor triangulates planner requirements + task-designer spec + test-designer tests; runs tests independently; routes rejections to the appropriate owner
+  3. Executor MUST NOT modify/delete test-designer tests; reports structured status (DONE/DONE_WITH_CONCERNS/BLOCKED/NEEDS_CONTEXT); performs self-review before handoff
+  4. Validator simplified to confirm immutable tests pass and spec compliance check
+  5. Planner frames test expectations as test-designer input (not validator guidance)
+  6. Orchestrator dispatches test-designer after task-designer, before task-auditor; handles BLOCKED escalation routing
+  7. agents.toml registers test-designer; trust.toml has test-designer tier_authority=[]; provides vocabulary has test-contract as 12th slug
+**Plans**: 3 plans
+
+Plans:
+- [ ] 26.3-01-PLAN.md — Create test-designer.md agent + update _synapse-protocol.md provides vocab + register in agents.toml/trust.toml (TDD-01, TDD-07)
+- [ ] 26.3-02-PLAN.md — Expand task-auditor (triangulation), constrain executor (TDD rules), simplify validator, update planner (TDD-02, TDD-03, TDD-04, TDD-05)
+- [ ] 26.3-03-PLAN.md — Update orchestrator with test-designer dispatch step and BLOCKED escalation routing (TDD-06)
+
 ### Phase 26.2: Agent Handoff Tightening (INSERTED)
 **Goal**: Promote agent handoff data to first-class structured task fields, unify context loading in the shared protocol, add input/output contracts to every agent, and install gateway protocol as a configurable per-project template
 **Depends on**: Phase 26.1
@@ -317,12 +346,13 @@ Plans:
 ## Progress
 
 **Execution Order:**
-15 → 16 → 17 → 18 → 19 → 20 → 21 → 22 → 23 → 24 → 25 → 26 → 26.1 → 26.2
+15 → 16 → 17 → 18 → 19 → 20 → 21 → 22 → 23 → 24 → 25 → 26 → 26.1 → 26.2 → 26.3
 Parallelizable: Phase 17 (Tech Debt) and Phase 20 (Skills) can proceed in parallel with 18-19. Phase 20 depends only on Phase 15.
 Phase 25 depends on Phase 24 (failure log drives scope).
 Phase 26 depends on Phase 25 + real usage findings (plans created as issues arise).
 Phase 26.1 depends on Phase 25 (restructures agent prompts and pipeline).
 Phase 26.2 depends on Phase 26.1 (tightens handoff contracts on the new agent roster).
+Phase 26.3 depends on Phase 26.2 (adds TDD to the pipeline with the new agent roster).
 
 | Phase | Milestone | Plans Complete | Status | Completed |
 |-------|-----------|----------------|--------|-----------|
@@ -355,3 +385,4 @@ Phase 26.2 depends on Phase 26.1 (tightens handoff contracts on the new agent ro
 | 26. Usage Findings | v3.0 | 0/0 | Pending | - |
 | 26.1. Further Improvements | 5/5 | Complete    | 2026-03-10 | - |
 | 26.2. Agent Handoff Tightening | 4/4 | Complete    | 2026-03-10 | - |
+| 26.3. TDD | v3.0 | 0/3 | Planned | - |

@@ -74,6 +74,22 @@ Tags: `"|executor|implementation|provides:implementation|{task_id}|stage:EXECUTI
 
 CRITICAL: After storing executor-implementation doc, call `update_task(output_doc_ids: '["executor-implementation-{task_id}"]')` to register produced output. The Validator reads this field to know what you produced.
 
+### Verification Evidence (Required)
+
+Your implementation summary document MUST include a `## Verification` section with:
+
+1. **Exact commands run** — The literal commands you executed to verify the implementation (e.g., `bun test --cwd packages/server`, `curl -X POST /api/auth/login`)
+2. **Full output** — The complete stdout/stderr from each verification command (not summarized, not truncated)
+3. **Pass/fail determination** — Your explicit assessment: PASS or FAIL for each command
+
+Red flags that indicate false completion claims (from Superpowers verification-before-completion skill):
+- Words like "should", "probably", "seems to", "likely" in your verification section
+- Verification section says "tests pass" without showing the actual test output
+- Verification commands are described but not actually run
+- Output is summarized instead of shown in full
+
+If you cannot run verification commands (e.g., no test file exists, command requires external service): state this explicitly in the Verification section with reason. Do NOT fabricate verification output.
+
 ## TDD Constraints
 
 ### Test Immutability (HARD RULE)

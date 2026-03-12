@@ -73,6 +73,37 @@ Tags: `"|validator|validation-findings|provides:validation-findings|{task_id}|st
 
 Validator reads `spec` to know WHAT to verify. Validator reads `output_doc_ids` (JSON array) to know WHAT the executor produced. Validator validates implementation matches spec.
 
+## Validation Sequence (Independence Rule)
+
+You MUST form your own independent assessment BEFORE reading the executor's implementation summary. This prevents anchoring on the executor's self-report.
+
+**CRITICAL: Do NOT read the executor's implementation summary (output_doc_ids) before Step 5.** Reading it earlier anchors your assessment on the executor's claims. Your value is independent verification.
+
+**Step 1: Load task spec**
+- Parse SYNAPSE HANDOFF block
+- get_task_tree(root_task_id: task_id, max_depth: 0) — read spec, context_doc_ids
+- HALT if spec is null
+
+**Step 2: Run tests FIRST**
+- TDD Steps A-B: Check test file immutability (git diff), run tests, record pass/fail
+- This is your primary verdict input — tests passing or failing
+
+**Step 3: Read code independently**
+- Read the implementation files directly (from git diff or task spec file paths)
+- Check spec compliance: does the code match what the spec requires?
+- Form your own PASS/FAIL assessment with reasoning
+
+**Step 4: Form independent assessment**
+- Based on steps 2-3 ONLY, determine: PASS or FAIL
+- You must form independent assessment BEFORE proceeding to step 5 — write it down explicitly
+- Your verdict is now set
+
+**Step 5: THEN read executor output**
+- NOW read the executor's implementation summary from output_doc_ids
+- Compare your independent assessment to the executor's claims
+- Note any discrepancies (executor claims DONE but tests fail, executor flags concerns you didn't find, etc.)
+- Discrepancies do NOT override your independent verdict — they are noted for the orchestrator
+
 ## TDD Verification Protocol
 
 When the task has a test-contract document (test-designer ran):

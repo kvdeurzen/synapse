@@ -78,9 +78,11 @@ Use the existing Checkpoint Format section -- that is your ONLY wave output.
 Decompose features into tasks ONLY when that feature is the next to execute.
 
 7. Spawn **Task Designer** to write detailed task specs with mock code, file paths, integration points
-8. Spawn **Task Auditor** to verify specs are execution-ready
-9. If Task Auditor rejects: respawn Task Designer with feedback (max 3 cycles)
-10. Proceed to wave execution (Executor + Validator pairs, unchanged)
+8. Spawn **Test Designer** to write executable failing tests from the spec and planner test expectations
+9. If Test Designer reports plan deficiency (requirement too vague to test): escalate to Planner
+10. Spawn **Task Auditor** to triangulate spec + tests + requirements and verify execution-readiness
+11. If Task Auditor rejects: route to the agent specified in the rejection (test-designer, task-designer, or planner) — max 3 cycles per reject target
+12. Proceed to wave execution (Executor + Validator pairs)
 
 ### RPEV Agent Roles
 
@@ -89,6 +91,7 @@ Decompose features into tasks ONLY when that feature is the next to execute.
 - **Planner** — Creates executable task tree from approved architecture
 - **Plan Auditor** — Goal-backward verification of task tree; blocks deficient plans
 - **Task Designer** — Writes detailed task specifications with mock code, file paths, integration points
+- **Test Designer** — Writes executable failing tests from task-designer specs and planner test expectations; verifies RED state
 - **Task Auditor** — Verifies task specs are execution-ready; activates Tier 2-3 decision drafts
 - **Executor** — Implements leaf tasks per spec
 - **Validator** — Verifies implementation matches spec and decisions
@@ -123,8 +126,10 @@ Before wave execution:
 1. For each task in the wave, spawn an Executor subagent via Task tool with `isolation: "worktree"`
    - Dispatch wave tasks via the Pool Manager Protocol — do NOT issue all Task calls in one turn
    - Include SYNAPSE HANDOFF block in each Task prompt
+   - Before dispatching executor: verify test-designer tests exist for this task (check task description for appended test file paths). If no tests: HALT — test-designer step was skipped.
 2. Await all executor results before proceeding
 3. For each completed task: spawn Validator subagent to check output against spec and decisions
+   - Include test-contract doc_id (test-designer-test-contract-{task_id}) in validator's handoff doc_ids so validator can verify test immutability
 4. If ANY validation fails: HALT the wave and emit failure report to gateway
 5. If all validations pass: proceed to the next wave
 6. After all feature waves complete: spawn Integration Checker for feature-level validation
@@ -145,6 +150,29 @@ When a task fails after executor retry:
 3. Emit failure report to gateway with: task_id, failure context, executor output, error messages
 
 The gateway decides retry/debug/escalate. You do NOT decide what to do about failures.
+
+## TDD Escalation Routing
+
+When an executor reports a non-DONE status in its output document:
+
+### BLOCKED
+
+Read the executor's output document to understand the block:
+
+1. **Implementation gap** (executor says "I cannot find an approach" but test seems correct): Respawn executor with additional guidance. If still blocked after retry: spawn Debugger to investigate.
+2. **Wrong test assumption** (executor says "test encodes incorrect requirement"): Escalate to Planner — the planner owns the requirement contract. The planner revises the requirement, then test-designer produces updated tests. Resume from task-auditor review.
+3. **Ambiguous** (executor is unsure): Spawn Task Auditor to evaluate. Task Auditor inspects the test, runs it independently, and determines routing (executor retry vs planner revision).
+
+### DONE_WITH_CONCERNS
+
+Proceed to Validator as normal. Include the executor's concern in the validator's handoff context. The validator reviews the concern alongside the implementation:
+- If concern is cosmetic or non-blocking: validator confirms PASS
+- If concern reveals a plan gap: validator notes it in findings for the next planning cycle (does not block current task completion)
+- If concern is critical (e.g., discovered security issue): validator reports FAIL and escalates
+
+### NEEDS_CONTEXT
+
+Spawn the Researcher with the executor's context request. Feed researcher findings back to the executor for retry.
 
 ## PR Workflow
 
@@ -254,6 +282,7 @@ On dispatch tick:
 When a Task tool call completes:
 
 1. Identify which slot completed (by tracking which Task call maps to which slot)
+1b. Check executor output document status: if BLOCKED or NEEDS_CONTEXT, do NOT proceed to validator — follow TDD Escalation Routing instead
 2. Commit verification: Run `git log --oneline --grep='task:{task_id}'` — if no commit found: re-queue with note "no commit found"
 3. Extract token usage (`input_tokens + output_tokens`), store via `update_task` with `|tokens_used=N|` tag and write to pool-state `tokens_by_task` map
 4. Free the slot (set to null) and update pool-state document
@@ -339,9 +368,10 @@ When dispatching an agent, set `context_doc_ids` and `context_decision_ids` on t
 | Planner | architecture doc_id | activated decision_ids from Architecture Auditor |
 | Plan Auditor | plan doc_id + research doc_ids from Planner | -- |
 | Task Designer | plan doc_id | activated decision_ids |
-| Task Auditor | -- (reads spec field directly) | -- |
+| Test Designer | task-designer spec rationale doc_id | task's context_decision_ids |
+| Task Auditor | test-designer-test-contract-{task_id} (reads spec field directly from task) | -- |
 | Executor | task's context_doc_ids (set by Planner/Task Designer) | task's context_decision_ids |
-| Validator | executor's output_doc_ids from task field | -- |
+| Validator | executor's output_doc_ids from task field, test-designer-test-contract-{task_id} | -- |
 | Integration Checker | children tasks' output_doc_ids | -- |
 | Debugger | validator-findings or integration-findings doc_id | -- |
 

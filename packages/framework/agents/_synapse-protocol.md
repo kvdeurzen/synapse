@@ -75,7 +75,7 @@ The authoritative source for agent output contracts (doc_id patterns, provides s
 
 See `packages/framework/config/output-contracts.toml` for the full mapping of agents to their required output documents.
 
-Current slugs (13): architecture, decision-draft, plan, task-spec, test-contract, implementation, validation-findings, quality-review, debug-diagnosis, research-findings, audit-findings, integration-report, code-analysis.
+Current slugs (14): architecture, decision-draft, plan, task-spec, test-contract, implementation, validation-findings, quality-review, debug-diagnosis, research-findings, audit-findings, integration-report, code-analysis, record-review.
 
 Use ONLY the slugs listed in output-contracts.toml in `provides:` tags. Do not invent new ones.
 

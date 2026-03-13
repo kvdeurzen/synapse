@@ -368,6 +368,29 @@ process.stdin.on("end", () => {
       );
     }
 
+    // --- Pause snapshot detection ---
+    let pauseContext = "";
+    try {
+      if (projectRoot) {
+        const snapshotPath = path.join(projectRoot, ".synapse", "state", "pause-snapshot.json");
+        if (fs.existsSync(snapshotPath)) {
+          const snapshot = JSON.parse(fs.readFileSync(snapshotPath, "utf8"));
+          const stageInfo = snapshot.pipeline_active
+            ? `RPEV pipeline at stage ${snapshot.pipeline_stage}`
+            : "a session";
+          pauseContext = [
+            "## Paused Work Detected",
+            "",
+            `You paused ${stageInfo} on ${new Date(snapshot.paused_at).toLocaleString()}.`,
+            "Run /synapse:continue to resume where you left off.",
+          ].join("\n");
+        }
+      }
+    } catch {
+      // Silent fail — never block session start
+    }
+    if (pauseContext) contextParts.push(pauseContext);
+
     // Permission mode advisory — warn when not in bypassPermissions mode
     if (permissionMode && permissionMode !== "bypassPermissions") {
       contextParts.push([

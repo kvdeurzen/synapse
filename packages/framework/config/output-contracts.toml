@@ -16,7 +16,8 @@
 # Provides slugs (canonical vocabulary -- this file is the authoritative source):
 #   architecture, decision-draft, plan, task-spec, test-contract,
 #   implementation, validation-findings, quality-review, debug-diagnosis,
-#   research-findings, audit-findings, integration-report, code-analysis
+#   research-findings, audit-findings, integration-report, code-analysis,
+#   record-review
 #
 # Agents NOT listed here (e.g., synapse-orchestrator) may call
 # update_task(status: "done") freely -- typically to close parent tasks
@@ -95,4 +96,9 @@ required_docs = [
 [agents.code-quality-reviewer]
 required_docs = [
   { doc_id_pattern = "code-quality-reviewer-quality-review-{task_id}", provides = "quality-review" }
+]
+
+[agents.document-controller]
+required_docs = [
+  { doc_id_pattern = "document-controller-record-review-{task_id}", provides = "record-review" }
 ]

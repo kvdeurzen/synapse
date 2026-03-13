@@ -35,6 +35,7 @@ researcher = []
 debugger = []
 codebase-analyst = []
 code-quality-reviewer = []
+document-controller = []
 
 # Per-agent domain overrides (optional -- uncomment to customize)
 # [agent_overrides.executor.domains]
@@ -86,3 +87,5 @@ max_retries_feature = 2
 max_retries_epic = 1
 # Maximum NEEDS_REVISION cycles from code-quality-reviewer before escalation
 max_revision_retries = 2
+# Require Document Controller to store a record-review document before marking tasks done
+require_traceability = true

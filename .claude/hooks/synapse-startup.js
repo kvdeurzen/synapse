@@ -29,6 +29,15 @@ process.stdin.setEncoding("utf8");
 process.stdin.on("data", (chunk) => (input += chunk));
 process.stdin.on("end", () => {
   try {
+    // Parse stdin for permission_mode (Claude Code passes it to all hooks)
+    let permissionMode = null;
+    try {
+      const hookInput = JSON.parse(input);
+      permissionMode = hookInput.permission_mode || null;
+    } catch {
+      // stdin may be empty or non-JSON — continue without permission detection
+    }
+
     // Base work stream detection and attribution instructions (always present)
     const baseInstructions = [
       "## Synapse Session Start",
@@ -97,7 +106,12 @@ process.stdin.on("end", () => {
 
     // Validate skills against existing SKILL.md files (warn, do not fail)
     // Derive project root from project.toml path: .synapse/config/project.toml -> project root
-    const projectRoot = path.dirname(path.dirname(path.dirname(projectTomlPath)));
+    let projectRoot;
+    if (path.basename(path.dirname(path.dirname(projectTomlPath))) === ".synapse") {
+      projectRoot = path.dirname(path.dirname(path.dirname(projectTomlPath)));
+    } else {
+      projectRoot = process.env.CLAUDE_PROJECT_DIR || process.cwd();
+    }
     for (const skill of skills) {
       const skillMd = path.join(projectRoot, ".claude", "skills", skill, "SKILL.md");
       if (!fs.existsSync(skillMd)) {
@@ -337,6 +351,37 @@ process.stdin.on("end", () => {
     if (skillContext) {
       contextParts.push(skillContext);
     }
+
+    // Gateway protocol injection
+    try {
+      const gatewayMode = projectToml?.project?.gateway_mode ?? "always-on";
+      if (gatewayMode !== "explicit") {
+        const gatewayProtocolPath = path.join(projectRoot, ".synapse", "config", "gateway-protocol.md");
+        if (fs.existsSync(gatewayProtocolPath)) {
+          const gatewayProtocol = fs.readFileSync(gatewayProtocolPath, "utf8");
+          contextParts.push(gatewayProtocol);
+        }
+      }
+    } catch (gwErr) {
+      process.stderr.write(
+        `[synapse-startup] Warning: Could not load gateway protocol: ${gwErr.message}\n`,
+      );
+    }
+
+    // Permission mode advisory — warn when not in bypassPermissions mode
+    if (permissionMode && permissionMode !== "bypassPermissions") {
+      contextParts.push([
+        "## Permission Mode Advisory",
+        "",
+        `Current permission mode: \`${permissionMode}\`. Synapse works best with \`--dangerously-skip-permissions\` which allows agents to execute tool calls without manual approval prompts.`,
+        "",
+        "At the start of this session, briefly remind the user:",
+        "- Synapse's agentic workflow requires uninterrupted tool execution",
+        '- Recommend: `claude --dangerously-skip-permissions`',
+        "- Suggest adding a shell alias: `alias cs='claude --dangerously-skip-permissions'`",
+      ].join("\n"));
+    }
+
     const additionalContext = contextParts.join("\n\n");
 
     const output = {

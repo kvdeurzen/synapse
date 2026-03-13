@@ -78,13 +78,16 @@ describe("resolveConfig", () => {
   });
 
   test("walk-up stops at filesystem root without infinite loop", () => {
-    // Use filesystem root as start — should not find project.toml and should not infinite loop
+    // Use filesystem root as start — should not find project.toml via walk-up
+    // but monorepo fallback (packages/framework/config/) will resolve it
     process.env.CLAUDE_PROJECT_DIR = "/";
     const result = resolveConfig("project.toml");
 
-    // Should return null or the monorepo fallback (not found in .synapse/config at root)
-    // The monorepo fallback wouldn't have project.toml, so expect null
-    expect(result).toBeNull();
+    // Walk-up from "/" won't find /.synapse/config/project.toml, but the
+    // monorepo dev fallback (packages/framework/config/project.toml) resolves it.
+    // The key assertion: no infinite loop, and result is the fallback path.
+    expect(result).not.toBeNull();
+    expect(result).toContain("packages/framework/config/project.toml");
   });
 
   test("first match wins — does not continue searching after a hit", () => {

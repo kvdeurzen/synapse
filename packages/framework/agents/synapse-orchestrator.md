@@ -148,6 +148,11 @@ Before wave execution:
      </TASK_SPEC>
      ```
 2. Await all executor results before proceeding
+2b. **Re-index before validators:** After all wave executors complete, refresh the code index so validators and downstream agents search current code:
+    `index_codebase(project_id: '{project_id}', project_root: '{project_root}', actor: "synapse-orchestrator")`
+    - Log: "Re-indexing codebase after wave {N} executors..."
+    - If `success: false`: emit a warning — "Re-index failed: {error}. Proceeding with validators on potentially stale index."
+    - Re-index failure is NON-BLOCKING — validators proceed regardless. Do NOT halt the wave for indexing failures.
 3. For each completed task: spawn Validator subagent to check output against spec and decisions
    - Include test-contract doc_id (test-designer-test-contract-{task_id}) in validator's handoff doc_ids so validator can verify test immutability
 3b. If validator PASSES: spawn **Code Quality Reviewer** for the task

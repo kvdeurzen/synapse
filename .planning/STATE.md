@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v3.0
 milestone_name: Working Prototype
 status: Phase 25 closed (5/6 plans; 25-04 E2E re-validation deferred). Phase 26 created for real usage findings.
-stopped_at: Completed 26.6-01-PLAN.md
-last_updated: "2026-03-13T12:35:49.921Z"
+stopped_at: Completed 26.6-02-PLAN.md
+last_updated: "2026-03-13T12:39:23.949Z"
 last_activity: 2026-03-09 — Phase 25 execution complete. Phase 26 created.
 progress:
   total_phases: 18
-  completed_phases: 14
+  completed_phases: 15
   total_plans: 53
-  completed_plans: 50
+  completed_plans: 51
   percent: 96
 ---
 
@@ -94,6 +94,7 @@ Progress: [█████████░] 96%
 | Phase 26.5-proper-archiving P04 | 2min | 2 tasks | 5 files |
 | Phase 26.5-proper-archiving P03 | 3min | 2 tasks | 3 files |
 | Phase 26.6-auto-re-index P01 | 3min | 2 tasks | 4 files |
+| Phase 26.6-auto-re-index P02 | 2min | 2 tasks | 2 files |
 
 ## Accumulated Context
 
@@ -244,6 +245,8 @@ Key decisions affecting v3.0:
 - [Phase 26.6-01]: glob + minimatch replace Bun.Glob in scanner.ts — glob() returns Promise<string[]> (plain for loop, not for-await); minimatch() handles include_patterns matching
 - [Phase 26.6-01]: Static import of readFile from node:fs/promises preferred over dynamic import in index-codebase.ts and get-index-status.ts — consistent with project patterns, avoids per-call overhead
 - [Phase 26.6-01]: Node.js-compatible APIs only rule in packages/server/src/ — never use Bun-specific APIs since MCP server runs under npx tsx (tree-sitter native module incompatibility with Bun runtime)
+- [Phase 26.6-02]: Wave-level re-index inserts as step 2b between await-executors and validator-dispatch in orchestrator; re-index failure is NON-BLOCKING in both orchestrator and init.md
+- [Phase 26.6-02]: init.md step 7b gates indexing on Ollama availability via curl/nomic-embed-text check; step 11 Next step is conditional on indexing outcome
 
 ### Roadmap Evolution
 
@@ -267,6 +270,6 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-03-13T12:35:49.918Z
-Stopped at: Completed 26.6-01-PLAN.md
+Last session: 2026-03-13T12:39:23.946Z
+Stopped at: Completed 26.6-02-PLAN.md
 Resume file: None

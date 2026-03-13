@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, test } from "bun:test";
 import { spawnSync } from "node:child_process";
-import { existsSync, mkdtempSync, readFileSync, rmSync } from "node:fs";
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 
@@ -134,6 +134,125 @@ describe("synapse-startup.js (SessionStart hook)", () => {
     expect(parsed.hookSpecificOutput.hookEventName).toBe("SessionStart");
     // Base instructions still present even without tier context
     expect(parsed.hookSpecificOutput.additionalContext).toContain("get_task_tree");
+  });
+
+  // Helper: create a minimal Synapse project in tmpDir with valid project.toml
+  function makeSynapseProject(tmpDir: string): void {
+    mkdirSync(join(tmpDir, ".synapse", "config"), { recursive: true });
+    writeFileSync(
+      join(tmpDir, ".synapse", "config", "project.toml"),
+      '[project]\nproject_id = "test-project"\nname = "Test Project"\n',
+    );
+  }
+
+  describe("pause snapshot detection", () => {
+    test("injects Paused Work Detected when snapshot exists with pipeline_active=true", () => {
+      const tmpDir = makeTmpDir();
+      makeSynapseProject(tmpDir);
+      mkdirSync(join(tmpDir, ".synapse", "state"), { recursive: true });
+      const snapshot = {
+        paused_at: new Date().toISOString(),
+        pipeline_active: true,
+        pipeline_stage: "EXECUTING",
+        active_epic_task_id: "epic-001",
+        active_feature_task_ids: ["feat-001"],
+        in_progress_task_ids: ["task-001"],
+        pool_state_doc_id: "pool-state-test-project",
+        pending_refinements: [],
+        session_context: "Executing auth feature",
+        revert_to_commit: "abc1234",
+        stop_mode: "graceful",
+      };
+      writeFileSync(
+        join(tmpDir, ".synapse", "state", "pause-snapshot.json"),
+        JSON.stringify(snapshot),
+      );
+
+      const result = spawnSync("node", [STARTUP_HOOK], {
+        input: "{}",
+        encoding: "utf8",
+        cwd: tmpDir,
+      });
+
+      expect(result.status).toBe(0);
+      const parsed = JSON.parse(result.stdout);
+      const ctx = parsed.hookSpecificOutput.additionalContext;
+      expect(ctx).toContain("Paused Work Detected");
+      expect(ctx).toContain("/synapse:continue");
+    });
+
+    test("injects Paused Work Detected when snapshot exists with pipeline_active=false", () => {
+      const tmpDir = makeTmpDir();
+      makeSynapseProject(tmpDir);
+      mkdirSync(join(tmpDir, ".synapse", "state"), { recursive: true });
+      const snapshot = {
+        paused_at: new Date().toISOString(),
+        pipeline_active: false,
+        pipeline_stage: null,
+        active_epic_task_id: null,
+        active_feature_task_ids: [],
+        in_progress_task_ids: [],
+        pool_state_doc_id: "pool-state-test-project",
+        pending_refinements: ["ref-001"],
+        session_context: "Refining payment epic",
+        revert_to_commit: "abc1234",
+        stop_mode: "graceful",
+      };
+      writeFileSync(
+        join(tmpDir, ".synapse", "state", "pause-snapshot.json"),
+        JSON.stringify(snapshot),
+      );
+
+      const result = spawnSync("node", [STARTUP_HOOK], {
+        input: "{}",
+        encoding: "utf8",
+        cwd: tmpDir,
+      });
+
+      expect(result.status).toBe(0);
+      const parsed = JSON.parse(result.stdout);
+      const ctx = parsed.hookSpecificOutput.additionalContext;
+      expect(ctx).toContain("Paused Work Detected");
+      expect(ctx).toContain("/synapse:continue");
+    });
+
+    test("does NOT inject Paused Work Detected when no snapshot file exists", () => {
+      const tmpDir = makeTmpDir();
+      makeSynapseProject(tmpDir);
+      // No pause-snapshot.json created
+
+      const result = spawnSync("node", [STARTUP_HOOK], {
+        input: "{}",
+        encoding: "utf8",
+        cwd: tmpDir,
+      });
+
+      expect(result.status).toBe(0);
+      const parsed = JSON.parse(result.stdout);
+      const ctx = parsed.hookSpecificOutput.additionalContext;
+      expect(ctx).not.toContain("Paused Work Detected");
+    });
+
+    test("does NOT crash and does NOT inject Paused Work Detected when snapshot contains invalid JSON", () => {
+      const tmpDir = makeTmpDir();
+      makeSynapseProject(tmpDir);
+      mkdirSync(join(tmpDir, ".synapse", "state"), { recursive: true });
+      writeFileSync(
+        join(tmpDir, ".synapse", "state", "pause-snapshot.json"),
+        "not valid json{{",
+      );
+
+      const result = spawnSync("node", [STARTUP_HOOK], {
+        input: "{}",
+        encoding: "utf8",
+        cwd: tmpDir,
+      });
+
+      expect(result.status).toBe(0);
+      const parsed = JSON.parse(result.stdout);
+      const ctx = parsed.hookSpecificOutput.additionalContext;
+      expect(ctx).not.toContain("Paused Work Detected");
+    });
   });
 });
 

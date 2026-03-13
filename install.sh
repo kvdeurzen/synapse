@@ -431,7 +431,7 @@ else
 fi
 
 # Copy config templates (only if not already present — preserve user customizations)
-for config_file in trust.toml agents.toml synapse.toml; do
+for config_file in trust.toml agents.toml synapse.toml cliff.toml; do
   src="$SYNAPSE_SOURCE/packages/framework/config/$config_file"
   dst="$TARGET_DIR/.synapse/config/$config_file"
   if [ -f "$src" ] && [ ! -f "$dst" ]; then
@@ -495,6 +495,24 @@ SYNAPSE_HOOKS_JSON='{
           "command": "bun $CLAUDE_PROJECT_DIR/.claude/hooks/audit-log.js"
         }
       ]
+    },
+    {
+      "matcher": "Bash",
+      "hooks": [
+        {
+          "type": "command",
+          "command": "bun $CLAUDE_PROJECT_DIR/.claude/hooks/conventional-commit.js"
+        }
+      ]
+    },
+    {
+      "matcher": "mcp__synapse__update_task",
+      "hooks": [
+        {
+          "type": "command",
+          "command": "bun $CLAUDE_PROJECT_DIR/.claude/hooks/output-contract-gate.js"
+        }
+      ]
     }
   ]
 }'
@@ -530,6 +548,8 @@ else
       'tool-allowlist.js',
       'audit-log.js',
       'synapse-statusline.js',
+      'conventional-commit.js',
+      'output-contract-gate.js',
     ];
 
     function isSynapseHook(hook) {

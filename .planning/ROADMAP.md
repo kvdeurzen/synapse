@@ -276,6 +276,26 @@ Deferred to v3.1 (#9, #18, #27):
 Plans:
 - *(plans will be added as usage findings are reported)*
 
+### Phase 26.5: Document Controller + Version Management (INSERTED)
+**Goal**: Add a Document Controller agent as the final quality gate in the RPEV pipeline before PR creation — ensuring documentation freshness, requirement traceability, and changelog generation. Plus conventional commit validation hook, output-contract-gate activation, git-cliff config template, and documentation SKILL.md rewrite.
+**Depends on**: Phase 26.4
+**Requirements**: ARCH-01, ARCH-02, ARCH-03, ARCH-04, ARCH-05, ARCH-06, ARCH-07
+**Success Criteria** (what must be TRUE):
+  1. Document Controller agent exists with Sonnet model, read-only reviewer role, registered in agents.toml/trust.toml/output-contracts.toml
+  2. Conventional commit hook validates `type(scope): description` format on all git commits, fail-open on errors
+  3. Both conventional-commit.js and output-contract-gate.js are registered in install.sh and .claude/settings.json with correct matchers
+  4. Orchestrator pipeline dispatches DC after Integration Checker, routes NEEDS_REVISION to doc-fix tasks, extracts changelog for PR body
+  5. Documentation SKILL.md rewritten with 5 quality criteria, AI-specific anti-patterns, and changelog format conventions
+  6. Executor commit format updated to conventional commits with no [task:id] suffix
+  7. git-cliff config template exists and is distributed by install.sh
+**Plans**: 4 plans
+
+Plans:
+- [ ] 26.5-01-PLAN.md — Conventional commit hook (TDD): tests + implementation for PostToolUse validation (ARCH-02)
+- [ ] 26.5-02-PLAN.md — Config registrations + executor commit format update + documentation SKILL.md rewrite (ARCH-01, ARCH-05, ARCH-06)
+- [ ] 26.5-03-PLAN.md — Document Controller agent + orchestrator pipeline wiring (ARCH-01, ARCH-04)
+- [ ] 26.5-04-PLAN.md — Hook registration in install.sh/settings.json + cliff.toml + extended tests (ARCH-03, ARCH-07)
+
 ### Phase 26.4: Best Lessons from Superpowers (INSERTED)
 **Goal**: Close the gap between Synapse's structural pipeline design and runtime agent behavior — anti-rationalization tables for all agents and skills, output contract enforcement via hooks, two-stage review pipeline with code-quality-reviewer, structured escalation statuses, validator independence, controller-curated context, fresh-agent mandate, and brainstorming skill rewrite
 **Depends on**: Phase 26.3
@@ -358,7 +378,7 @@ Plans:
 ## Progress
 
 **Execution Order:**
-15 → 16 → 17 → 18 → 19 → 20 → 21 → 22 → 23 → 24 → 25 → 26 → 26.1 → 26.2 → 26.3 → 26.4
+15 → 16 → 17 → 18 → 19 → 20 → 21 → 22 → 23 → 24 → 25 → 26 → 26.1 → 26.2 → 26.3 → 26.4 → 26.5
 Parallelizable: Phase 17 (Tech Debt) and Phase 20 (Skills) can proceed in parallel with 18-19. Phase 20 depends only on Phase 15.
 Phase 25 depends on Phase 24 (failure log drives scope).
 Phase 26 depends on Phase 25 + real usage findings (plans created as issues arise).
@@ -366,6 +386,7 @@ Phase 26.1 depends on Phase 25 (restructures agent prompts and pipeline).
 Phase 26.2 depends on Phase 26.1 (tightens handoff contracts on the new agent roster).
 Phase 26.3 depends on Phase 26.2 (adds TDD to the pipeline with the new agent roster).
 Phase 26.4 depends on Phase 26.3 (adds behavioral enforcement on top of TDD pipeline).
+Phase 26.5 depends on Phase 26.4 (adds Document Controller + version management to pipeline).
 
 | Phase | Milestone | Plans Complete | Status | Completed |
 |-------|-----------|----------------|--------|-----------|
@@ -400,3 +421,4 @@ Phase 26.4 depends on Phase 26.3 (adds behavioral enforcement on top of TDD pipe
 | 26.2. Agent Handoff Tightening | 4/4 | Complete    | 2026-03-10 | - |
 | 26.3. TDD | 3/3 | Complete    | 2026-03-12 | - |
 | 26.4. Best Lessons from Superpowers | 5/5 | Complete    | 2026-03-12 | - |
+| 26.5. Document Controller + Version Mgmt | 0/4 | Planning    | - | - |

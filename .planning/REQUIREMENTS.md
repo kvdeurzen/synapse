@@ -123,6 +123,16 @@ Requirements for Working Prototype milestone. Each maps to roadmap phases.
 - [x] **BEH-10**: All 18 existing skill SKILL.md files have anti-rationalization sections with externally-sourced entries
 - [x] **BEH-11**: trust.toml has max_revision_retries = 2 for NEEDS_REVISION cycle limits; Provides vocabulary expanded to 13 slugs
 
+### Document Controller + Version Management
+
+- [ ] **ARCH-01**: Document Controller agent exists with Sonnet model, read-only reviewer role (tier_authority=[]), registered in agents.toml/trust.toml/output-contracts.toml with record-review provides slug
+- [ ] **ARCH-02**: Conventional commit validation hook enforces `type(scope): description` format on Bash tool calls containing `git commit`; fail-open on errors; scope required; max 72 chars first line
+- [ ] **ARCH-03**: Both conventional-commit.js and output-contract-gate.js registered as PostToolUse hooks in install.sh and .claude/settings.json with correct matchers (Bash and mcp__synapse__update_task respectively)
+- [ ] **ARCH-04**: Orchestrator pipeline dispatches Document Controller after Integration Checker; routes NEEDS_REVISION to doc-fix executor task (shortened pipeline); extracts changelog for PR body
+- [ ] **ARCH-05**: Documentation SKILL.md rewritten with 5 quality criteria (Accuracy, Completeness, Audience awareness, Consistency, Freshness), AI-specific anti-patterns, changelog format conventions
+- [ ] **ARCH-06**: Executor commit format updated to `type(scope): description` with no [task:id] suffix throughout executor.md
+- [ ] **ARCH-07**: git-cliff config template (cliff.toml) exists in packages/framework/config/ and is distributed by install.sh
+
 ## Future Requirements
 
 Deferred to future release. Tracked but not in current roadmap.
@@ -239,12 +249,19 @@ Which phases cover which requirements. Updated during roadmap creation.
 | BEH-09 | Phase 26.4 | Planned |
 | BEH-10 | Phase 26.4 | Planned |
 | BEH-11 | Phase 26.4 | Planned |
+| ARCH-01 | Phase 26.5 | Planned |
+| ARCH-02 | Phase 26.5 | Planned |
+| ARCH-03 | Phase 26.5 | Planned |
+| ARCH-04 | Phase 26.5 | Planned |
+| ARCH-05 | Phase 26.5 | Planned |
+| ARCH-06 | Phase 26.5 | Planned |
+| ARCH-07 | Phase 26.5 | Planned |
 
 **Coverage:**
-- v3.0 requirements: 77 total (39 original + 8 RPEV + 4 Agent Pool + 8 Agent Behavior Hardening + 7 TDD Pipeline + 11 Behavioral Enforcement)
-- Mapped to phases: 77
+- v3.0 requirements: 84 total (39 original + 8 RPEV + 4 Agent Pool + 8 Agent Behavior Hardening + 7 TDD Pipeline + 11 Behavioral Enforcement + 7 Document Controller)
+- Mapped to phases: 84
 - Unmapped: 0
 
 ---
 *Requirements defined: 2026-03-03*
-*Last updated: 2026-03-12 after Phase 26.4 planning (Behavioral Enforcement requirements added)*
+*Last updated: 2026-03-13 after Phase 26.5 planning (Document Controller + Version Management requirements added)*

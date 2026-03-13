@@ -14,19 +14,21 @@
     "smol-toml": "latest"
   },
   "dependencies": {
-    "apache-arrow": "18.1.0",
     "@lancedb/lancedb": "0.26.2",
     "@langchain/textsplitters": "^1.0.1",
     "@modelcontextprotocol/sdk": "latest",
+    "apache-arrow": "18.1.0",
+    "glob": "^13.0.6",
     "gpt-tokenizer": "^3.4.0",
     "ignore": "^7.0.5",
     "lru-cache": "^11.2.6",
+    "minimatch": "^10.2.4",
     "pino": "latest",
-    "tsx": "^4.19.0",
     "tree-sitter": "^0.25.0",
     "tree-sitter-python": "^0.25.0",
     "tree-sitter-rust": "^0.24.0",
     "tree-sitter-typescript": "^0.23.2",
+    "tsx": "^4.19.0",
     "ulidx": "^2.4.1"
   }
 }

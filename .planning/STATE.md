@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v3.0
 milestone_name: Working Prototype
 status: Phase 25 closed (5/6 plans; 25-04 E2E re-validation deferred). Phase 26 created for real usage findings.
-stopped_at: Phase 26.5 context gathered
-last_updated: "2026-03-13T10:16:20.012Z"
+stopped_at: Completed 26.5-02-PLAN.md
+last_updated: "2026-03-13T10:56:23.143Z"
 last_activity: 2026-03-09 — Phase 25 execution complete. Phase 26 created.
 progress:
   total_phases: 17
   completed_phases: 13
-  total_plans: 47
-  completed_plans: 45
+  total_plans: 51
+  completed_plans: 47
   percent: 96
 ---
 
@@ -89,6 +89,8 @@ Progress: [█████████░] 96%
 | Phase 26.4-best-lessons-from-superpowers P03 | 8 | 2 tasks | 5 files |
 | Phase 26.4-best-lessons-from-superpowers P04 | 3min | 2 tasks | 3 files |
 | Phase 26.4-best-lessons-from-superpowers P05 | 9min | 2 tasks | 16 files |
+| Phase 26.5-proper-archiving P02 | 3min | 2 tasks | 5 files |
+| Phase 26.5-proper-archiving P01 | 3min | 2 tasks | 2 files |
 
 ## Accumulated Context
 
@@ -227,6 +229,11 @@ Key decisions affecting v3.0:
 - [Phase 26.4-best-lessons-from-superpowers]: [Phase 26.4-04]: Executor Verification Evidence: output contract now requires exact commands run, full output, and pass/fail — no summarized or fabricated verification
 - [Phase 26.4-best-lessons-from-superpowers]: [Phase 26.4-best-lessons-from-superpowers]: [Phase 26.4-05]: Anti-rationalization tables sourced from Superpowers catalogs + established phase protocols (24 failure memories, 11 TDD rationalizations, Do Not Trust the Report, anti-sycophancy catalog) — not self-generated
 - [Phase 26.4-best-lessons-from-superpowers]: [Phase 26.4-best-lessons-from-superpowers]: [Phase 26.4-05]: Orchestrator status uses stage documents + failure reports pattern — not doer/reviewer status document fields; explicit note added to synapse-orchestrator.md Status Reporting section
+- [Phase 26.5-02]: Document Controller has Write tool (CHANGELOG.md) but no search_code or get_index_status per locked CONTEXT decision; record-review is 14th provides vocabulary slug
+- [Phase 26.5-02]: Executor commit format drops [task:id] suffix entirely — conventional commit hook rejects it; format is {type}({scope}): {description} with mandatory scope (lowercase alphanumeric + hyphens)
+- [Phase 26.5-01]: conventional-commit hook is fail-open (not fail-closed) — advisory formatting hook passes silently on errors; [task:id] suffix explicitly rejected from commit messages
+- [Phase 26.5-02]: require_traceability = true in trust.toml [rpev] — foundation for Document Controller integration hook wiring in plan 26.5-03/04
+- [Phase 26.5-02]: Documentation SKILL.md freshness principle sourced from Qodo 2026: stale docs worse than no docs; AI-specific anti-patterns added (hallucinated params, boilerplate generation, README without reading)
 
 ### Roadmap Evolution
 
@@ -249,6 +256,6 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-03-13T10:16:20.007Z
-Stopped at: Phase 26.5 context gathered
-Resume file: .planning/phases/26.5-proper-archiving/26.5-CONTEXT.md
+Last session: 2026-03-13T10:56:23.137Z
+Stopped at: Completed 26.5-02-PLAN.md
+Resume file: None

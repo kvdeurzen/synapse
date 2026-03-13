@@ -3,8 +3,8 @@ gsd_state_version: 1.0
 milestone: v3.0
 milestone_name: Working Prototype
 status: Phase 25 closed (5/6 plans; 25-04 E2E re-validation deferred). Phase 26 created for real usage findings.
-stopped_at: Completed 26.7-02-PLAN.md
-last_updated: "2026-03-13T14:38:15.673Z"
+stopped_at: Completed 26.7-01-PLAN.md
+last_updated: "2026-03-13T14:38:37.255Z"
 last_activity: 2026-03-09 — Phase 25 execution complete. Phase 26 created.
 progress:
   total_phases: 19
@@ -97,6 +97,7 @@ Progress: [█████████░] 96%
 | Phase 26.6-auto-re-index P02 | 2min | 2 tasks | 2 files |
 | Phase 26.7-pause-continue-upgrade-and-remove-synapse P03 | 1min | 1 tasks | 1 files |
 | Phase 26.7-pause-continue-upgrade-and-remove-synapse P02 | 2 | 2 tasks | 3 files |
+| Phase 26.7-pause-continue-upgrade-and-remove-synapse P01 | 3 | 2 tasks | 4 files |
 
 ## Accumulated Context
 
@@ -253,6 +254,9 @@ Key decisions affecting v3.0:
 - [Phase 26.7-02]: synapse_version upsert semantics: append when field absent, sed-replace when present — works for both fresh installs and upgrades
 - [Phase 26.7-02]: Cross-platform sed: sed -i.bak pattern used in install.sh Section 9b — works on both GNU sed (Linux) and BSD sed (macOS)
 - [Phase 26.7-02]: upgrade.md requires explicit user confirmation before running install.sh — no silent upgrades
+- [Phase 26.7-01]: pause-snapshot.json stored at .synapse/state/ (file-based, not Synapse document) — consistent with statusline.json pattern, no MCP dependency
+- [Phase 26.7-01]: Pause detection positioned after gateway protocol injection and before permission advisory — pause notification is high-priority context near end of additionalContext
+- [Phase 26.7-01]: Silent fail (empty catch) for pause detection — never blocks session start on corrupt or unreadable snapshot
 
 ### Roadmap Evolution
 
@@ -277,6 +281,6 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-03-13T14:38:15.670Z
-Stopped at: Completed 26.7-02-PLAN.md
+Last session: 2026-03-13T14:38:37.252Z
+Stopped at: Completed 26.7-01-PLAN.md
 Resume file: None

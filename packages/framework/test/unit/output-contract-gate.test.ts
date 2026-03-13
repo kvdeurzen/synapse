@@ -241,6 +241,41 @@ describe("output-contract-gate.js (PostToolUse enforcement hook)", () => {
     expect(result.stdout.trim()).toBe("");
   });
 
+  // Test 7: document-controller contract from output-contracts.toml
+  test("denies document-controller update_task(status: done) with no record-review doc", () => {
+    // document-controller requires doc_id_pattern = "document-controller-record-review-{task_id}"
+    const result = runHook({
+      tool_name: "mcp__synapse__update_task",
+      tool_input: {
+        actor: "document-controller",
+        task_id: "task-dc-001",
+        status: "done",
+        output_doc_ids: null,
+      },
+    });
+
+    expect(result.status).toBe(0);
+    const out = parsedOutput(result.stdout);
+    expect(out.hookSpecificOutput.hookEventName).toBe("PostToolUse");
+    expect(out.hookSpecificOutput.permissionDecision).toBe("deny");
+    expect(out.hookSpecificOutput.permissionDecisionReason).toContain("DENIED");
+  });
+
+  test("allows document-controller update_task(status: done) with record-review doc", () => {
+    const result = runHook({
+      tool_name: "mcp__synapse__update_task",
+      tool_input: {
+        actor: "document-controller",
+        task_id: "task-dc-001",
+        status: "done",
+        output_doc_ids: ["document-controller-record-review-task-dc-001"],
+      },
+    });
+
+    expect(result.status).toBe(0);
+    expect(result.stdout.trim()).toBe("");
+  });
+
   // Fail-closed: malformed JSON should result in deny
   test("denies on malformed JSON input (fail-closed)", () => {
     const result = spawnSync("node", [OUTPUT_CONTRACT_GATE_HOOK], {

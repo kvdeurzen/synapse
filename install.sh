@@ -667,6 +667,22 @@ else
 fi
 
 # ============================================================
+# Section 9b: Record synapse_version in project.toml
+# ============================================================
+
+PROJECT_TOML="$TARGET_DIR/.synapse/config/project.toml"
+if [ -f "$PROJECT_TOML" ]; then
+  if grep -q "^synapse_version" "$PROJECT_TOML"; then
+    # Update existing field — use cross-platform sed (GNU and BSD safe)
+    sed -i.bak "s/^synapse_version = .*/synapse_version = \"$VERSION\"/" "$PROJECT_TOML" && rm -f "$PROJECT_TOML.bak"
+  else
+    # Append to file (safe since project.toml has a simple flat structure under [project])
+    echo "synapse_version = \"$VERSION\"" >> "$PROJECT_TOML"
+  fi
+  log_step "Recorded synapse_version = $VERSION in project.toml"
+fi
+
+# ============================================================
 # Section 10: Smoke test invocation
 # ============================================================
 

@@ -172,7 +172,8 @@ describe("conventional-commit.js (PostToolUse validation hook)", () => {
 
     test("denies commit with first line exceeding 72 characters", () => {
       // Build a commit where first line exceeds 72 chars
-      const longDesc = "a".repeat(60); // "feat(auth): " + 60 chars = 72+, >72
+      // "feat(auth): " = 12 chars; need > 72 total, so description must be > 60 chars
+      const longDesc = "a".repeat(61); // "feat(auth): " (12) + 61 = 73 chars > 72
       const result = runHook({
         tool_name: "Bash",
         tool_input: { command: `git commit -m "feat(auth): ${longDesc}"` },

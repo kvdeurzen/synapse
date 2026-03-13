@@ -154,9 +154,12 @@ If self-review reveals issues: fix them before reporting. If issues are unfixabl
 After implementing the task and verifying tests pass, BEFORE storing the implementation summary:
 
 1. Stage changed files: `git add {specific files changed}` (prefer explicit file list over `git add -A`)
-2. Commit with task_id: `git commit -m "feat({task_title_slug}): {one-line summary} [task:{task_id}]"`
-   - Use conventional commit format (feat/fix/refactor/test/docs)
-   - Include [task:{task_id}] suffix for traceability
+2. Commit: `git commit -m "{type}({scope}): {one-line summary}"`
+   - Accepted types: feat | fix | refactor | test | docs | chore | style | perf | ci | build
+   - Scope is REQUIRED (lowercase alphanumeric + hyphens), use task slug as scope
+   - First line max 72 characters (including type and scope)
+   - NO [task:id] suffix — conventional commit hook will reject it
+   - Example: `git commit -m "feat(jwt-signing): implement RS256 token generation"`
 3. Verify commit: `git log --oneline -1` -- confirm the commit appears
 4. Include the commit SHA in your implementation summary document (in the "## Files changed" section)
 
@@ -174,7 +177,7 @@ If `git add` or `git commit` fails: HALT. Report the error to orchestrator. Do n
 6. Implement using Read, Write, Edit, Bash, Glob, Grep using the `spec` field as implementation guide
 
 **Store Implementation Summary (after implementation, before marking done):**
-0. Git commit: `git add {files} && git commit -m "feat({slug}): {summary} [task:{task_id}]"` -- see Git Commit Protocol above
+0. Git commit: `git add {files} && git commit -m "feat({slug}): {summary}"` -- see Git Commit Protocol above
 1. `store_document(project_id: "{project_id}", doc_id: "executor-implementation-{task_id}", title: "Implementation Summary: {task_title}", category: "implementation_note", status: "active", tags: "|executor|implementation|provides:implementation|{task_id}|stage:EXECUTION|", content: "## What was implemented\n{summary}\n\n## Files changed\n{list}\n\n## Commit\n{commit SHA}\n\n## Decisions made\n{any tier 3}\n\n## Warnings\n{any MCP read failures}\n\n## Status\n{DONE|DONE_WITH_CONCERNS|BLOCKED|NEEDS_CONTEXT}\n\n## Self-Review\nCompleteness: {pass/fail}\nQuality: {pass/fail}\nDiscipline: {pass/fail}\nSupplementary tests: {count added, or 'none'}\n\n## Test Results\nTest-designer tests: {N passed}/{M total}\nSupplementary tests: {N passed}/{M total}\n{test runner output summary}", actor: "executor")`
 2. `link_documents(project_id: "{project_id}", from_id: "executor-implementation-{task_id}", to_id: "{task_id}", relationship_type: "implements", actor: "executor")`
 3. `update_task(project_id: "{project_id}", task_id: "{task_id}", output_doc_ids: '["executor-implementation-{task_id}"]', actor: "executor")` -- register produced output
@@ -203,7 +206,7 @@ Task: "Implement JWT signing utility — create signToken(payload) function usin
 5. Implement the JWT signing module with `signToken()` function
 6. Write tests for the JWT signing module
 7. Run tests via `Bash`
-8. Git commit: `git add src/auth/jwt.ts test/auth/jwt.test.ts && git commit -m "feat(jwt-signing-utility): implement signToken with jose RS256 [task:{task_id}]"`
+8. Git commit: `git add src/auth/jwt.ts test/auth/jwt.test.ts && git commit -m "feat(jwt-signing-utility): implement signToken with jose RS256"`
 9. `store_decision(project_id: "{project_id}", tier: 3, title: "JWT signing: jose importJWK + SignJWT", actor: "executor")` — record implementation choice
 10. `store_document(project_id: "{project_id}", doc_id: "executor-implementation-{task_id}", title: "Implementation Summary: JWT signing utility", category: "implementation_note", status: "active", tags: "|executor|implementation|provides:implementation|{task_id}|stage:EXECUTION|", content: "## What was implemented\nsignToken() using jose importJWK + SignJWT, RS256, 15-min TTL\n\n## Files changed\nsrc/auth/jwt.ts, test/auth/jwt.test.ts\n\n## Commit\n{commit SHA from step 8}\n\n## Decisions made\nUse jose importJWK + SignJWT pattern", actor: "executor")`
 11. `link_documents(project_id: "{project_id}", from_id: "executor-implementation-{task_id}", to_id: "{task_id}", relationship_type: "implements", actor: "executor")`

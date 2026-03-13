@@ -1,65 +1,61 @@
 ---
 name: documentation
-description: When, what, and how to document code and systems. Load when writing comments, doc comments, README files, or planning documentation strategy.
+description: Documentation standards for project files, APIs, and changelogs. Load when writing doc comments, README files, CHANGELOG entries, or planning documentation strategy.
 disable-model-invocation: true
 user-invocable: false
 ---
 
 ## Conventions
 
-- Comments explain why, not what: if code is clear, the comment explains the reasoning, not the mechanics (community consensus)
-- Doc comments for all public API surfaces: exported functions, classes, and types need doc comments; private internals do not (awesome-cursorrules + DEV Community)
-- README at major feature boundaries: each significant module or feature directory should have a README (DEV Community)
-- Never duplicate documentation: single source of truth; link rather than restate (Markin)
-- Self-documenting names reduce comment need: invest in naming before writing a comment (community consensus)
-- Structured logging over string interpolation: treat log output as queryable data with named fields (Markin)
-- Document the "what and when" externally (README); the "why" inline (comments) (synthesis across sources)
-- Code is the primary documentation — separate doc files only when concept cannot be expressed in code (Markin)
-- Flag incomplete or uncertain code with `TODO:` or `FIXME:` comments — do not silently leave ambiguities (awesome-cursorrules)
+- **Why over what**: comments explain reasoning, not mechanics; if code is clear, the comment explains why this approach was chosen (community consensus)
+- **Single source of truth**: document in one place, link from others; duplication creates disagreement when the primary source changes (Markin)
+- **Freshness principle**: stale documentation is worse than no documentation — update docs in the same PR as code changes, not after (Qodo 2026)
+- **Changelog format**: group entries by type using conventional commit vocabulary (Added, Changed, Fixed, Removed, Deprecated, Security); one entry per meaningful change (Keep a Changelog)
+- **Doc comments for public APIs**: exported functions, classes, and types require doc comments; private internals do not (awesome-cursorrules)
+- **README at feature boundaries**: each significant module or feature directory should have a README explaining purpose, setup, and usage (DEV Community)
+- **Self-documenting names reduce comment need**: invest in naming before writing a comment (community consensus)
+- **Code is the primary documentation**: separate doc files only when a concept cannot be expressed in code (Markin)
 
 ## Quality Criteria
 
-- All exported functions/classes have doc comments (JSDoc, docstring, rustdoc, godoc as appropriate) (awesome-cursorrules)
-- No redundant comments restating what clear code already expresses (community consensus)
-- Each major feature directory has a README.md (DEV Community)
-- Comments explain WHY, not WHAT — test by checking if removing the comment loses information (community consensus)
-- Log statements use structured fields, not string interpolation (Markin)
-- No documentation duplicated across multiple locations — single source of truth (Markin)
+- **Accuracy**: documentation matches actual behavior — test by checking whether the documented behavior can be reproduced exactly as written
+- **Completeness**: all public API surfaces have doc comments; no exported function, class, or type is undocumented
+- **Audience awareness**: documentation matches the reader's expertise level — API docs assume library users, README assumes new contributors
+- **Consistency**: one doc comment format (JSDoc, rustdoc, godoc, etc.) used uniformly across the project; never mixed
+- **Freshness**: documentation updated in the same commit as code changes — never deferred to a follow-up PR
 
 ## Vocabulary
 
 - **doc comment**: a comment attached to a public API surface, processed by documentation generators (JSDoc `/** */`, Python `"""`, rustdoc `///`)
-- **self-documenting code**: code whose names, types, and structure communicate intent without needing comments
-- **structured logging**: log output with named key-value fields rather than interpolated strings
-- **README**: a markdown file in a directory explaining purpose, setup, and usage
-- **docstring**: an inline string literal (Python `"""..."""`) serving as the doc comment for a function or class
-- **API documentation**: generated reference docs derived from doc comments; never written separately from source
+- **self-documenting code**: code whose names, types, and structure communicate intent without requiring comments
+- **changelog**: a curated human-readable log of notable changes per version; distinct from git log (Keep a Changelog)
+- **CHANGELOG.md**: the canonical file for tracking version-by-version changes in a project; entries grouped by type
+- **stale documentation**: documentation that no longer reflects the current behavior; actively harmful because it misleads readers
+- **conventional commit**: a commit message format (`type(scope): description`) that enables automated changelog generation
+- **ADR**: Architecture Decision Record; a document capturing a significant architectural decision, its context, and consequences
 
 ## Anti-patterns
 
+**Standard anti-patterns:**
 - Comments that restate the code: `// increment counter` above `counter++` (community consensus)
-- Missing doc comments on public API while commenting private internals (awesome-cursorrules: inverted priority)
-- Duplicating the same information in README, inline comments, and external docs (Markin)
-- String-interpolated log messages instead of structured logging (Markin)
+- Duplicating information across README, inline comments, and external docs (Markin: creates disagreement on update)
+- Stale documentation left in place — outdated docs are actively worse than no docs (Qodo 2026 freshness principle)
 - Documenting modification history inline — use git commit history instead (Markin)
-- Over-documenting trivial code to meet coverage metrics (awesome-cursorrules: "lines of code = debt")
 
-## Anti-patterns (additional)
-
-- Writing comments before checking if a better name would eliminate the need for the comment
-- Using comments to compensate for confusing code — refactor the code instead
-- Keeping stale documentation instead of updating it — outdated docs are worse than no docs
-- Generating documentation from boilerplate templates instead of writing accurate descriptions
-- Inconsistent doc comment style across the codebase — pick one format (JSDoc, rustdoc, etc.) and enforce it
+**AI-specific anti-patterns:**
+- Generating documentation boilerplate from templates without reading the actual implementation — produces plausible-looking but inaccurate docs (IBM AI documentation guidelines: anti-hallucination)
+- Hallucinating API parameters or return types not present in the code — internal misuse from false docs causes more bugs than missing docs
+- Documenting obvious code to appear thorough — `// returns true if the value is true` is noise, not documentation
+- Generating a README without reading the implementation — leads to README describing a different system than what was built (awesome-cursorrules)
 
 ## Anti-Rationalization
 
 | Rationalization | Why It's Wrong | What To Do Instead |
 |----------------|----------------|-------------------|
-| "I'll add doc comments after the API stabilizes" | Doc comments are hardest to write accurately after the API stabilizes — by then, the author has lost the design context that makes comments valuable. The moment of writing is the moment of maximum context. (DEV Community: "write the comment when you have the context, not when you have the time") | Write doc comments at the time of implementation. The comment explains the reasoning that won't be obvious in 6 months. |
-| "A comment explaining what the code does is better than nothing" | Comments that restate what the code does add visual noise without information. They become incorrect when the code changes but the comment is not updated — worse than no comment. (Community consensus: "comments that describe the what are technical debt") | Delete the what-comment. Improve the name if the code is not self-explanatory. If reasoning context is needed, write the why. |
-| "Keeping documentation in multiple places ensures people find it" | Documentation in multiple places is documentation in disagreement. When the primary source is updated and the copy is not, the copy is wrong. Wrong documentation is more harmful than absent documentation. (Markin: "single source of truth; link rather than restate") | Document in one place. Link from other places. When the primary changes, the links are still correct. |
-| "Generated documentation from templates is good enough for internal tools" | Template-generated documentation has the shape of documentation but not the content. It creates the false impression that a function is documented when it is not. Internal tools built on misunderstood APIs cause more bugs than external APIs. (awesome-cursorrules: "lines of generated documentation = lines of debt") | Write accurate descriptions. If accuracy requires effort, the effort is worth making — internal misuse is still misuse. |
+| "I'll add doc comments after the API stabilizes" | The moment of writing is the moment of maximum context. After the API stabilizes, the author has lost the design reasoning that makes doc comments valuable. (DEV Community: "write the comment when you have the context, not when you have the time") | Write doc comments at implementation time. The comment captures the reasoning that will not be obvious in 6 months. |
+| "Keeping docs in multiple places ensures people find them" | Documentation in multiple places is documentation in disagreement. When the primary source updates and the copy does not, the copy is wrong. Wrong documentation misleads more than absent documentation. (Markin: single source of truth) | Document in one place. Link from all other places. When the primary changes, links remain correct. |
+| "I'll update the docs in a follow-up PR" | Follow-up PRs for docs are rarely merged. Code and docs that diverge in the same release window create permanent staleness. Stale docs are worse than no docs. (Qodo 2026 freshness principle: update in the same PR as code) | Update documentation in the same commit or PR as the code change. No follow-up. |
+| "Generated documentation from templates is good enough for internal tools" | Template-generated docs have the shape of documentation but not the content. They create a false impression that a function is documented when it is not. Internal APIs built on misunderstood contracts cause bugs. (awesome-cursorrules: "lines of generated documentation = lines of debt") | Write accurate descriptions. If the effort feels high, the complexity is real — and worth capturing. |
 
 ## Commands
 

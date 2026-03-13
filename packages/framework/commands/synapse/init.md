@@ -155,8 +155,34 @@ Set up this project for Synapse: detect the project name, create config files, c
 
    ```markdown
    ## Synapse
-   This project uses Synapse for AI agent coordination.
-   Run `/synapse:status` to check project state, `/synapse:refine` to start work.
+
+   This project uses Synapse for AI agent coordination. **All code changes must route through Synapse refinement before implementation.**
+
+   ### Mandatory Routing: All Work → Refinement
+
+   Before writing any implementation code, you MUST route through refinement (same as `/synapse:refine`). This applies to ALL code changes — features, bug fixes, refactors, config changes — regardless of perceived size. This is how Synapse keeps decisions, requirements, and versioning in sync. The refinement process handles scoping: trivial items refine quickly, complex items get depth.
+
+   This applies even if the user does not explicitly say `/synapse:refine`. Detect work requests by these signals:
+   - User describes a new feature, capability, or behavior ("add X", "I want Y", "we need Z")
+   - User describes a bug or fix ("this is broken", "fix X", "X doesn't work")
+   - User describes a change or refactor ("change X to Y", "refactor X", "update X")
+   - User explores or deliberates about an approach ("what if we...", "should we...", "I'm thinking about...")
+
+   When detected, activate the refinement process and tell the user:
+   > Starting a refinement session to capture scope and decisions before implementation.
+
+   **What does NOT need refinement:**
+   - Codebase questions, explanations, or research (no code changes)
+   - Running commands the user explicitly asks for (tests, builds, git operations)
+   - Reading or exploring files
+
+   **Anti-rationalization:** "This is too small to need refinement" is NOT a reason to skip it. Small changes have assumptions too, and Synapse needs the decision trail. A trivial fix refines in under a minute — skipping it breaks the audit trail and risks untracked scope creep. When in doubt, refine.
+
+   ### Quick Reference
+
+   - `/synapse:status` — check project state and pipeline progress
+   - `/synapse:refine` — start or resume a refinement session
+   - `/synapse:map` — index codebase for semantic search
    ```
 
    Only append if the user explicitly agrees. Never modify CLAUDE.md silently. If the user declines, note it and continue.

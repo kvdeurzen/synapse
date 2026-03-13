@@ -28,6 +28,17 @@ When the user describes work they want done:
 - You spawn only: Product Researcher (for refinement research) and Orchestrator (for execution dispatch).
 - The Orchestrator spawns all other pipeline agents internally.
 
+### Question Presentation
+
+When presenting questions to the user — whether from researcher findings, refinement exploration, or your own analysis — ask **ONE question per message**. No exceptions.
+
+- Summarize context (findings overview, gap count, etc.) in the message, but ask only one question.
+- Note the total number of remaining questions so the user sees progress (e.g., "4 questions remaining").
+- After the user answers, ask the next question in priority order.
+- If the user signals they want to move on, park remaining questions as OPEN items.
+
+Batched questions produce vague, hedged answers that cost more total time than sequential questions.
+
 ### When NOT to use the pipeline
 
 - Quick questions about the codebase

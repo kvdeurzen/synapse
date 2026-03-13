@@ -74,6 +74,10 @@ Run a structured brainstorming session that tracks decisions, surfaces what's mi
    - **Assumption challenging:** "What are we taking for granted here?"
    - **UX/DX dimension surfacing:** When a decision has both a technical dimension AND a developer/user experience dimension, surface them separately. Example: "SSH vs deploy" is a Tier 1 architectural decision, but "how does the developer configure the Pi address?" and "what happens when the Pi is unreachable?" are Tier 2 UX decisions that must also be captured. If you detect a decision with DX impact, ask: "This also affects developer experience -- should we capture [specific DX aspect] as a separate decision?"
 
+   **ONE question per message — no exceptions.** Batched questions produce vague, hedged answers. One question at a time produces more specific, actionable answers. The total time is lower, not higher. Break your questions into a sequence and ask the most important one first. Prefer multiple-choice questions — they produce faster, more actionable answers. Open-ended questions are appropriate only when the possibility space is too large for predefined options.
+
+   **Presenting researcher findings:** When the Product Researcher returns findings with multiple questions for the user, do NOT dump the full question list in a single message. Instead: (1) summarize the findings overview (gaps, risks, improvements) in one message, (2) note the total number of outstanding questions, and (3) ask the highest-priority question only. After the user answers, ask the next question. Continue until all questions are resolved or the user signals they want to move on.
+
    Throughout the conversation, maintain and update three categories:
    - **DECIDED**: Statements the user has explicitly committed to. As each decision is made:
      1. Call `mcp__synapse__check_precedent` to verify consistency with prior decisions
@@ -190,6 +194,16 @@ Run a structured brainstorming session that tracks decisions, surfaces what's mi
 - Do NOT auto-transition to Plan at Project or Epic level — the user must explicitly signal readiness at these levels
 - Always persist state before the session ends — context window may fill during rich brainstorming
 - Use the existing `doc_id` when resuming to create a new version rather than duplicate documents
+- Do NOT ask multiple questions in a single message — one question per message, no exceptions. Batched questions produce vague, hedged answers that cost more total time than sequential questions
+- Do NOT dump researcher findings as a question list — summarize findings, then ask questions one at a time starting with the highest priority
+
+## Anti-Rationalization
+
+| Rationalization | Why It's Wrong | What To Do Instead |
+|----------------|----------------|-------------------|
+| "Multiple questions would be more efficient" | Batched questions produce vague, hedged answers. One question at a time produces more specific, actionable answers. The total time is lower, not higher. | Break your questions into a sequence. Ask the most important one first. |
+| "The researcher returned 5 questions — I should present them all so the user sees the full picture" | The user can see a count ("5 questions remaining") without being asked to answer them all at once. Dumping a list overwhelms the user and produces shallow responses across all questions instead of deep engagement with each. | Summarize findings and question count. Ask question #1. After the answer, ask #2. Continue sequentially. |
+| "The user seems eager to move fast — I should batch questions to save turns" | Eagerness to move fast is a signal to ask better questions, not more questions per turn. Fewer turns with shallow answers produce more rework than more turns with precise answers. | Ask ONE well-crafted question, preferably multiple-choice. Fast turns with clear answers is faster than few turns with ambiguous answers. |
 
 ## Attribution
 

@@ -128,6 +128,9 @@ Format:
 **Improvement suggestions (N):** [one-line each]
 **Questions for user (N):** [ordered by priority]
 **Precedent conflicts:** [any/none]
+
+GATEWAY INSTRUCTION: Present questions ONE AT A TIME, highest priority first.
+Do NOT dump this question list to the user in a single message.
 ```
 
 ## Key Tool Sequences

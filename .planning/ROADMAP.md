@@ -276,6 +276,21 @@ Deferred to v3.1 (#9, #18, #27):
 Plans:
 - *(plans will be added as usage findings are reported)*
 
+### Phase 26.6: Auto Re-index (INSERTED)
+**Goal**: Fix the Bun API incompatibility that blocks code indexing under the npx tsx runtime, wire automatic re-indexing into the orchestrator wave execution loop so validators always search fresh code, and integrate indexing into /synapse:init for single-command project setup
+**Depends on**: Phase 26.5
+**Requirements**: RIDX-01, RIDX-02, RIDX-03, RIDX-04
+**Success Criteria** (what must be TRUE):
+  1. index_codebase and get_index_status work under the npx tsx (Node.js) runtime without ReferenceError: Bun is not defined
+  2. After each wave of executors completes, the orchestrator re-indexes the codebase before dispatching validators
+  3. /synapse:init indexes the codebase when Ollama is available, completing project setup in a single command
+  4. Re-index failures are non-blocking in both orchestrator and init contexts
+**Plans**: 2 plans
+
+Plans:
+- [ ] 26.6-01-PLAN.md — Fix Bun API incompatibility: replace Bun.Glob with glob/minimatch, Bun.file() with readFile in scanner.ts, index-codebase.ts, get-index-status.ts (RIDX-01, RIDX-02)
+- [ ] 26.6-02-PLAN.md — Wire re-index into orchestrator wave loop + init.md conditional indexing (RIDX-03, RIDX-04)
+
 ### Phase 26.5: Document Controller + Version Management (INSERTED)
 **Goal**: Add a Document Controller agent as the final quality gate in the RPEV pipeline before PR creation — ensuring documentation freshness, requirement traceability, and changelog generation. Plus conventional commit validation hook, output-contract-gate activation, git-cliff config template, and documentation SKILL.md rewrite.
 **Depends on**: Phase 26.4
@@ -378,7 +393,7 @@ Plans:
 ## Progress
 
 **Execution Order:**
-15 → 16 → 17 → 18 → 19 → 20 → 21 → 22 → 23 → 24 → 25 → 26 → 26.1 → 26.2 → 26.3 → 26.4 → 26.5
+15 → 16 → 17 → 18 → 19 → 20 → 21 → 22 → 23 → 24 → 25 → 26 → 26.1 → 26.2 → 26.3 → 26.4 → 26.5 → 26.6
 Parallelizable: Phase 17 (Tech Debt) and Phase 20 (Skills) can proceed in parallel with 18-19. Phase 20 depends only on Phase 15.
 Phase 25 depends on Phase 24 (failure log drives scope).
 Phase 26 depends on Phase 25 + real usage findings (plans created as issues arise).
@@ -387,6 +402,7 @@ Phase 26.2 depends on Phase 26.1 (tightens handoff contracts on the new agent ro
 Phase 26.3 depends on Phase 26.2 (adds TDD to the pipeline with the new agent roster).
 Phase 26.4 depends on Phase 26.3 (adds behavioral enforcement on top of TDD pipeline).
 Phase 26.5 depends on Phase 26.4 (adds Document Controller + version management to pipeline).
+Phase 26.6 depends on Phase 26.5 (fixes Bun API bug + wires auto re-index).
 
 | Phase | Milestone | Plans Complete | Status | Completed |
 |-------|-----------|----------------|--------|-----------|

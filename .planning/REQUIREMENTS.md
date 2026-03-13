@@ -138,10 +138,10 @@ Requirements for Working Prototype milestone. Each maps to roadmap phases.
 - [ ] **LC-01**: `/synapse:pause` saves full state snapshot (pipeline position, active decisions, in-progress task IDs, pool state) to `.synapse/state/pause-snapshot.json` — works during active RPEV pipeline and outside it; supports graceful drain and immediate stop modes
 - [ ] **LC-02**: `/synapse:continue` auto-detects paused state from snapshot, validates task IDs and stage documents against live state, resumes pipeline or session context automatically, deletes snapshot after successful resume
 - [ ] **LC-03**: `synapse-startup.js` detects pause snapshot on session start and injects "Paused Work Detected" with `/synapse:continue` prompt into additionalContext; non-blocking (silent fail on corrupt/missing snapshot)
-- [ ] **LC-04**: `/synapse:upgrade` detects current version from project.toml `synapse_version` field, fetches latest from GitHub API, shows changelog diff, runs `install.sh --quiet --version TAG` after user confirmation, auto-commits with `chore(synapse): upgrade to {version}`, recommends session restart when hook files changed
-- [ ] **LC-05**: `install.sh` writes `synapse_version` field to `project.toml` after successful install (update existing or append new field)
-- [ ] **LC-06**: `/synapse:remove` surgically strips Synapse entries from `.mcp.json` and `settings.json` using `synapseSignatures` pattern, removes Gateway Protocol section from CLAUDE.md, deletes all Synapse directories, prompts user about LanceDB database preservation, self-deletes as final step
-- [ ] **LC-07**: Four new command files (pause.md, continue.md, upgrade.md, remove.md) present in `packages/framework/commands/synapse/` and installed by install.sh
+- [x] **LC-04**: `/synapse:upgrade` detects current version from project.toml `synapse_version` field, fetches latest from GitHub API, shows changelog diff, runs `install.sh --quiet --version TAG` after user confirmation, auto-commits with `chore(synapse): upgrade to {version}`, recommends session restart when hook files changed
+- [x] **LC-05**: `install.sh` writes `synapse_version` field to `project.toml` after successful install (update existing or append new field)
+- [x] **LC-06**: `/synapse:remove` surgically strips Synapse entries from `.mcp.json` and `settings.json` using `synapseSignatures` pattern, removes Gateway Protocol section from CLAUDE.md, deletes all Synapse directories, prompts user about LanceDB database preservation, self-deletes as final step
+- [x] **LC-07**: Four new command files (pause.md, continue.md, upgrade.md, remove.md) present in `packages/framework/commands/synapse/` and installed by install.sh
 
 ## Future Requirements
 

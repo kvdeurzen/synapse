@@ -1,4 +1,5 @@
 import { createHash } from "node:crypto";
+import { readFile } from "node:fs/promises";
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { ulid } from "ulidx";
 import { z } from "zod";
@@ -185,7 +186,7 @@ export async function indexCodebase(
     logger.info({ file: file.relativePath }, "Indexing file");
     try {
       // a. Read file content
-      const content = await Bun.file(file.absolutePath).text();
+      const content = await readFile(file.absolutePath, "utf8");
 
       // Compute SHA-256 hash
       const hash = createHash("sha256").update(content).digest("hex");

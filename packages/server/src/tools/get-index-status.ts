@@ -11,6 +11,7 @@
  */
 
 import { createHash } from "node:crypto";
+import { readFile } from "node:fs/promises";
 import { join } from "node:path";
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
@@ -121,7 +122,7 @@ export async function getIndexStatus(
     for (const [filePath, storedHash] of fileHashMap) {
       try {
         const absPath = join(projectRoot, filePath);
-        const content = await Bun.file(absPath).text();
+        const content = await readFile(absPath, "utf8");
         const currentHash = createHash("sha256").update(content).digest("hex");
         if (currentHash !== storedHash) {
           staleFiles++;

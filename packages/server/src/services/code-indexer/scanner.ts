@@ -1,5 +1,7 @@
 import { existsSync, readFileSync } from "node:fs";
 import { basename, join } from "node:path";
+import { glob } from "glob";
+import { minimatch } from "minimatch";
 import Ignore from "ignore";
 import { logger } from "../../logger.js";
 
@@ -100,18 +102,16 @@ export async function scanFiles(projectRoot: string, opts?: ScanOptions): Promis
     ig.add(opts.exclude_patterns);
   }
 
-  // Build include glob matchers (if provided)
-  let includeGlobs: InstanceType<typeof Bun.Glob>[] | null = null;
-  if (opts?.include_patterns && opts.include_patterns.length > 0) {
-    includeGlobs = opts.include_patterns.map((p) => new Bun.Glob(p));
-  }
+  // Build include patterns (if provided)
+  const includePatterns: string[] | null =
+    opts?.include_patterns && opts.include_patterns.length > 0 ? opts.include_patterns : null;
 
   const files: FileEntry[] = [];
 
-  // Scan all supported extensions
-  const glob = new Bun.Glob("**/*.{ts,tsx,py,rs}");
+  // Scan all supported extensions using glob package (Node.js-compatible)
+  const matches = await glob("**/*.{ts,tsx,py,rs}", { cwd: projectRoot, nodir: true });
 
-  for await (const relRaw of glob.scan({ cwd: projectRoot, absolute: false })) {
+  for (const relRaw of matches) {
     // Normalize to forward slashes (defensive for future Windows compat)
     const relPath = relRaw.replace(/\\/g, "/");
 
@@ -121,8 +121,8 @@ export async function scanFiles(projectRoot: string, opts?: ScanOptions): Promis
     }
 
     // Apply include_patterns filter
-    if (includeGlobs !== null) {
-      const matchesInclude = includeGlobs.some((g) => g.match(relPath));
+    if (includePatterns !== null) {
+      const matchesInclude = includePatterns.some((p) => minimatch(relPath, p));
       if (!matchesInclude) {
         continue;
       }

@@ -276,6 +276,25 @@ Deferred to v3.1 (#9, #18, #27):
 Plans:
 - *(plans will be added as usage findings are reported)*
 
+### Phase 26.7: Pause, Continue, Upgrade, and Remove Synapse (INSERTED)
+**Goal**: Add four lifecycle management slash commands (/synapse:pause, /synapse:continue, /synapse:upgrade, /synapse:remove) covering mid-session work interruption with full state snapshots, cross-session resume with snapshot validation, one-command version upgrades via install.sh with changelog display, and clean Synapse removal with surgical config stripping
+**Depends on**: Phase 26.6
+**Requirements**: LC-01, LC-02, LC-03, LC-04, LC-05, LC-06, LC-07
+**Success Criteria** (what must be TRUE):
+  1. `/synapse:pause` saves a full state snapshot to `.synapse/state/pause-snapshot.json` containing pipeline position, active tasks, pool state, and session context — works both during active RPEV pipeline and outside it
+  2. `/synapse:continue` loads the pause snapshot, validates task IDs and stage docs against live state, and resumes the pipeline or session context automatically
+  3. `synapse-startup.js` detects the pause snapshot on session start and injects "Paused Work Detected" with a `/synapse:continue` prompt into additionalContext
+  4. `/synapse:upgrade` detects current version from `project.toml`, fetches latest from GitHub, shows changelog diff, runs `install.sh --quiet --version TAG` after user confirms, auto-commits with `chore(synapse): upgrade to {version}`, and recommends session restart if hooks changed
+  5. `install.sh` writes `synapse_version` field to `project.toml` after successful install
+  6. `/synapse:remove` surgically strips Synapse entries from `.mcp.json` and `settings.json` using the `synapseSignatures` pattern, removes the Gateway Protocol section from `CLAUDE.md`, deletes all Synapse directories, prompts user about LanceDB database separately, and self-deletes as the final step
+  7. All four new command files (pause.md, continue.md, upgrade.md, remove.md) are present in `packages/framework/commands/synapse/`
+**Plans**: 3 plans
+
+Plans:
+- [ ] 26.7-01-PLAN.md — Pause + Continue commands + startup hook pause detection (LC-01, LC-02, LC-03)
+- [ ] 26.7-02-PLAN.md — Upgrade command + install.sh synapse_version tracking (LC-04, LC-05, LC-07)
+- [ ] 26.7-03-PLAN.md — Remove command with surgical config stripping (LC-06)
+
 ### Phase 26.6: Auto Re-index (INSERTED)
 **Goal**: Fix the Bun API incompatibility that blocks code indexing under the npx tsx runtime, wire automatic re-indexing into the orchestrator wave execution loop so validators always search fresh code, and integrate indexing into /synapse:init for single-command project setup
 **Depends on**: Phase 26.5
@@ -344,7 +363,7 @@ Plans:
   4. Validator simplified to confirm immutable tests pass and spec compliance check
   5. Planner frames test expectations as test-designer input (not validator guidance)
   6. Orchestrator dispatches test-designer after task-designer, before task-auditor; handles BLOCKED escalation routing
-  7. agents.toml registers test-designer; trust.toml has test-designer tier_authority=[]; provides vocabulary has test-contract as 12th slug
+  7. agents.toml registers test-designer; trust.toml has test-designer tier authority; shared protocol has test-contract as provides vocabulary slug
 **Plans**: 3 plans
 
 Plans:
@@ -393,7 +412,7 @@ Plans:
 ## Progress
 
 **Execution Order:**
-15 → 16 → 17 → 18 → 19 → 20 → 21 → 22 → 23 → 24 → 25 → 26 → 26.1 → 26.2 → 26.3 → 26.4 → 26.5 → 26.6
+15 → 16 → 17 → 18 → 19 → 20 → 21 → 22 → 23 → 24 → 25 → 26 → 26.1 → 26.2 → 26.3 → 26.4 → 26.5 → 26.6 → 26.7
 Parallelizable: Phase 17 (Tech Debt) and Phase 20 (Skills) can proceed in parallel with 18-19. Phase 20 depends only on Phase 15.
 Phase 25 depends on Phase 24 (failure log drives scope).
 Phase 26 depends on Phase 25 + real usage findings (plans created as issues arise).
@@ -403,6 +422,7 @@ Phase 26.3 depends on Phase 26.2 (adds TDD to the pipeline with the new agent ro
 Phase 26.4 depends on Phase 26.3 (adds behavioral enforcement on top of TDD pipeline).
 Phase 26.5 depends on Phase 26.4 (adds Document Controller + version management to pipeline).
 Phase 26.6 depends on Phase 26.5 (fixes Bun API bug + wires auto re-index).
+Phase 26.7 depends on Phase 26.6 (adds lifecycle management commands).
 
 | Phase | Milestone | Plans Complete | Status | Completed |
 |-------|-----------|----------------|--------|-----------|
@@ -438,3 +458,5 @@ Phase 26.6 depends on Phase 26.5 (fixes Bun API bug + wires auto re-index).
 | 26.3. TDD | 3/3 | Complete    | 2026-03-12 | - |
 | 26.4. Best Lessons from Superpowers | 5/5 | Complete    | 2026-03-12 | - |
 | 26.5. Document Controller + Version Mgmt | 4/4 | Complete    | 2026-03-13 | - |
+| 26.6. Auto Re-index | 2/2 | Complete | 2026-03-13 | - |
+| 26.7. Pause, Continue, Upgrade, Remove | 0/3 | Planned | - | - |

@@ -133,6 +133,16 @@ Requirements for Working Prototype milestone. Each maps to roadmap phases.
 - [x] **ARCH-06**: Executor commit format updated to `type(scope): description` with no [task:id] suffix throughout executor.md
 - [x] **ARCH-07**: git-cliff config template (cliff.toml) exists in packages/framework/config/ and is distributed by install.sh
 
+### Lifecycle Management
+
+- [ ] **LC-01**: `/synapse:pause` saves full state snapshot (pipeline position, active decisions, in-progress task IDs, pool state) to `.synapse/state/pause-snapshot.json` — works during active RPEV pipeline and outside it; supports graceful drain and immediate stop modes
+- [ ] **LC-02**: `/synapse:continue` auto-detects paused state from snapshot, validates task IDs and stage documents against live state, resumes pipeline or session context automatically, deletes snapshot after successful resume
+- [ ] **LC-03**: `synapse-startup.js` detects pause snapshot on session start and injects "Paused Work Detected" with `/synapse:continue` prompt into additionalContext; non-blocking (silent fail on corrupt/missing snapshot)
+- [ ] **LC-04**: `/synapse:upgrade` detects current version from project.toml `synapse_version` field, fetches latest from GitHub API, shows changelog diff, runs `install.sh --quiet --version TAG` after user confirmation, auto-commits with `chore(synapse): upgrade to {version}`, recommends session restart when hook files changed
+- [ ] **LC-05**: `install.sh` writes `synapse_version` field to `project.toml` after successful install (update existing or append new field)
+- [ ] **LC-06**: `/synapse:remove` surgically strips Synapse entries from `.mcp.json` and `settings.json` using `synapseSignatures` pattern, removes Gateway Protocol section from CLAUDE.md, deletes all Synapse directories, prompts user about LanceDB database preservation, self-deletes as final step
+- [ ] **LC-07**: Four new command files (pause.md, continue.md, upgrade.md, remove.md) present in `packages/framework/commands/synapse/` and installed by install.sh
+
 ## Future Requirements
 
 Deferred to future release. Tracked but not in current roadmap.
@@ -256,12 +266,19 @@ Which phases cover which requirements. Updated during roadmap creation.
 | ARCH-05 | Phase 26.5 | Planned |
 | ARCH-06 | Phase 26.5 | Planned |
 | ARCH-07 | Phase 26.5 | Planned |
+| LC-01 | Phase 26.7-01 | Planned |
+| LC-02 | Phase 26.7-01 | Planned |
+| LC-03 | Phase 26.7-01 | Planned |
+| LC-04 | Phase 26.7-02 | Planned |
+| LC-05 | Phase 26.7-02 | Planned |
+| LC-06 | Phase 26.7-03 | Planned |
+| LC-07 | Phase 26.7-02 | Planned |
 
 **Coverage:**
-- v3.0 requirements: 84 total (39 original + 8 RPEV + 4 Agent Pool + 8 Agent Behavior Hardening + 7 TDD Pipeline + 11 Behavioral Enforcement + 7 Document Controller)
-- Mapped to phases: 84
+- v3.0 requirements: 91 total (39 original + 8 RPEV + 4 Agent Pool + 8 Agent Behavior Hardening + 7 TDD Pipeline + 11 Behavioral Enforcement + 7 Document Controller + 7 Lifecycle Management)
+- Mapped to phases: 91
 - Unmapped: 0
 
 ---
 *Requirements defined: 2026-03-03*
-*Last updated: 2026-03-13 after Phase 26.5 planning (Document Controller + Version Management requirements added)*
+*Last updated: 2026-03-13 after Phase 26.7 planning (Lifecycle Management requirements added)*

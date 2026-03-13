@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v3.0
 milestone_name: Working Prototype
 status: Phase 25 closed (5/6 plans; 25-04 E2E re-validation deferred). Phase 26 created for real usage findings.
-stopped_at: Phase 26.6 context gathered
-last_updated: "2026-03-13T12:17:07.008Z"
+stopped_at: Completed 26.6-01-PLAN.md
+last_updated: "2026-03-13T12:35:49.921Z"
 last_activity: 2026-03-09 — Phase 25 execution complete. Phase 26 created.
 progress:
   total_phases: 18
   completed_phases: 14
-  total_plans: 51
-  completed_plans: 49
+  total_plans: 53
+  completed_plans: 50
   percent: 96
 ---
 
@@ -93,6 +93,7 @@ Progress: [█████████░] 96%
 | Phase 26.5-proper-archiving P01 | 3min | 2 tasks | 2 files |
 | Phase 26.5-proper-archiving P04 | 2min | 2 tasks | 5 files |
 | Phase 26.5-proper-archiving P03 | 3min | 2 tasks | 3 files |
+| Phase 26.6-auto-re-index P01 | 3min | 2 tasks | 4 files |
 
 ## Accumulated Context
 
@@ -240,6 +241,9 @@ Key decisions affecting v3.0:
 - [Phase 26.5-03]: Document Controller operates at feature level by default (main...HEAD); epic-level aggregates all feature branches
 - [Phase 26.5-03]: doc-fix executor pipeline is shortened (executor -> validator only, no code-quality-reviewer); retry cap from max_revision_retries in trust.toml [rpev]
 - [Phase 26.5-03]: PR creation gated on DC APPROVED (not Integration Checker PASS); orchestrator reads ## Changelog Summary from record-review doc for PR body
+- [Phase 26.6-01]: glob + minimatch replace Bun.Glob in scanner.ts — glob() returns Promise<string[]> (plain for loop, not for-await); minimatch() handles include_patterns matching
+- [Phase 26.6-01]: Static import of readFile from node:fs/promises preferred over dynamic import in index-codebase.ts and get-index-status.ts — consistent with project patterns, avoids per-call overhead
+- [Phase 26.6-01]: Node.js-compatible APIs only rule in packages/server/src/ — never use Bun-specific APIs since MCP server runs under npx tsx (tree-sitter native module incompatibility with Bun runtime)
 
 ### Roadmap Evolution
 
@@ -263,6 +267,6 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-03-13T12:17:07.006Z
-Stopped at: Phase 26.6 context gathered
-Resume file: .planning/phases/26.6-auto-re-index/26.6-CONTEXT.md
+Last session: 2026-03-13T12:35:49.918Z
+Stopped at: Completed 26.6-01-PLAN.md
+Resume file: None

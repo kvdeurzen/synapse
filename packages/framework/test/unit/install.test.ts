@@ -3,10 +3,12 @@ import { spawnSync } from "node:child_process";
 import {
   existsSync,
   lstatSync,
+  mkdirSync,
   mkdtempSync,
   readFileSync,
   readdirSync,
   rmSync,
+  writeFileSync,
 } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
@@ -174,5 +176,40 @@ describe("install.sh", () => {
     const serverPath = join(targetDir, ".claude/server");
     const stat = lstatSync(serverPath);
     expect(stat.isSymbolicLink()).toBe(true);
+  });
+});
+
+describe("synapse_version tracking", () => {
+  let versionTargetDir: string;
+  let versionResult: ReturnType<typeof spawnSync>;
+
+  beforeAll(() => {
+    versionTargetDir = mkdtempSync(join(tmpdir(), "synapse-version-test-"));
+    // Pre-seed project.toml
+    mkdirSync(join(versionTargetDir, ".synapse", "config"), { recursive: true });
+    writeFileSync(
+      join(versionTargetDir, ".synapse", "config", "project.toml"),
+      '[project]\nproject_id = "test-proj"\nname = "Test"\nskills = []\n'
+    );
+    versionResult = spawnSync("bash", [INSTALL_SCRIPT, "--quiet"], {
+      encoding: "utf8",
+      env: { ...process.env, TARGET_DIR: versionTargetDir },
+      timeout: 30_000,
+    });
+  });
+
+  afterAll(() => { rmSync(versionTargetDir, { recursive: true, force: true }); });
+
+  test("install runs successfully with pre-seeded project.toml", () => {
+    if (versionResult.status !== 0) {
+      console.error("STDOUT:", versionResult.stdout);
+      console.error("STDERR:", versionResult.stderr);
+    }
+    expect(versionResult.status).toBe(0);
+  });
+
+  test("writes synapse_version to existing project.toml", () => {
+    const toml = readFileSync(join(versionTargetDir, ".synapse", "config", "project.toml"), "utf8");
+    expect(toml).toContain("synapse_version");
   });
 });

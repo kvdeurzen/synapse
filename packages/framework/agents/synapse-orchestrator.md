@@ -106,6 +106,7 @@ Decompose features into tasks ONLY when that feature is the next to execute.
 - **Executor** — Implements leaf tasks per spec
 - **Validator** — Verifies implementation matches spec and decisions
 - **Integration Checker** — Cross-task integration at feature/epic boundaries
+- **Document Controller** — Reviews documentation freshness, requirement traceability, and generates changelogs at feature boundaries
 - **Code Quality Reviewer** — Reviews implementation quality (craftsmanship, security, performance) after validator confirms spec compliance
 - **Debugger** — Root-cause analysis on failures
 - **Researcher** — Technical investigation (spawned by Architect or Planner when needed)
@@ -159,12 +160,19 @@ Before wave execution:
 4. If ANY validation fails: HALT the wave and emit failure report to gateway
 5. If all validations pass: proceed to the next wave
 6. After all feature waves complete: spawn Integration Checker for feature-level validation
+6b. If Integration Checker PASSES: spawn Document Controller for feature-level doc review
+    - context_doc_ids: `integration-checker-integration-report-{task_id}` + children's output_doc_ids
+    - On APPROVED: proceed to step 7 (PR creation)
+    - On NEEDS_REVISION: create a doc-fix executor task (shortened pipeline: executor -> validator only, skip code-quality-reviewer)
+      Track retry count against `max_revision_retries` from trust.toml `[rpev]` section. After retries exhausted: emit failure report to gateway.
+      After doc fixes validated: re-dispatch Document Controller for full re-check.
+    - On REJECTED: HALT, emit failure report to gateway
 
 After feature completion:
 - Run `index_codebase(project_id: '{project_id}')` to update code index
 - Update stage document: `stage: "VALIDATING"`
 
-7. If integration passes: create a Pull Request for the feature branch (see PR Workflow below)
+7. If Document Controller APPROVED: create a Pull Request for the feature branch (with changelog from record-review doc — see PR Workflow below)
 
 After validation passes: Update stage document: `stage: "DONE"`, `pending_approval: false`
 
@@ -202,10 +210,12 @@ Spawn the Researcher with the executor's context request. Feed researcher findin
 
 ## PR Workflow
 
-After Integration Checker passes for a feature:
+After Document Controller APPROVED for a feature:
 
 1. Push the feature branch: `git push -u origin feat/{epic_slug}/{feature_slug}`
-2. Create the PR via `gh pr create --base main --head "feat/{epic_slug}/{feature_slug}" --title "feat({feature_slug}): {feature_title}"` with a body that includes: epic title, RPEV stage doc ID, involvement mode, 1-3 sentence summary, task commits list (`[{sha}] {msg} (task:{id})`), referenced decisions, validation checklist (tasks validated, integration passed, index updated), and test evidence from validator findings.
+1b. Read Document Controller output: `query_documents(doc_id: "document-controller-record-review-{task_id}", actor: "synapse-orchestrator")`.
+    Extract the `## Changelog Summary` section for inclusion in PR body.
+2. Create the PR via `gh pr create --base main --head "feat/{epic_slug}/{feature_slug}" --title "feat({feature_slug}): {feature_title}"` with a body that includes: epic title, RPEV stage doc ID, involvement mode, 1-3 sentence summary, changelog summary from Document Controller, task commits list (`[{sha}] {msg} (task:{id})`), referenced decisions, validation checklist (tasks validated, integration passed, doc review approved, index updated), and test evidence from validator findings.
 3. Store the PR URL in the stage document notes with `pr_url: {url}` for traceability.
 
 ### Merge Gate (Involvement-Mode Dependent)
@@ -400,6 +410,7 @@ When dispatching an agent, set `context_doc_ids` and `context_decision_ids` on t
 | Validator | executor's output_doc_ids from task field, test-designer-test-contract-{task_id} | -- |
 | Code Quality Reviewer | executor's implementation summary doc_id (executor-implementation-{task_id}) | -- |
 | Integration Checker | children tasks' output_doc_ids | -- |
+| Document Controller | integration-checker-integration-report-{task_id} + children's output_doc_ids | -- |
 | Debugger | validator-findings or integration-findings doc_id | -- |
 
 **Protocol:** After an agent completes, read its completion report for produced doc_ids. Before dispatching the next agent, call `update_task` to set `context_doc_ids` (JSON array string) on the target task.

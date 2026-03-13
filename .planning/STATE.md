@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v3.0
 milestone_name: Working Prototype
 status: Phase 25 closed (5/6 plans; 25-04 E2E re-validation deferred). Phase 26 created for real usage findings.
-stopped_at: Completed 26.5-02-PLAN.md
-last_updated: "2026-03-13T10:56:23.143Z"
+stopped_at: Completed 26.5-04-PLAN.md
+last_updated: "2026-03-13T11:00:42.063Z"
 last_activity: 2026-03-09 — Phase 25 execution complete. Phase 26 created.
 progress:
   total_phases: 17
   completed_phases: 13
   total_plans: 51
-  completed_plans: 47
+  completed_plans: 48
   percent: 96
 ---
 
@@ -91,6 +91,7 @@ Progress: [█████████░] 96%
 | Phase 26.4-best-lessons-from-superpowers P05 | 9min | 2 tasks | 16 files |
 | Phase 26.5-proper-archiving P02 | 3min | 2 tasks | 5 files |
 | Phase 26.5-proper-archiving P01 | 3min | 2 tasks | 2 files |
+| Phase 26.5-proper-archiving P04 | 2min | 2 tasks | 5 files |
 
 ## Accumulated Context
 
@@ -234,6 +235,7 @@ Key decisions affecting v3.0:
 - [Phase 26.5-01]: conventional-commit hook is fail-open (not fail-closed) — advisory formatting hook passes silently on errors; [task:id] suffix explicitly rejected from commit messages
 - [Phase 26.5-02]: require_traceability = true in trust.toml [rpev] — foundation for Document Controller integration hook wiring in plan 26.5-03/04
 - [Phase 26.5-02]: Documentation SKILL.md freshness principle sourced from Qodo 2026: stale docs worse than no docs; AI-specific anti-patterns added (hallucinated params, boilerplate generation, README without reading)
+- [Phase 26.5-04]: conventional-commit.js registered with Bash matcher only; output-contract-gate.js registered with mcp__synapse__update_task matcher; both added to synapseSignatures for dedup
 
 ### Roadmap Evolution
 
@@ -256,6 +258,6 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-03-13T10:56:23.137Z
-Stopped at: Completed 26.5-02-PLAN.md
+Last session: 2026-03-13T11:00:42.055Z
+Stopped at: Completed 26.5-04-PLAN.md
 Resume file: None

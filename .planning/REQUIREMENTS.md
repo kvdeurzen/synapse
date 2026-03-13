@@ -127,11 +127,11 @@ Requirements for Working Prototype milestone. Each maps to roadmap phases.
 
 - [x] **ARCH-01**: Document Controller agent exists with Sonnet model, read-only reviewer role (tier_authority=[]), registered in agents.toml/trust.toml/output-contracts.toml with record-review provides slug
 - [x] **ARCH-02**: Conventional commit validation hook enforces `type(scope): description` format on Bash tool calls containing `git commit`; fail-open on errors; scope required; max 72 chars first line
-- [ ] **ARCH-03**: Both conventional-commit.js and output-contract-gate.js registered as PostToolUse hooks in install.sh and .claude/settings.json with correct matchers (Bash and mcp__synapse__update_task respectively)
+- [x] **ARCH-03**: Both conventional-commit.js and output-contract-gate.js registered as PostToolUse hooks in install.sh and .claude/settings.json with correct matchers (Bash and mcp__synapse__update_task respectively)
 - [ ] **ARCH-04**: Orchestrator pipeline dispatches Document Controller after Integration Checker; routes NEEDS_REVISION to doc-fix executor task (shortened pipeline); extracts changelog for PR body
 - [x] **ARCH-05**: Documentation SKILL.md rewritten with 5 quality criteria (Accuracy, Completeness, Audience awareness, Consistency, Freshness), AI-specific anti-patterns, changelog format conventions
 - [x] **ARCH-06**: Executor commit format updated to `type(scope): description` with no [task:id] suffix throughout executor.md
-- [ ] **ARCH-07**: git-cliff config template (cliff.toml) exists in packages/framework/config/ and is distributed by install.sh
+- [x] **ARCH-07**: git-cliff config template (cliff.toml) exists in packages/framework/config/ and is distributed by install.sh
 
 ## Future Requirements
 

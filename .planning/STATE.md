@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v3.0
 milestone_name: Working Prototype
 status: Phase 25 closed (5/6 plans; 25-04 E2E re-validation deferred). Phase 26 created for real usage findings.
-stopped_at: Completed 26.5-04-PLAN.md
-last_updated: "2026-03-13T11:00:42.063Z"
+stopped_at: Completed 26.5-03-PLAN.md
+last_updated: "2026-03-13T11:02:09.505Z"
 last_activity: 2026-03-09 — Phase 25 execution complete. Phase 26 created.
 progress:
   total_phases: 17
-  completed_phases: 13
+  completed_phases: 14
   total_plans: 51
-  completed_plans: 48
+  completed_plans: 49
   percent: 96
 ---
 
@@ -92,6 +92,7 @@ Progress: [█████████░] 96%
 | Phase 26.5-proper-archiving P02 | 3min | 2 tasks | 5 files |
 | Phase 26.5-proper-archiving P01 | 3min | 2 tasks | 2 files |
 | Phase 26.5-proper-archiving P04 | 2min | 2 tasks | 5 files |
+| Phase 26.5-proper-archiving P03 | 3min | 2 tasks | 3 files |
 
 ## Accumulated Context
 
@@ -236,6 +237,9 @@ Key decisions affecting v3.0:
 - [Phase 26.5-02]: require_traceability = true in trust.toml [rpev] — foundation for Document Controller integration hook wiring in plan 26.5-03/04
 - [Phase 26.5-02]: Documentation SKILL.md freshness principle sourced from Qodo 2026: stale docs worse than no docs; AI-specific anti-patterns added (hallucinated params, boilerplate generation, README without reading)
 - [Phase 26.5-04]: conventional-commit.js registered with Bash matcher only; output-contract-gate.js registered with mcp__synapse__update_task matcher; both added to synapseSignatures for dedup
+- [Phase 26.5-03]: Document Controller operates at feature level by default (main...HEAD); epic-level aggregates all feature branches
+- [Phase 26.5-03]: doc-fix executor pipeline is shortened (executor -> validator only, no code-quality-reviewer); retry cap from max_revision_retries in trust.toml [rpev]
+- [Phase 26.5-03]: PR creation gated on DC APPROVED (not Integration Checker PASS); orchestrator reads ## Changelog Summary from record-review doc for PR body
 
 ### Roadmap Evolution
 
@@ -258,6 +262,6 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-03-13T11:00:42.055Z
-Stopped at: Completed 26.5-04-PLAN.md
+Last session: 2026-03-13T11:02:09.500Z
+Stopped at: Completed 26.5-03-PLAN.md
 Resume file: None

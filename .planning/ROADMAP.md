@@ -421,4 +421,4 @@ Phase 26.5 depends on Phase 26.4 (adds Document Controller + version management 
 | 26.2. Agent Handoff Tightening | 4/4 | Complete    | 2026-03-10 | - |
 | 26.3. TDD | 3/3 | Complete    | 2026-03-12 | - |
 | 26.4. Best Lessons from Superpowers | 5/5 | Complete    | 2026-03-12 | - |
-| 26.5. Document Controller + Version Mgmt | 3/4 | In Progress|  | - |
+| 26.5. Document Controller + Version Mgmt | 4/4 | Complete   | 2026-03-13 | - |

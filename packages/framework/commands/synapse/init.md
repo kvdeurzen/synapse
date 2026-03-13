@@ -6,6 +6,7 @@ allowed-tools:
   - Write
   - Bash
   - mcp__synapse__init_project
+  - mcp__synapse__index_codebase
 ---
 
 ## Objective
@@ -130,6 +131,24 @@ Set up this project for Synapse: detect the project name, create config files, c
 
    NOTE: This step does NOT require Ollama — it creates LanceDB tables only. Do not check for Ollama here.
 
+7b. **Index codebase (conditional):** After init_project succeeds, silently check if Ollama is available with the required model:
+
+    ```bash
+    curl -sf http://localhost:11434/api/tags | grep -q "nomic-embed-text" && echo "ready" || echo "unavailable"
+    ```
+
+    If `ready`:
+    - Inform user: "Indexing your codebase... (this may take a minute)"
+    - Call `mcp__synapse__index_codebase` with:
+      - `project_id`: the confirmed project_id
+      - `project_root`: absolute path to the project root (derived from `.synapse/config/project.toml` location)
+      - `actor`: "synapse-orchestrator"
+    - On success: report "Codebase indexed: {files_indexed} files."
+    - On failure: warn "Codebase indexing skipped — run /synapse:map when Ollama is available." (non-fatal — continue init)
+
+    If `unavailable`:
+    - Skip silently. The step 11 summary will note: "Codebase: not indexed — run /synapse:map to enable semantic search."
+
 8. **Offer CLAUDE.md amendment:** Check if `CLAUDE.md` exists in the project root. If it already contains a `## Synapse` section, skip this step silently.
 
    Otherwise, offer to append the following block:
@@ -174,9 +193,13 @@ Set up this project for Synapse: detect the project name, create config files, c
 
     CLAUDE.md: {{amended | not modified}}
     Skills: {{list or "none detected"}}
+    Codebase: {{N files indexed | not indexed — run /synapse:map to enable semantic search}}
 
-    Next step: Run /synapse:map to index your codebase for semantic search.
+    Next step: {{Run /synapse:refine to start planning work. | Run /synapse:map to index your codebase for semantic search.}}
     ```
+
+    If indexing succeeded in step 7b, set "Next step" to "Run /synapse:refine to start planning work." and omit the /synapse:map suggestion.
+    If indexing was skipped (Ollama unavailable or failed), set "Next step" to "Run /synapse:map to index your codebase for semantic search (requires Ollama with nomic-embed-text)."
 
     **Important:** Synapse's multi-agent workflow works best when Claude Code runs
     without permission prompts. Start sessions with:
@@ -189,7 +212,7 @@ Set up this project for Synapse: detect the project name, create config files, c
 
 ## Anti-Patterns
 
-- Do NOT check for Ollama during init — only `/synapse:map` requires Ollama
+- Do NOT check for Ollama during the core init flow (steps 1-7) — only the optional indexing step (7b) checks Ollama, and it is non-blocking
 - Do NOT modify CLAUDE.md without explicit user consent
 - Do NOT hardcode `project_id` — always use the detected and confirmed value
 - Do NOT proceed past step 2 without user confirmation of the project_id

@@ -393,6 +393,13 @@ for d in "$SYNAPSE_SOURCE/packages/framework/skills/"/*/; do
 done
 log_step "Skills: $SKILL_COUNT directories"
 
+# Copy scripts (smoke-test.mjs etc.)
+if [ -d "$SYNAPSE_SOURCE/scripts" ]; then
+  mkdir -p "$TARGET_DIR/scripts"
+  cp "$SYNAPSE_SOURCE/scripts/"*.mjs "$TARGET_DIR/scripts/" 2>/dev/null || true
+  log_step "Scripts: copied to scripts/"
+fi
+
 # Copy server (entire packages/server/)
 # In dev mode, symlink to the repo's server (already has node_modules with native binaries built)
 if [ "$SYNAPSE_SOURCE" = "$SCRIPT_DIR" ] || [ "$SYNAPSE_SOURCE" = "$TARGET_DIR" ]; then

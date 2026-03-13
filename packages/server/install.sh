@@ -399,6 +399,13 @@ if [ -d "$SYNAPSE_SOURCE/packages/framework/scripts" ]; then
   log_step "Scripts: $SCRIPT_COUNT files"
 fi
 
+# Copy smoke test script (scripts/smoke-test.mjs)
+if [ -d "$SYNAPSE_SOURCE/scripts" ]; then
+  mkdir -p "$TARGET_DIR/scripts"
+  cp "$SYNAPSE_SOURCE/scripts/"*.mjs "$TARGET_DIR/scripts/" 2>/dev/null || true
+  log_step "Smoke test: copied to scripts/"
+fi
+
 # Copy server (entire packages/server/)
 cp -r "$SYNAPSE_SOURCE/packages/server/." "$TARGET_DIR/.claude/server/"
 log_step "Server: copied to .claude/server/"
